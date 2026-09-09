@@ -1099,6 +1099,18 @@ body{
 .repaso-toggle-btn.nostat:hover,.repaso-toggle-btn.nostat.active{border-color:var(--red);color:var(--red);background:var(--redbg)}
 .repaso-empty{padding:36px 0;text-align:center;color:var(--t3);font-size:13px;flex:1}
 
+/* ── Avisos de Repaso SL (junto al calendario) ───────────────── */
+.repaso-alerts-side{width:230px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;align-self:flex-start}
+.sl-alert-card{
+  display:flex;align-items:flex-start;gap:10px;text-align:left;width:100%;
+  background:var(--cal-bg);border:1px solid var(--goldborder);border-radius:12px;
+  padding:14px 15px;cursor:pointer;transition:all .2s;font-family:var(--font-body);
+}
+.sl-alert-card:hover{background:var(--bgh);border-color:var(--gold);box-shadow:0 8px 22px rgba(0,0,0,.4)}
+.sl-alert-icon{font-size:15px;line-height:1;margin-top:1px;color:var(--gold);flex-shrink:0}
+.sl-alert-text{font-size:12.5px;font-weight:700;color:var(--t1);line-height:1.45}
+.sl-alert-count{display:block;margin-top:5px;font-size:10.5px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.4px}
+
 /* ── Botón Eliminar/Reiniciar día ─────────────────────────── */
 .btn-reset-day{
   display:flex;align-items:center;gap:5px;
@@ -1265,6 +1277,9 @@ body{
   .fondeo-body{flex-direction:column;gap:16px;padding:12px 12px 28px;overflow:visible;max-width:100%}
   .fondeo-stats-side{width:100%;order:2;max-height:none;overflow:visible;align-self:auto;gap:14px}
   .fondeo-cal-side{order:1;overflow:visible;flex:none;min-height:0;padding:14px 12px 12px}
+  .repaso-alerts-side{width:100%;order:0;align-self:auto;flex-direction:row;flex-wrap:wrap;gap:10px}
+  .repaso-alerts-side:empty{display:none}
+  .sl-alert-card{flex:1;min-width:220px}
 
   /* — Header del calendario / selector mes-año — */
   .cal-header{gap:10px}
@@ -1409,6 +1424,7 @@ body{
             <div class="cal-dow" id="calDowP"></div>
             <div class="cal-grid" id="calGridP"></div>
           </div>
+          <div class="repaso-alerts-side" id="pRepasoAlerts"></div>
         </div>
       </div>
     </div><!-- /pane-practica -->
@@ -1466,6 +1482,7 @@ body{
             <div class="cal-dow" id="calDowF"></div>
             <div class="cal-grid" id="calGridF"></div>
           </div>
+          <div class="repaso-alerts-side" id="fRepasoAlerts"></div>
 
         </div>
       </div>
@@ -1567,6 +1584,27 @@ body{
         ○ Marcar revisado
       </button>
       <button class="f-save-btn" id="fSaveBtn" onclick="saveFondeoDay()">Guardar Día</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL — REPASO RÁPIDO DE SL (semana/mes actual)
+════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="slAlertModal" onclick="slAlertBgClick(event)">
+  <div class="modal" role="dialog" aria-modal="true" style="display:flex;flex-direction:column;max-width:560px">
+    <div class="modal-head">
+      <div>
+        <div class="modal-date" id="slAlertModalTitle">Repaso de Stop Loss</div>
+        <div class="modal-meta" id="slAlertModalMeta">—</div>
+      </div>
+      <div class="modal-head-right">
+        <button class="modal-close-btn" onclick="closeSlAlertModal()" title="Cerrar">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="repaso-summary" id="slAlertModalSummary" style="margin-bottom:14px"></div>
+      <div class="repaso-list" id="slAlertModalList" style="gap:10px;display:flex;flex-direction:column"></div>
     </div>
   </div>
 </div>
@@ -2875,6 +2913,7 @@ function pEstrategiaStatsHTML(st) {
 function renderPStats() {
   renderPPnl();
   renderPMonthStats();
+  renderSlAlerts('practica');
 }
 
 function renderPPnl() {
@@ -3992,15 +4031,56 @@ function escapeHtml(s) {
 /* ══════════════════════════════════════════════════════════════
    REPASO DE SL — repaso semanal/mensual de pérdidas, por sección
 ══════════════════════════════════════════════════════════════ */
-function repasoStore()          { return RS.scope === 'practica' ? _practica : _fondeo; }
-function repasoGetDay(k)        { return RS.scope === 'practica' ? getPracticaDay(k) : getDayFondeo(k); }
-function repasoSaveDay(k, data) { if (RS.scope === 'practica') saveDayPractica(k, data); else saveDayFondeo(k, data); }
+function scopedStore(scope)          { return scope === 'practica' ? _practica : _fondeo; }
+function scopedGetDay(scope, k)      { return scope === 'practica' ? getPracticaDay(k) : getDayFondeo(k); }
+function scopedSaveDay(scope, k, d)  { if (scope === 'practica') saveDayPractica(k, d); else saveDayFondeo(k, d); }
 
-function monthKeysOf(y, m) {
-  const total = new Date(y, m + 1, 0).getDate();
-  const keys = [];
-  for (let d = 1; d <= total; d++) keys.push(mkKey(y, m, d));
-  return keys;
+function repasoStore()          { return scopedStore(RS.scope); }
+function repasoGetDay(k)        { return scopedGetDay(RS.scope, k); }
+function repasoSaveDay(k, data) { return scopedSaveDay(RS.scope, k, data); }
+
+// Días con SL, sin marcar (ni Estadístico ni No estadístico), en la semana/mes real actual.
+function slPendingCount(scope, period) {
+  const today = new Date();
+  const keys = period === 'week'
+    ? getWeekKeys(mkKey(today.getFullYear(), today.getMonth(), today.getDate()))
+    : getMonthKeys(today.getFullYear(), today.getMonth());
+  const store = scopedStore(scope);
+  return keys.filter(k => store[k] && getDayResult(store[k]) === 'sl' && store[k].slStatus == null).length;
+}
+
+function slSummaryHTML(total, estCount, pendCount) {
+  if (!total) return '<div class="repaso-summary-title">Sin SL en este período</div>';
+  const pct = Math.round(estCount / total * 100);
+  return '<div class="repaso-summary-title">' + estCount + ' de ' + total + ' SL fueron estadísticos (' + pct + '%)' +
+      (pendCount ? ' <span style="color:var(--t3);font-weight:600">· ' + pendCount + ' sin marcar</span>' : '') +
+    '</div>' +
+    '<div class="repaso-summary-bar"><div class="repaso-summary-bar-fill" style="width:' + pct + '%"></div></div>';
+}
+
+function slCardHTML(scope, k, onToggleFn) {
+  const store = scopedStore(scope);
+  const d   = store[k];
+  const p   = parseKey(k);
+  const dow = new Date(p.y, p.m, p.d).getDay();
+  const dateLbl = DAYS_S[dow] + ' ' + p.d + ' ' + MONTHS[p.m].slice(0,3);
+  const amt  = getDayPL(d);
+  const note = (d.contextNote || '').trim();
+  const statActive   = d.slStatus === 'estadistico'    ? ' active' : '';
+  const noStatActive = d.slStatus === 'no_estadistico' ? ' active' : '';
+  return (
+    '<div class="repaso-card">' +
+      '<div class="repaso-card-top">' +
+        '<div class="repaso-card-date">' + dateLbl + '</div>' +
+        '<div class="repaso-card-amt">' + amt.toLocaleString('es-AR') + '</div>' +
+      '</div>' +
+      '<div class="repaso-card-note' + (note ? '' : ' empty') + '">' + (note ? escapeHtml(note) : 'Sin nota') + '</div>' +
+      '<div class="repaso-toggle-btns">' +
+        '<button class="repaso-toggle-btn stat' + statActive + '" onclick="' + onToggleFn + '(\'' + scope + '\',\'' + k + '\',\'estadistico\')">Estadístico</button>' +
+        '<button class="repaso-toggle-btn nostat' + noStatActive + '" onclick="' + onToggleFn + '(\'' + scope + '\',\'' + k + '\',\'no_estadistico\')">No estadístico</button>' +
+      '</div>' +
+    '</div>'
+  );
 }
 
 function setRepasoScope(scope) { RS.scope = scope; renderRepaso(); }
@@ -4020,11 +4100,12 @@ function changeRepaso(dir) {
   renderRepaso();
 }
 
-function setSlStatus(key, val) {
-  const d = repasoGetDay(key);
+function setSlStatus(scope, key, val) {
+  const d = scopedGetDay(scope, key);
   d.slStatus = d.slStatus === val ? null : val;
-  repasoSaveDay(key, d);
+  scopedSaveDay(scope, key, d);
   renderRepaso();
+  renderSlAlerts(scope);
 }
 
 function renderRepaso() {
@@ -4040,7 +4121,7 @@ function renderRepaso() {
     const p1 = parseKey(keys[0]), p2 = parseKey(keys[6]);
     rangeLabel = p1.d + ' ' + MONTHS[p1.m].slice(0,3) + ' – ' + p2.d + ' ' + MONTHS[p2.m].slice(0,3) + ' ' + p2.y;
   } else {
-    keys = monthKeysOf(RS.y, RS.m);
+    keys = getMonthKeys(RS.y, RS.m);
     rangeLabel = MONTHS[RS.m] + ' ' + RS.y;
   }
   const rangeEl = document.getElementById('repasoRange');
@@ -4050,51 +4131,98 @@ function renderRepaso() {
   const total     = slKeys.length;
   const estCount  = slKeys.filter(k => store[k].slStatus === 'estadistico').length;
   const pendCount = slKeys.filter(k => store[k].slStatus == null).length;
-  const pct       = total ? Math.round(estCount / total * 100) : null;
 
   const summaryEl = document.getElementById('repasoSummary');
-  if (summaryEl) {
-    if (!total) {
-      summaryEl.innerHTML = '<div class="repaso-summary-title">Sin SL en este período</div>';
-    } else {
-      summaryEl.innerHTML =
-        '<div class="repaso-summary-title">' + estCount + ' de ' + total + ' SL fueron estadísticos (' + pct + '%)' +
-          (pendCount ? ' <span style="color:var(--t3);font-weight:600">· ' + pendCount + ' sin marcar</span>' : '') +
-        '</div>' +
-        '<div class="repaso-summary-bar"><div class="repaso-summary-bar-fill" style="width:' + pct + '%"></div></div>';
-    }
-  }
+  if (summaryEl) summaryEl.innerHTML = slSummaryHTML(total, estCount, pendCount);
 
   const listEl = document.getElementById('repasoList');
   if (!listEl) return;
-  if (!total) {
-    listEl.innerHTML = '<div class="repaso-empty">No hay días con SL en este período.</div>';
-    return;
+  listEl.innerHTML = total
+    ? slKeys.map(k => slCardHTML(RS.scope, k, 'setSlStatus')).join('')
+    : '<div class="repaso-empty">No hay días con SL en este período.</div>';
+}
+
+/* ── Avisos "Ya podés repasar SL" (semana/mes real actual) ──────
+   Se muestran junto al calendario de cada sección y abren un modal
+   de repaso rápido (mismo patrón que la pestaña Repaso SL). ────── */
+const alertModalCtx = { scope: 'fondeo', period: 'week' };
+
+function renderSlAlerts(scope) {
+  const containerId = scope === 'practica' ? 'pRepasoAlerts' : 'fRepasoAlerts';
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  const weekCount  = slPendingCount(scope, 'week');
+  const monthCount = slPendingCount(scope, 'month');
+  let html = '';
+  if (weekCount > 0) {
+    html += '<button class="sl-alert-card" onclick="openSlAlertModal(\'' + scope + '\',\'week\')">' +
+      '<span class="sl-alert-icon">⚠</span>' +
+      '<span class="sl-alert-text">Ya podés repasar el Stop Loss de la semana' +
+        '<span class="sl-alert-count">' + weekCount + ' pendiente' + (weekCount > 1 ? 's' : '') + '</span>' +
+      '</span>' +
+    '</button>';
+  }
+  if (monthCount > 0) {
+    html += '<button class="sl-alert-card" onclick="openSlAlertModal(\'' + scope + '\',\'month\')">' +
+      '<span class="sl-alert-icon">⚠</span>' +
+      '<span class="sl-alert-text">Ya podés repasar el Stop Loss del mes' +
+        '<span class="sl-alert-count">' + monthCount + ' pendiente' + (monthCount > 1 ? 's' : '') + '</span>' +
+      '</span>' +
+    '</button>';
+  }
+  el.innerHTML = html;
+}
+
+function openSlAlertModal(scope, period) {
+  alertModalCtx.scope = scope;
+  alertModalCtx.period = period;
+  renderSlAlertModal();
+  document.getElementById('slAlertModal').classList.add('open');
+}
+function closeSlAlertModal() {
+  document.getElementById('slAlertModal').classList.remove('open');
+}
+function slAlertBgClick(e) {
+  if (e.target === document.getElementById('slAlertModal')) closeSlAlertModal();
+}
+
+function setSlAlertStatus(scope, key, val) {
+  const d = scopedGetDay(scope, key);
+  d.slStatus = d.slStatus === val ? null : val;
+  scopedSaveDay(scope, key, d);
+  renderSlAlertModal();
+  renderSlAlerts(scope);
+}
+
+function renderSlAlertModal() {
+  const { scope, period } = alertModalCtx;
+  const store = scopedStore(scope);
+  const today = new Date();
+  let keys, rangeLabel;
+  if (period === 'week') {
+    keys = getWeekKeys(mkKey(today.getFullYear(), today.getMonth(), today.getDate()));
+    const p1 = parseKey(keys[0]), p2 = parseKey(keys[6]);
+    rangeLabel = 'Semana · ' + p1.d + ' ' + MONTHS[p1.m].slice(0,3) + ' – ' + p2.d + ' ' + MONTHS[p2.m].slice(0,3);
+  } else {
+    keys = getMonthKeys(today.getFullYear(), today.getMonth());
+    rangeLabel = MONTHS[today.getMonth()] + ' ' + today.getFullYear();
   }
 
-  listEl.innerHTML = slKeys.map(k => {
-    const d   = store[k];
-    const p   = parseKey(k);
-    const dow = new Date(p.y, p.m, p.d).getDay();
-    const dateLbl = DAYS_S[dow] + ' ' + p.d + ' ' + MONTHS[p.m].slice(0,3);
-    const amt  = getDayPL(d);
-    const note = (d.contextNote || '').trim();
-    const statActive   = d.slStatus === 'estadistico'    ? ' active' : '';
-    const noStatActive = d.slStatus === 'no_estadistico' ? ' active' : '';
-    return (
-      '<div class="repaso-card">' +
-        '<div class="repaso-card-top">' +
-          '<div class="repaso-card-date">' + dateLbl + '</div>' +
-          '<div class="repaso-card-amt">' + amt.toLocaleString('es-AR') + '</div>' +
-        '</div>' +
-        '<div class="repaso-card-note' + (note ? '' : ' empty') + '">' + (note ? escapeHtml(note) : 'Sin nota') + '</div>' +
-        '<div class="repaso-toggle-btns">' +
-          '<button class="repaso-toggle-btn stat' + statActive + '" onclick="setSlStatus(\'' + k + '\',\'estadistico\')">Estadístico</button>' +
-          '<button class="repaso-toggle-btn nostat' + noStatActive + '" onclick="setSlStatus(\'' + k + '\',\'no_estadistico\')">No estadístico</button>' +
-        '</div>' +
-      '</div>'
-    );
-  }).join('');
+  const slKeys   = keys.filter(k => store[k] && getDayResult(store[k]) === 'sl').sort();
+  const total     = slKeys.length;
+  const estCount  = slKeys.filter(k => store[k].slStatus === 'estadistico').length;
+  const pendCount = slKeys.filter(k => store[k].slStatus == null).length;
+
+  document.getElementById('slAlertModalTitle').textContent =
+    'Repaso de Stop Loss — ' + (scope === 'practica' ? 'Práctica' : 'Fondeo');
+  document.getElementById('slAlertModalMeta').textContent = rangeLabel;
+  document.getElementById('slAlertModalSummary').innerHTML = slSummaryHTML(total, estCount, pendCount);
+
+  const listEl = document.getElementById('slAlertModalList');
+  listEl.innerHTML = total
+    ? slKeys.map(k => slCardHTML(scope, k, 'setSlAlertStatus')).join('')
+    : '<div class="repaso-empty">No hay días con SL en este período.</div>';
 }
 
 /* ── Pie Chart ────────────────────────────────────────────────── */
@@ -4215,6 +4343,7 @@ function renderStats() {
   renderWeekStats();
   renderCyclePnl();
   renderCycleStats();
+  renderSlAlerts('fondeo');
 }
 
 function renderDayStats() {

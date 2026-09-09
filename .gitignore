@@ -1,0 +1,12 @@
+# Capturas de pantalla / iteraciones de diseño sueltas (no usadas por el sitio)
+*.png
+*.jpg
+*.jpeg
+!FONDO.jpg
+
+# Carpeta de deploy manual antigua (ya no se usa, Netlify despliega desde el repo)
+/deploy/
+
+# Backups locales
+index_backup_pre_supabase.html
+*.bak

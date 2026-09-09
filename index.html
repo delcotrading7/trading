@@ -73,6 +73,11 @@
   --ltbg:rgba(140,129,114,.1);
   --ltborder:rgba(140,129,114,.45);
 
+  /* ── Azul apagado — Día Feriado ── */
+  --fe:#5b7c99;
+  --febg:rgba(91,124,153,.1);
+  --feborder:rgba(91,124,153,.45);
+
   /* ── Violeta cyber — MT ── */
   --mt:#a855f7;
   --mtbg:rgba(168,85,247,.1);
@@ -127,6 +132,8 @@ body{
 .topbar-btn.success:hover{border-color:var(--green)}
 .topbar-btn.danger:hover{border-color:var(--red);color:var(--red);background:var(--redbg)}
 .topbar-sep{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.topbar-menu-btn{display:none}
+.topbar-menu{display:flex;align-items:center;gap:8px}
 
 .content{flex:1;overflow:hidden;position:relative}
 .tab-pane{position:absolute;inset:0;display:none;flex-direction:column}
@@ -570,19 +577,20 @@ body{
 }
 .stat-card:hover{border-color:var(--borderl);box-shadow:0 6px 24px rgba(0,0,0,.5)}
 .stat-card-title{
-  font-size:12px;font-weight:700;color:var(--t2);
-  text-transform:uppercase;letter-spacing:1.3px;margin-bottom:8px;
+  font-size:14px;font-weight:700;color:var(--t2);
+  text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;
   font-family:var(--font-body);
 }
-.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-size:14px}
-.stat-label{color:var(--t2)}
-.stat-value{font-weight:700;color:var(--t1)}
+.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.stat-label{color:var(--t2);font-size:13px}
+.stat-value{font-weight:700;color:var(--t1);font-size:17px}
 .stat-value.pos{color:var(--green)}
 .stat-value.neg{color:var(--red)}
 .stat-value.neu{color:var(--yellow)}
 .stat-value.sp{color:var(--sp)}
 .stat-value.ne{color:var(--ne)}
 .stat-value.lt{color:var(--lt)}
+.stat-value.fe{color:var(--fe)}
 .stat-value.mt{color:var(--mt)}
 .stat-divider{border:none;border-top:1px solid var(--border);margin:12px 0}
 .stat-empty{font-size:13px;color:var(--t3);text-align:center;padding:7px 0}
@@ -590,8 +598,8 @@ body{
 .stat-card-head .stat-card-title{margin-bottom:0}
 .stat-toggle{display:flex;background:var(--bg3);border-radius:20px;padding:2px;gap:2px}
 .stat-toggle button{
-  border:none;background:transparent;color:var(--t3);font-size:11px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.5px;padding:4px 11px;border-radius:16px;
+  border:none;background:transparent;color:var(--t3);font-size:15px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.3px;padding:4px 10px;border-radius:16px;
   cursor:pointer;font-family:var(--font-body);transition:background .15s,color .15s;
 }
 .stat-toggle button.active{background:var(--bgh);color:var(--t1)}
@@ -603,28 +611,28 @@ body{
 }
 
 /* Tarjeta STATISTICS — aire extra para que ocupe más alto (solo esta tarjeta) */
-.stats-card{padding-bottom:44px}
-.stats-card .stat-row{margin-bottom:9px}
-.stats-card .stat-divider{margin:13px 0}
-.stats-card .stat-sub-title{margin-bottom:11px}
-.stats-card .gauge-row{margin:13px 0 6px}
+.stats-card{padding-bottom:20px}
+.stats-card .stat-row{margin-bottom:6px}
+.stats-card .stat-divider{margin:8px 0}
+.stats-card .stat-sub-title{margin-bottom:8px}
+.stats-card .gauge-row{margin:8px 0 4px}
 
 /* Tarjeta PNLS — estilo referencia (número grande + pill) */
 .pnls-card{display:flex;flex-direction:column;gap:8px}
 .pnl-block{display:flex;flex-direction:column;gap:4px}
 .pnl-lbl{
-  font-size:13px;font-weight:600;color:var(--t2);
+  font-size:15px;font-weight:600;color:var(--t2);
   text-transform:none;letter-spacing:.2px;
 }
 .pnl-big{
-  font-size:26px;font-weight:700;line-height:1;
+  font-size:22px;font-weight:700;line-height:1;
   font-family:var(--font-body);letter-spacing:-.3px;color:var(--t1);
 }
 .pnl-pill{
   display:inline-flex;align-items:center;
-  font-size:11px;font-weight:700;color:var(--t2);
+  font-size:14px;font-weight:700;color:var(--t2);
   background:var(--bg3);border-radius:20px;
-  padding:3px 10px;width:fit-content;
+  padding:3px 11px;width:fit-content;
 }
 .pnl-pill.pos{color:var(--green)}
 .pnl-pill.neg{color:var(--red)}
@@ -633,7 +641,7 @@ body{
 .gauge-row{display:flex;gap:9px;margin:10px 0 4px}
 .gauge-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
 .gauge-ring{
-  width:56px;height:56px;border-radius:50%;
+  width:78px;height:78px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   position:relative;flex-shrink:0;
 }
@@ -642,10 +650,10 @@ body{
   background:conic-gradient(var(--ring-color,var(--t1)) calc(var(--pct,0)*1%), var(--border) 0);
 }
 .gauge-ring::after{
-  content:'';position:absolute;inset:5px;border-radius:50%;background:var(--bg2);
+  content:'';position:absolute;inset:7px;border-radius:50%;background:var(--bg2);
 }
-.gauge-val{position:relative;z-index:1;font-size:13px;font-weight:800;color:var(--t1)}
-.gauge-lbl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;text-align:center}
+.gauge-val{position:relative;z-index:1;font-size:26px;font-weight:800;color:var(--t1)}
+.gauge-lbl{font-size:15px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;text-align:center}
 
 .res-dot{
   display:inline-block;width:8px;height:8px;border-radius:50%;
@@ -661,6 +669,7 @@ body{
 .wdot.sp{background:var(--sp);box-shadow:0 0 7px rgba(6,182,212,.35)}
 .wdot.ne{background:var(--ne)}
 .wdot.lt{background:var(--lt)}
+.wdot.fe{background:var(--fe)}
 .wdot.mt{background:var(--mt)}
 .week-dots-wrap{margin-top:8px}
 
@@ -695,6 +704,11 @@ body{
   box-shadow:inset 0 0 0 1px var(--ltborder);
 }
 .cal-day.f-lt:hover{border-color:var(--lt);background-color:var(--bgh)}
+.cal-day.f-fe{
+  border-color:var(--feborder);background-color:var(--cal-bg);background-image:none;
+  box-shadow:inset 0 0 0 1px var(--feborder);
+}
+.cal-day.f-fe:hover{border-color:var(--fe);background-color:var(--bgh)}
 .cal-day.f-selected{outline:1.5px solid rgba(227,228,231,.4);outline-offset:2px}
 /* Día revisado (Práctica) */
 .p-reviewed-mark{
@@ -1176,20 +1190,139 @@ body{
   box-shadow:0 6px 22px rgba(227,228,231,.35);transform:translateY(-1px);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤640px)
+   Todo lo de acá abajo es ADICIONAL: no pisa ninguna regla de
+   arriba, solo se activa en pantallas angostas. El desktop
+   queda exactamente igual a como estaba.
+═══════════════════════════════════════════════════════════ */
+@media (max-width:640px){
+
+  /* — Dejar de forzar todo a 100vh: en mobile la página scrollea
+     normal, en vez de tener varias zonas con scroll interno
+     anidado (más cómodo y sin dobles scrollbars) — */
+  html,body{overflow:visible;height:auto;min-height:100%}
+  body{background-attachment:scroll}
+  #app{height:auto;min-height:100vh}
+  .content{overflow:visible}
+  .tab-pane{position:static}
+  .fondeo-layout{height:auto}
+
+  /* — Barra superior: fija arriba + menú hamburguesa — */
+  .top-bar{padding:0 12px;position:sticky;top:0;z-index:900}
+  .topbar-right{position:relative;gap:8px}
+  .topbar-menu-btn{
+    display:flex;align-items:center;justify-content:center;
+    width:40px;height:40px;background:var(--bg3);border:1px solid var(--border);
+    color:var(--t2);border-radius:8px;font-size:18px;cursor:pointer;flex-shrink:0;
+  }
+  .topbar-menu-btn:hover{border-color:var(--gold);color:var(--gold)}
+  .topbar-menu{
+    display:none;position:absolute;top:calc(100% + 10px);right:0;
+    flex-direction:column;align-items:stretch;gap:6px;
+    background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+    padding:10px;box-shadow:0 14px 32px rgba(0,0,0,.6);z-index:950;
+    min-width:220px;
+  }
+  .topbar-menu.open{display:flex}
+  .topbar-menu .topbar-btn{width:100%;justify-content:center;padding:12px 14px;font-size:13px;min-height:44px}
+  .topbar-menu .topbar-sep{display:none}
+  .user-chip{font-size:11px;padding:4px 10px}
+
+  /* — Layout de 2 columnas → apilado: calendario arriba, stats abajo — */
+  .fondeo-body{flex-direction:column;gap:16px;padding:12px 12px 28px;overflow:visible;max-width:100%}
+  .fondeo-stats-side{width:100%;order:2;max-height:none;overflow:visible;align-self:auto;gap:14px}
+  .fondeo-cal-side{order:1;overflow:visible;flex:none;min-height:0;padding:14px 12px 12px}
+
+  /* — Header del calendario / selector mes-año — */
+  .cal-header{gap:10px}
+  .cal-title-btn{font-size:19px}
+  .cal-controls{gap:8px;flex-wrap:wrap}
+  .nbtn{width:40px;height:40px}
+  .year-ctrl{height:40px}
+  .y-btn{width:34px}
+  .month-sel{padding:8px 28px 8px 12px;font-size:13px}
+
+  /* — Grilla del calendario — */
+  .cal-grid{gap:5px;overflow:visible}
+  .cal-day{padding:4px 5px;border-radius:8px}
+  .day-num{font-size:11px}
+  .tdot{width:6px;height:6px}
+  .day-count{font-size:9px}
+
+  /* — Tarjetas de estadísticas — */
+  .stat-card{padding:20px 18px}
+  .stat-pl-big{font-size:22px}
+  .gauge-ring{width:68px;height:68px}
+  .gauge-val{font-size:22px}
+  .stat-toggle button{padding:8px 12px}
+
+  /* — Modal de registro del día: pasa a pantalla completa — */
+  .modal-overlay{padding:0}
+  .modal{width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0}
+  .modal-head{padding:14px 14px 12px;flex-wrap:wrap;row-gap:10px}
+  .modal-date{font-size:17px}
+  .modal-head-right{gap:6px;flex-wrap:wrap}
+  .btn-reset-data,.btn-reset-day{padding:7px 10px;font-size:9px}
+  .modal-close-btn{width:38px;height:38px}
+  .f-section{padding:12px 14px}
+  .f-save-bar{padding:12px 14px}
+
+  /* — Selector de resultado del día (TP/BE/SL/SP) — */
+  .res-selector{gap:6px}
+  .res-sel-btn{padding:12px 4px;font-size:12px;min-height:44px}
+
+  /* — Filas de trade individuales (Fondeo) — */
+  .f-tr-btn{padding:8px 4px;min-height:38px}
+
+  /* — Fotos: Capturas / Subir fotos de contexto — */
+  .ph-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+
+  /* — Editor de fotos: herramientas más grandes al tacto — */
+  .ie-tool{width:40px;height:40px}
+  .ie-color-btn{width:30px;height:30px}
+  .img-editor-toolbar{padding:8px 10px;gap:5px}
+
+  /* — Confirmaciones (reiniciar / eliminar día) — */
+  .reset-confirm-box,.reset-data-confirm-box{padding:24px 20px 20px;width:calc(100vw - 32px)}
+  .reset-confirm-btns{gap:8px}
+  .reset-cancel-btn,.reset-confirm-btn,.reset-data-confirm-btn{min-height:44px}
+}
+
 </style>
 </head>
 <body>
+
+<!-- ── LOGIN ── -->
+<div id="authOverlay" style="position:fixed;inset:0;z-index:900;background:rgba(5,5,6,.94);display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:linear-gradient(160deg,var(--bg2) 0%,var(--bg1) 100%);border:1px solid var(--goldborder);border-radius:16px;box-shadow:var(--shadow);width:min(360px,100%);padding:32px 28px;">
+    <div style="font-family:var(--font-serif);font-style:italic;font-size:24px;color:var(--t1);margin-bottom:4px;">Trading Journal</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:20px;">Iniciá sesión para acceder a tu diario</div>
+    <input id="authEmail" type="email" placeholder="Email" autocomplete="username"
+      style="width:100%;padding:11px 14px;margin-bottom:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t1);font-size:14px;font-family:var(--font-body);box-sizing:border-box;">
+    <input id="authPassword" type="password" placeholder="Contraseña" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')handleLogin()"
+      style="width:100%;padding:11px 14px;margin-bottom:14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t1);font-size:14px;font-family:var(--font-body);box-sizing:border-box;">
+    <button id="authSubmitBtn" onclick="handleLogin()"
+      style="width:100%;padding:12px;background:linear-gradient(135deg,var(--gold) 0%,#9a9ca3 100%);color:#0a0a0b;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;">Entrar</button>
+    <div id="authError" style="color:var(--red);font-size:12px;margin-top:10px;min-height:16px;"></div>
+  </div>
+</div>
 
 <div id="app">
 
   <!-- ── BARRA SUPERIOR ── -->
   <header class="top-bar">
     <div class="topbar-right">
-      <button class="topbar-btn success" onclick="exportBackup()" title="Descargar copia de seguridad con todos los trades y fotos">Guardar Copia de Seguridad</button>
-      <button class="topbar-btn" onclick="document.getElementById('backupFileInput').click()" title="Cargar copia de seguridad previamente exportada">Cargar Copia de Seguridad</button>
-      <div class="topbar-sep"></div>
-      <button class="topbar-btn danger" onclick="clearLocalData()" title="Eliminar todos los datos locales">Limpiar Datos</button>
-      <div class="topbar-sep"></div>
+      <button class="topbar-menu-btn" id="topbarMenuBtn" onclick="toggleTopbarMenu(event)" title="Menú" aria-label="Menú">☰</button>
+      <div class="topbar-menu" id="topbarMenu">
+        <button class="topbar-btn success" onclick="exportBackup()" title="Descargar copia de seguridad con todos los trades y fotos">Guardar Copia de Seguridad</button>
+        <button class="topbar-btn" onclick="document.getElementById('backupFileInput').click()" title="Cargar copia de seguridad previamente exportada">Cargar Copia de Seguridad</button>
+        <div class="topbar-sep"></div>
+        <button class="topbar-btn danger" onclick="clearLocalData()" title="Eliminar todos los datos (esta compu y la nube)">Limpiar Datos</button>
+        <div class="topbar-sep"></div>
+        <button class="topbar-btn" onclick="handleLogout()" title="Cerrar sesión">Cerrar sesión</button>
+      </div>
       <div class="user-chip">Benja</div>
     </div>
   </header>
@@ -1411,8 +1544,16 @@ body{
 <!-- ════════════════════════════════════════════════════════════
      JAVASCRIPT
 ════════════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 'use strict';
+
+/* ── SUPABASE (sincronización en la nube) ───────────────────── */
+const SUPABASE_URL      = 'https://cghzxjyhabaxknjregvo.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_aUZxA0KG68XU6GXEkva3Xg_4Luvm0Pz';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const PHOTOS_BUCKET = 'journal-photos';
+let currentUser = null;
 
 /* ── CONSTANTES ─────────────────────────────────────────────── */
 const MONTHS  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -1497,6 +1638,176 @@ function idbLoadAll() {
   });
 }
 
+/* ── AUTENTICACIÓN ───────────────────────────────────────────── */
+async function handleLogin() {
+  const email    = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl    = document.getElementById('authError');
+  const btn      = document.getElementById('authSubmitBtn');
+  errEl.textContent = '';
+  if (!email || !password) { errEl.textContent = 'Completá email y contraseña.'; return; }
+  btn.textContent = 'Entrando...'; btn.disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  btn.textContent = 'Entrar'; btn.disabled = false;
+  if (error) { errEl.textContent = 'Email o contraseña incorrectos.'; return; }
+  currentUser = data.user;
+  document.getElementById('authOverlay').style.display = 'none';
+  await startApp();
+}
+
+async function handleLogout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+/* ── FOTOS EN LA NUBE (Supabase Storage) ─────────────────────── */
+async function uploadPhotoToStorage(imgId, file) {
+  if (!currentUser) return null;
+  try {
+    const path = currentUser.id + '/' + imgId;
+    const { error } = await sb.storage.from(PHOTOS_BUCKET).upload(path, file, { upsert: true, contentType: file.type });
+    if (error) throw error;
+    return path;
+  } catch (e) { console.warn('Error subiendo foto a la nube:', e); return null; }
+}
+
+function deletePhotoFromStorage(path) {
+  if (!path || !currentUser) return;
+  sb.storage.from(PHOTOS_BUCKET).remove([path]).catch(e => console.warn('Error borrando foto en la nube:', e));
+}
+
+async function syncPhotosToStorage(photos) {
+  if (!currentUser || !photos) return;
+  for (const p of photos) {
+    if (p.path || !p.imgId) continue;
+    const dataUrl = p.data || imgCache[p.imgId];
+    if (!dataUrl) continue;
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const path = currentUser.id + '/' + p.imgId;
+      const { error } = await sb.storage.from(PHOTOS_BUCKET).upload(path, blob, { upsert: true, contentType: blob.type });
+      if (!error) p.path = path;
+    } catch (e) { console.warn('Error sincronizando foto:', e); }
+  }
+}
+
+async function resolvePhotoUrls(store) {
+  const missing = [];
+  Object.values(store).forEach(d => {
+    [...(d.contextPhotos||[]), ...(d.photos||[])].forEach(p => {
+      if (!p.data && p.imgId && imgCache[p.imgId]) p.data = imgCache[p.imgId];
+      if (!p.data && p.path) missing.push(p);
+    });
+  });
+  if (!missing.length) return;
+  try {
+    const paths = missing.map(p => p.path);
+    const { data, error } = await sb.storage.from(PHOTOS_BUCKET).createSignedUrls(paths, 60*60*24*7);
+    if (error) throw error;
+    data.forEach((item, i) => { if (item && item.signedUrl) missing[i].data = item.signedUrl; });
+  } catch (e) { console.warn('No se pudieron generar URLs de fotos:', e); }
+}
+
+/* ── SINCRONIZACIÓN DE DÍAS CON LA NUBE ──────────────────────── */
+function dayToCloudRow(key, d) {
+  return {
+    user_id:             currentUser.id,
+    day:                 key,
+    context_note:        d.contextNote || '',
+    main_result:         d.mainResult || null,
+    main_amount:         d.mainAmount || 0,
+    missed_ops:          d.missedOps || [],
+    estrategia_cumplida: d.estrategiaCumplida ?? null,
+    reviewed:            d.reviewed || false,
+    context_photos:      (d.contextPhotos||[]).filter(Boolean).map(p => ({ imgId:p.imgId||null, name:p.name||null, size:p.size||null, path:p.path||null })),
+    photos:              (d.photos||[]).filter(Boolean).map(p => ({ imgId:p.imgId||null, name:p.name||null, size:p.size||null, path:p.path||null })),
+    updated_at:          new Date().toISOString(),
+  };
+}
+function cloudRowToDay(row) {
+  return {
+    contextNote:        row.context_note || '',
+    contextPhotos:      (row.context_photos||[]).map(p => ({...p})),
+    photos:              (row.photos||[]).map(p => ({...p})),
+    mainResult:         row.main_result || null,
+    mainAmount:         row.main_amount || 0,
+    missedOps:          row.missed_ops || [],
+    reviewed:           row.reviewed || false,
+    estrategiaCumplida: row.estrategia_cumplida ?? null,
+  };
+}
+async function upsertPracticaDayCloud(key, d) {
+  if (!currentUser) return;
+  const { error } = await sb.from('practica_days').upsert(dayToCloudRow(key, d), { onConflict: 'user_id,day' });
+  if (error) console.warn('Error sincronizando práctica con la nube:', error);
+}
+async function deletePracticaDayCloud(key) {
+  if (!currentUser) return;
+  const { error } = await sb.from('practica_days').delete().eq('user_id', currentUser.id).eq('day', key);
+  if (error) console.warn('Error borrando práctica en la nube:', error);
+}
+async function upsertFondeoDayCloud(key, d) {
+  if (!currentUser) return;
+  const { error } = await sb.from('fondeo_days').upsert(dayToCloudRow(key, d), { onConflict: 'user_id,day' });
+  if (error) console.warn('Error sincronizando fondeo con la nube:', error);
+}
+async function deleteFondeoDayCloud(key) {
+  if (!currentUser) return;
+  const { error } = await sb.from('fondeo_days').delete().eq('user_id', currentUser.id).eq('day', key);
+  if (error) console.warn('Error borrando fondeo en la nube:', error);
+}
+
+async function pushAllLocalToCloud(silent) {
+  if (!currentUser) return;
+  const keysP = Object.keys(_practica), keysF = Object.keys(_fondeo);
+  if (!keysP.length && !keysF.length) return;
+  if (!silent) showToast('⏳ Subiendo a la nube...');
+  let fallidos = 0;
+  for (const k of keysP) {
+    try {
+      const d = getPracticaDay(k);
+      await syncPhotosToStorage(d.contextPhotos);
+      await syncPhotosToStorage(d.photos);
+      await upsertPracticaDayCloud(k, d);
+    } catch (e) { fallidos++; console.warn('Error subiendo práctica ' + k + ':', e); }
+  }
+  for (const k of keysF) {
+    try {
+      const d = getDayFondeo(k);
+      await syncPhotosToStorage(d.contextPhotos);
+      await syncPhotosToStorage(d.photos);
+      await upsertFondeoDayCloud(k, d);
+    } catch (e) { fallidos++; console.warn('Error subiendo fondeo ' + k + ':', e); }
+  }
+  if (!silent) showToast(fallidos ? ('⚠ Subido con ' + fallidos + ' error(es), revisá la consola') : '✓ Sincronizado con la nube');
+}
+
+async function resincronizarTodoConLaNube() {
+  if (!currentUser) { alert('Iniciá sesión primero.'); return; }
+  loadPracticaDataLocal();
+  loadFondeoDataLocal();
+  await pushAllLocalToCloud();
+  await loadPracticaData();
+  await loadFondeoData();
+  renderStats();
+  renderPStats();
+  alert('✓ Resincronización completa.');
+}
+
+async function migrarDatosLocalesANube() {
+  if (!currentUser) return;
+  const cloudEmpty = Object.keys(_practica).length === 0 && Object.keys(_fondeo).length === 0;
+  if (!cloudEmpty) return;
+  const localP = JSON.parse(localStorage.getItem(PRACTICA_KEY) || '{}');
+  const localF = JSON.parse(localStorage.getItem(FONDEO_KEY)   || '{}');
+  const totalLocal = Object.keys(localP).length + Object.keys(localF).length;
+  if (!totalLocal) return;
+  if (!confirm('Encontré ' + totalLocal + ' día(s) guardados en esta computadora que todavía no están en la nube.\n\n¿Subirlos ahora para verlos desde cualquier dispositivo?')) return;
+  loadPracticaDataLocal();
+  loadFondeoDataLocal();
+  await pushAllLocalToCloud();
+}
+
 /* ── PERSISTENCIA PRÁCTICA ───────────────────────────────────── */
 const PRACTICA_KEY = 'trading_practica';
 
@@ -1541,7 +1852,7 @@ function goToLastPracticaMonth() {
   PS.y = p.y; PS.m = p.m;
 }
 
-function loadPracticaData() {
+function loadPracticaDataLocal() {
   try {
     const raw    = localStorage.getItem(PRACTICA_KEY);
     const loaded = raw ? JSON.parse(raw) : {};
@@ -1572,6 +1883,25 @@ function loadPracticaData() {
   goToLastPracticaMonth();
   renderPracticaCal();
   renderPStats();
+}
+
+async function loadPracticaData() {
+  if (currentUser) {
+    try {
+      const { data, error } = await sb.from('practica_days').select('*').eq('user_id', currentUser.id);
+      if (error) throw error;
+      _practica = {};
+      (data||[]).forEach(row => { _practica[row.day] = cloudRowToDay(row); });
+      await resolvePhotoUrls(_practica);
+      goToLastPracticaMonth();
+      renderPracticaCal();
+      renderPStats();
+      return;
+    } catch (e) {
+      console.warn('No se pudo cargar Práctica desde la nube, uso copia local:', e);
+    }
+  }
+  loadPracticaDataLocal();
 }
 
 function getPracticaDay(k) {
@@ -1608,6 +1938,7 @@ function saveDayPractica(k, data) {
   renderPracticaCal();
   renderPStats();
   showToast();
+  upsertPracticaDayCloud(k, data);
 }
 
 /* ── HELPERS ─────────────────────────────────────────────────── */
@@ -1655,6 +1986,7 @@ function _deleteImgsForDay(d) {
   if (!d) return;
   [...(d.contextPhotos || []), ...(d.photos || [])].forEach(p => {
     if (p?.imgId) { delete imgCache[p.imgId]; idbDelete(p.imgId); }
+    if (p?.path)  deletePhotoFromStorage(p.path);
   });
 }
 
@@ -1667,6 +1999,7 @@ function confirmResetDay() {
     _deleteImgsForDay(_practica[key]);
     delete _practica[key];
     savePracticaData();
+    deletePracticaDayCloud(key);
     closeResetConfirm();
     currentPracticaKey      = key;
     practicaModalMain       = { result: null };
@@ -1686,6 +2019,7 @@ function confirmResetDay() {
     _deleteImgsForDay(_fondeo[key]);
     delete _fondeo[key];
     saveFondeoData();
+    deleteFondeoDayCloud(key);
     closeResetConfirm();
     currentFondeoKey      = key;
     fondeoModalMain       = { result: null, amount: 0 };
@@ -1779,13 +2113,23 @@ function confirmResetData() {
 }
 
 /* ── LIMPIAR DATOS ───────────────────────────────────────────── */
-function clearLocalData() {
-  if (!confirm('¿Limpiar todos los datos? Esta acción no se puede deshacer.')) return;
+async function clearLocalData() {
+  if (!confirm('¿Borrar TODOS los datos (Práctica y Fondeo), en esta computadora Y en la nube? Esta acción no se puede deshacer.')) return;
   localStorage.clear();
   idbClearAll();
   Object.keys(imgCache).forEach(k => delete imgCache[k]);
   _practica = {};
   _fondeo   = {};
+  if (currentUser) {
+    try {
+      await sb.from('practica_days').delete().eq('user_id', currentUser.id);
+      await sb.from('fondeo_days').delete().eq('user_id', currentUser.id);
+      const { data: list } = await sb.storage.from(PHOTOS_BUCKET).list(currentUser.id);
+      if (list && list.length) {
+        await sb.storage.from(PHOTOS_BUCKET).remove(list.map(f => currentUser.id + '/' + f.name));
+      }
+    } catch (e) { console.warn('Error borrando datos en la nube:', e); }
+  }
   renderPracticaCal();
   renderFondeoCal();
   if (currentPracticaKey) closePracticaModal();
@@ -1815,6 +2159,18 @@ function closeSectionMenus() {
 }
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.cal-title-wrap')) closeSectionMenus();
+});
+
+/* ── Menú hamburguesa de la barra superior (solo mobile) ─────── */
+function toggleTopbarMenu(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('topbarMenu').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (e.target.closest('.topbar-menu-btn')) return;
+  if (e.target.closest('.topbar-menu') || !e.target.closest('.topbar-right')) {
+    document.getElementById('topbarMenu').classList.remove('open');
+  }
 });
 
 /* ══════════════════════════════════════════════════════════════
@@ -1882,6 +2238,7 @@ function renderPracticaCal() {
     let cls = 'cal-day';
     if (isToday(n))   cls += ' today';
     if (isWeekend)    cls += ' f-weekend';
+    else if (dr === 'sp') cls += ' f-' + (getDayPLPractica(data) < 0 ? 'sl' : 'tp');
     else if (dr)      cls += ' f-' + dr;
     else if (hasData) cls += ' has-data';
     if (key === selectedPracticaKey) cls += ' f-selected';
@@ -1915,12 +2272,17 @@ function renderPracticaCal() {
       ltLbl.className = 'day-trades-mini'; ltLbl.textContent = 'Día lateral';
       ltLbl.style.cssText = 'margin-top:6px;color:var(--lt);font-weight:700';
       el.appendChild(ltLbl);
+    } else if (dr === 'fe') {
+      const feLbl = document.createElement('div');
+      feLbl.className = 'day-trades-mini'; feLbl.textContent = 'Día feriado';
+      feLbl.style.cssText = 'margin-top:6px;color:var(--fe);font-weight:700';
+      el.appendChild(feLbl);
     } else if (dr) {
       const ri = RES_INFO[dr];
       const pl = getDayPLPractica(data);
       const amtEl = document.createElement('div');
       amtEl.className = 'day-amount';
-      amtEl.style.cssText = 'margin-top:5px;color:' + ri.color;
+      amtEl.style.cssText = 'margin-top:5px;color:' + (dr === 'sp' ? spColorFor(pl) : ri.color);
       amtEl.textContent = (pl > 0 ? '+' : '') + pl.toLocaleString('es-AR');
       el.appendChild(amtEl);
       const trEl = document.createElement('div');
@@ -2005,7 +2367,8 @@ function updatePracticaModalMeta(key) {
     document.getElementById('practicaModalMeta').textContent = parts.join(' · ') || 'Sin datos';
     return;
   }
-  let meta = RES_INFO[dr].emoji + '  ' + RES_INFO[dr].full;
+  const emoji = dr === 'sp' ? spEmojiFor(d.mainAmount) : RES_INFO[dr].emoji;
+  let meta = emoji + '  ' + RES_INFO[dr].full;
   const extraParts = [];
   if (mtC) extraParts.push(mtC+' MT');
   if (neC) extraParts.push(neC+' NE');
@@ -2096,13 +2459,15 @@ function renderPMainSection() {
   const sec = document.getElementById('p-main-content');
   if (!sec) return;
   const r    = practicaModalMain.result;
-  const isTP = r==='tp', isBE = r==='be', isSL = r==='sl', isSP = r==='sp', isNE = r==='ne', isLT = r==='lt';
+  const isTP = r==='tp', isBE = r==='be', isSL = r==='sl', isSP = r==='sp', isNE = r==='ne', isLT = r==='lt', isFE = r==='fe';
 
   let amtHTML = '';
   if (isNE) {
     amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--nebg);border:1px solid var(--neborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--ne)"><span class="res-dot" style="background:var(--ne)"></span>Sin entrada — día sin trade</div>';
   } else if (isLT) {
     amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--ltbg);border:1px solid var(--ltborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--lt)"><span class="res-dot" style="background:var(--lt)"></span>Día lateral — sin operar</div>';
+  } else if (isFE) {
+    amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--febg);border:1px solid var(--feborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--fe)"><span class="res-dot" style="background:var(--fe)"></span>Día feriado — sin operar</div>';
   } else if (isBE) {
     amtHTML = '<div style="margin-top:8px;text-align:center;font-size:26px;font-weight:900;color:var(--yellow);letter-spacing:1px">= 0</div>';
   } else if (isTP) {
@@ -2117,7 +2482,7 @@ function renderPMainSection() {
   }
 
   let summaryHTML = '';
-  if (r && !isNE && !isLT) {
+  if (r && !isNE && !isLT && !isFE) {
     const pl = practicaModalMain.amount !== undefined ? practicaModalMain.amount : 0;
     const plColor = pl>0?'var(--green)':pl<0?'var(--red)':'var(--yellow)';
     summaryHTML = '<div class="f-day-summary" style="margin-top:12px" id="pMainSummary">'+
@@ -2140,6 +2505,9 @@ function renderPMainSection() {
     '<div style="margin-top:8px">'+
       '<button class="res-sel-btn lt" style="width:100%;padding:10px;'+(isLT?'border-color:var(--lt);color:var(--lt);background:var(--ltbg)':'')+'" onclick="setPMainResult(\'lt\')"><span class="res-dot" style="background:var(--lt)"></span>Día Lateral</button>'+
     '</div>'+
+    '<div style="margin-top:8px">'+
+      '<button class="res-sel-btn fe" style="width:100%;padding:10px;'+(isFE?'border-color:var(--fe);color:var(--fe);background:var(--febg)':'')+'" onclick="setPMainResult(\'fe\')"><span class="res-dot" style="background:var(--fe)"></span>Día Feriado</button>'+
+    '</div>'+
     amtHTML+summaryHTML;
 
 }
@@ -2161,6 +2529,8 @@ function setPMainResult(result) {
     practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.ne; // 0
   } else if (result === 'lt') {
     practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.lt; // 0
+  } else if (result === 'fe') {
+    practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.fe; // 0
   }
 
   renderPMainSection();
@@ -2291,7 +2661,8 @@ async function handlePCtxFiles(files, key) {
     const dataUrl = await fileToDataUrl(f);
     await idbSave(imgId, dataUrl);
     imgCache[imgId] = dataUrl;
-    d.contextPhotos.push({ imgId, data: dataUrl, name: f.name, size: f.size });
+    const path = await uploadPhotoToStorage(imgId, f);
+    d.contextPhotos.push({ imgId, data: dataUrl, name: f.name, size: f.size, path });
   }
   saveDayPractica(key, d);
   if (currentPracticaKey===key) { renderPracticaModalBody(key); updatePracticaModalMeta(key); }
@@ -2302,6 +2673,7 @@ function delPCtx(e, key, idx) {
   const d       = getPracticaDay(key);
   const removed = (d.contextPhotos||[]).splice(idx,1)[0];
   if (removed?.imgId) { delete imgCache[removed.imgId]; idbDelete(removed.imgId); }
+  if (removed?.path)  deletePhotoFromStorage(removed.path);
   saveDayPractica(key, d);
   if (currentPracticaKey===key) { renderPracticaModalBody(key); updatePracticaModalMeta(key); }
 }
@@ -2324,7 +2696,8 @@ async function handlePPhFiles(files, key) {
     const dataUrl = await fileToDataUrl(f);
     await idbSave(imgId, dataUrl);
     imgCache[imgId] = dataUrl;
-    d.photos.push({ imgId, data: dataUrl, name: f.name, size: f.size });
+    const path = await uploadPhotoToStorage(imgId, f);
+    d.photos.push({ imgId, data: dataUrl, name: f.name, size: f.size, path });
   }
   saveDayPractica(key, d);
   if (currentPracticaKey===key) { renderPracticaModalBody(key); updatePracticaModalMeta(key); }
@@ -2335,6 +2708,7 @@ function delPPhoto(e, key, idx) {
   const d       = getPracticaDay(key);
   const removed = (d.photos||[]).splice(idx,1)[0];
   if (removed?.imgId) { delete imgCache[removed.imgId]; idbDelete(removed.imgId); }
+  if (removed?.path)  deletePhotoFromStorage(removed.path);
   saveDayPractica(key, d);
   if (currentPracticaKey===key) { renderPracticaModalBody(key); updatePracticaModalMeta(key); }
 }
@@ -2345,7 +2719,7 @@ function delPPhoto(e, key, idx) {
 function getDayPLPractica(d) {
   // Calcular ganancia/pérdida para Práctica (similar a getDayPL)
   if (d.mainResult !== undefined) {
-    if (d.mainResult === 'be' || d.mainResult === 'ne' || d.mainResult === 'lt' || !d.mainResult) return 0;
+    if (d.mainResult === 'be' || d.mainResult === 'ne' || d.mainResult === 'lt' || d.mainResult === 'fe' || !d.mainResult) return 0;
     return d.mainAmount || 0;
   }
   return 0;
@@ -2362,22 +2736,23 @@ function getDayStatsP(d) {
   const tp = r==='tp'?1:0, be=r==='be'?1:0, sl=r==='sl'?1:0, sp=r==='sp'?1:0;
   const ne = r==='ne'?1:0; // NE es mainResult, no missedOps
   const lt = r==='lt'?1:0; // Día Lateral es mainResult, no missedOps
+  const fe = r==='fe'?1:0; // Día Feriado es mainResult, no missedOps
   const mt = (d.missedOps||[]).filter(op=>op.type==='mt').length;
   const pl = getDayPLPractica(d);
-  return { tp, be, sl, sp, ne, lt, mt, total:tp+be+sl+sp, pl };
+  return { tp, be, sl, sp, ne, lt, fe, mt, total:tp+be+sl+sp, pl };
 }
 
 function calcPStats(keys) {
-  let tpC=0,beC=0,slC=0,spC=0,neC=0,ltC=0,mtC=0,tradingDays=0,totalPL=0,grossProfit=0,grossLoss=0,estrategiaSi=0,estrategiaNo=0,estrategiaDudoso=0;
+  let tpC=0,beC=0,slC=0,spC=0,neC=0,ltC=0,feC=0,mtC=0,tradingDays=0,totalPL=0,grossProfit=0,grossLoss=0,estrategiaSi=0,estrategiaNo=0,estrategiaDudoso=0;
   keys.forEach(k => {
     const d = _practica[k];
     if (!d) return;
     const st = getDayStatsP(d);
-    tpC+=st.tp; beC+=st.be; slC+=st.sl; spC+=st.sp; neC+=st.ne; ltC+=st.lt; mtC+=st.mt;
+    tpC+=st.tp; beC+=st.be; slC+=st.sl; spC+=st.sp; neC+=st.ne; ltC+=st.lt; feC+=st.fe; mtC+=st.mt;
     totalPL += st.pl;
     if (st.pl > 0) grossProfit += st.pl;
     if (st.pl < 0) grossLoss += -st.pl;
-    if (d.mainResult && d.mainResult !== 'ne' && d.mainResult !== 'lt') tradingDays++;
+    if (d.mainResult && d.mainResult !== 'ne' && d.mainResult !== 'lt' && d.mainResult !== 'fe') tradingDays++;
     if (d.estrategiaCumplida === true)         estrategiaSi++;
     else if (d.estrategiaCumplida === false)   estrategiaNo++;
     else if (d.estrategiaCumplida === 'dudoso') estrategiaDudoso++;
@@ -2388,7 +2763,7 @@ function calcPStats(keys) {
   const esperanza = tradesTotal > 0 ? totalPL / tradesTotal : null;
   const estrategiaTot = estrategiaSi + estrategiaNo + estrategiaDudoso;
   const estrategiaPct = estrategiaTot > 0 ? Math.round(estrategiaSi/estrategiaTot*100) : null;
-  return { tpC,beC,slC,spC,neC,ltC,mtC,tradingDays,totalPL,grossProfit,grossLoss,pf,esperanza,tradesTotal,wr,estrategiaSi,estrategiaNo,estrategiaDudoso,estrategiaTot,estrategiaPct };
+  return { tpC,beC,slC,spC,neC,ltC,feC,mtC,tradingDays,totalPL,grossProfit,grossLoss,pf,esperanza,tradesTotal,wr,estrategiaSi,estrategiaNo,estrategiaDudoso,estrategiaTot,estrategiaPct };
 }
 
 function pEstrategiaStatsHTML(st) {
@@ -2401,13 +2776,13 @@ function pEstrategiaStatsHTML(st) {
   let html = '<hr class="stat-divider">' +
     '<div style="font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;opacity:.85">Disciplina de estrategia</div>' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">' +
-      '<span style="font-size:14px;color:var(--t2)">% Sí cumplí</span>' +
-      '<span style="font-size:18px;font-weight:900;color:'+pctColor+'">'+siPct+'%</span>' +
+      '<span style="font-size:13px;color:var(--t2)">% Sí cumplí</span>' +
+      '<span style="font-size:20px;font-weight:900;color:'+pctColor+'">'+siPct+'%</span>' +
     '</div>' +
-    '<div class="stat-row"><span class="stat-label">Sí cumplí</span><span class="stat-value pos">'+st.estrategiaSi+' <small style="color:var(--t3);font-size:12px">('+siPct+'%)</small></span></div>' +
-    '<div class="stat-row"><span class="stat-label">No cumplí</span><span class="stat-value neg">'+st.estrategiaNo+' <small style="color:var(--t3);font-size:12px">('+noPct+'%)</small></span></div>';
+    '<div class="stat-row"><span class="stat-label">Sí cumplí</span><span class="stat-value pos">'+st.estrategiaSi+' <small style="color:var(--t3);font-size:14px">('+siPct+'%)</small></span></div>' +
+    '<div class="stat-row"><span class="stat-label">No cumplí</span><span class="stat-value neg">'+st.estrategiaNo+' <small style="color:var(--t3);font-size:14px">('+noPct+'%)</small></span></div>';
   if (st.estrategiaDudoso) {
-    html += '<div class="stat-row"><span class="stat-label">No sé / Dudoso</span><span class="stat-value neu">'+(st.estrategiaDudoso||0)+' <small style="color:var(--t3);font-size:12px">('+dubPct+'%)</small></span></div>';
+    html += '<div class="stat-row"><span class="stat-label">No sé / Dudoso</span><span class="stat-value neu">'+(st.estrategiaDudoso||0)+' <small style="color:var(--t3);font-size:14px">('+dubPct+'%)</small></span></div>';
   }
   return html;
 }
@@ -2466,7 +2841,7 @@ function renderPMonthStats() {
       '</div>'+
     '</div>';
 
-  if (!st.tradingDays && !st.mtC && !st.neC && !st.ltC) {
+  if (!st.tradingDays && !st.mtC && !st.neC && !st.ltC && !st.feC) {
     html += '<div class="stat-empty">Sin datos'+(mode==='overall'?' registrados':' este mes')+'</div>';
     card.innerHTML = html;
     return;
@@ -2479,8 +2854,8 @@ function renderPMonthStats() {
 
   const winsPct = st.tradingDays>0 ? Math.round(st.tpC/st.tradingDays*100) : 0;
   const lossPct = st.tradingDays>0 ? Math.round(st.slC/st.tradingDays*100) : 0;
-  html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#22c55e"></span>Wins</span><span class="stat-value pos">'+st.tpC+' <small style="color:var(--t3);font-size:12px">('+winsPct+'%)</small></span></div>';
-  html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#f43f5e"></span>Losses</span><span class="stat-value neg">'+st.slC+' <small style="color:var(--t3);font-size:12px">('+lossPct+'%)</small></span></div>';
+  html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#22c55e"></span>Wins</span><span class="stat-value pos">'+st.tpC+' <small style="color:var(--t3);font-size:14px">('+winsPct+'%)</small></span></div>';
+  html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#f43f5e"></span>Losses</span><span class="stat-value neg">'+st.slC+' <small style="color:var(--t3);font-size:14px">('+lossPct+'%)</small></span></div>';
 
   const wrPct   = st.wr != null ? st.wr : 0;
   const wrColor = st.wr != null && st.wr >= 50 ? 'var(--green)' : 'var(--red)';
@@ -2493,13 +2868,14 @@ function renderPMonthStats() {
     gaugeHTML('Net Profit Ratio', pfVal, pfPct, pfColor)+
   '</div>';
 
-  if (st.mtC||st.neC||st.ltC||st.estrategiaTot) {
+  if (st.mtC||st.neC||st.ltC||st.feC||st.estrategiaTot) {
     html += '<div class="stat-secondary">';
-    if (st.mtC||st.neC||st.ltC) {
+    if (st.mtC||st.neC||st.ltC||st.feC) {
       html += '<hr class="stat-divider"><div class="stat-sub-title">Oportunidades perdidas</div>';
       if (st.mtC) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#a855f7"></span>MT</span><span class="stat-value mt">'+st.mtC+'</span></div>';
       if (st.neC) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--ne)"></span>NE</span><span class="stat-value ne">'+st.neC+'</span></div>';
       if (st.ltC) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--lt)"></span>Día Lateral</span><span class="stat-value lt">'+st.ltC+'</span></div>';
+      if (st.feC) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--fe)"></span>Día Feriado</span><span class="stat-value fe">'+st.feC+'</span></div>';
     }
     html += pEstrategiaStatsHTML(st);
     html += '</div>';
@@ -2587,6 +2963,20 @@ let fondeoModalEstrategia = null;                         // true | false | null
 let fUploadTarget         = null;
 let fCtxTarget            = null;
 
+function goToLastFondeoMonth() {
+  const keys = Object.keys(_fondeo).filter(k => {
+    const d = _fondeo[k];
+    return d && (d.mainResult || (d.missedOps && d.missedOps.length) ||
+                 (d.contextNote && d.contextNote.trim()) ||
+                 (d.contextPhotos && d.contextPhotos.length) ||
+                 (d.photos && d.photos.length));
+  });
+  if (!keys.length) return;
+  keys.sort();
+  const p = parseKey(keys[keys.length - 1]);
+  FS.y = p.y; FS.m = p.m;
+}
+
 /* ── Íconos SVG sobrios (reemplazan emojis sueltos sin texto al lado) ── */
 const ICON_LOCK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="11" width="15" height="9.5" rx="2"/><path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11"/></svg>';
 const ICON_MAP = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>';
@@ -2594,8 +2984,8 @@ const ICON_FOLDER = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none"
 const ICON_TRENDLINE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 5"/><polyline points="15 5 21 5 21 11"/></svg>';
 
 // NOTA: RES_INFO.color se usa como fillStyle en <canvas> (drawPieChart), que no
-// puede leer variables CSS — por eso be/ne/lt quedan en hex literal acá. Si se
-// cambia --yellow, --ne o --lt en :root, actualizar estos valores para que coincidan.
+// puede leer variables CSS — por eso be/ne/lt/fe quedan en hex literal acá. Si se
+// cambia --yellow, --ne, --lt o --fe en :root, actualizar estos valores para que coincidan.
 const RES_INFO = {
   tp: { label:'TP', full:'Take Profit', emoji:'<span class="res-dot" style="background:#22c55e"></span>', color:'#22c55e' },
   be: { label:'BE', full:'Break Even',  emoji:'<span class="res-dot" style="background:var(--yellow)"></span>', color:'#d4a94e' },
@@ -2603,8 +2993,16 @@ const RES_INFO = {
   sp: { label:'SP', full:'Stop Profit', emoji:'<span class="res-dot" style="background:#06b6d4"></span>', color:'#06b6d4' },
   ne: { label:'NE', full:'No Entry',    emoji:'<span class="res-dot" style="background:var(--ne)"></span>', color:'#6b6d73' },
   lt: { label:'DL', full:'Día Lateral', emoji:'<span class="res-dot" style="background:var(--lt)"></span>', color:'#8c8172' },
+  fe: { label:'FE', full:'Día Feriado', emoji:'<span class="res-dot" style="background:var(--fe)"></span>', color:'#5b7c99' },
   mt: { label:'MT', full:'Miss Trade',  emoji:'<span class="res-dot" style="background:#a855f7"></span>', color:'#a855f7' },
 };
+
+// SP puede ser ganancia o pérdida según el monto cargado ese día — a diferencia
+// de las demás categorías (color fijo), su color visual depende del signo.
+function spColorFor(amount) { return (amount||0) < 0 ? '#f43f5e' : '#22c55e'; }
+function spEmojiFor(amount) {
+  return '<span class="res-dot" style="background:' + spColorFor(amount) + '"></span>';
+}
 
 function isFondeoWeekend(key) {
   const { y, m, d } = parseKey(key);
@@ -2627,7 +3025,7 @@ function weekendBlockHTML() {
 function getDayPL(d) {
   // New format: mainResult / mainAmount
   if (d.mainResult !== undefined) {
-    if (d.mainResult === 'be' || d.mainResult === 'ne' || d.mainResult === 'lt' || !d.mainResult) return 0;
+    if (d.mainResult === 'be' || d.mainResult === 'ne' || d.mainResult === 'lt' || d.mainResult === 'fe' || !d.mainResult) return 0;
     return d.mainAmount || 0;
   }
   // Legacy trades array
@@ -2657,8 +3055,9 @@ function getDayStats(d) {
     const sp = r === 'sp' ? 1 : 0;
     const ne = r === 'ne' ? 1 : 0;   // NE is now mainResult, not missedOps
     const lt = r === 'lt' ? 1 : 0;   // Día Lateral is also mainResult, not missedOps
+    const fe = r === 'fe' ? 1 : 0;   // Día Feriado is also mainResult, not missedOps
     const mt = (d.missedOps || []).filter(op => op.type === 'mt').length;
-    return { tp, be, sl, sp, ne, lt, mt, total: tp+be+sl+sp, pl: getDayPL(d) };
+    return { tp, be, sl, sp, ne, lt, fe, mt, total: tp+be+sl+sp, pl: getDayPL(d) };
   }
   // Legacy trades array format
   const trades = d.trades || [];
@@ -2697,7 +3096,25 @@ function saveFondeoData() {
   } catch(e) { console.warn('Error guardando fondeo:', e); }
 }
 
-function loadFondeoData() {
+async function loadFondeoData() {
+  if (currentUser) {
+    try {
+      const { data, error } = await sb.from('fondeo_days').select('*').eq('user_id', currentUser.id);
+      if (error) throw error;
+      _fondeo = {};
+      (data||[]).forEach(row => { _fondeo[row.day] = cloudRowToDay(row); });
+      await resolvePhotoUrls(_fondeo);
+      goToLastFondeoMonth();
+      renderFondeoCal();
+      return;
+    } catch (e) {
+      console.warn('No se pudo cargar Fondeo desde la nube, uso copia local:', e);
+    }
+  }
+  loadFondeoDataLocal();
+}
+
+function loadFondeoDataLocal() {
   try {
     const raw    = localStorage.getItem(FONDEO_KEY);
     const loaded = raw ? JSON.parse(raw) : {};
@@ -2744,6 +3161,7 @@ function loadFondeoData() {
       _fondeo[date] = { contextNote: d.contextNote||'', contextPhotos:ctx, photos:phot, mainResult, mainAmount, missedOps };
     });
   } catch { _fondeo = {}; }
+  goToLastFondeoMonth();
   renderFondeoCal();
 }
 
@@ -2768,6 +3186,7 @@ function saveDayFondeo(k, data) {
   renderFondeoCal();
   renderStats();
   showToast();
+  upsertFondeoDayCloud(k, data);
 }
 
 function toggleFReviewed(key) {
@@ -2840,6 +3259,7 @@ function renderFondeoCal() {
     let cls = 'cal-day';
     if (isToday(d))         cls += ' today';
     if (isWeekend)          cls += ' f-weekend';
+    else if (dr === 'sp')   cls += ' f-' + (pl < 0 ? 'sl' : 'tp');
     else if (dr)            cls += ' f-' + dr;
     else if (hasData)       cls += ' has-data';
     if (key === selectedFondeoKey) cls += ' f-selected';
@@ -2872,10 +3292,15 @@ function renderFondeoCal() {
       ltLbl.className = 'day-trades-mini'; ltLbl.textContent = 'Día lateral';
       ltLbl.style.cssText = 'margin-top:6px;color:var(--lt);font-weight:700';
       el.appendChild(ltLbl);
+    } else if (dr === 'fe') {
+      const feLbl = document.createElement('div');
+      feLbl.className = 'day-trades-mini'; feLbl.textContent = 'Día feriado';
+      feLbl.style.cssText = 'margin-top:6px;color:var(--fe);font-weight:700';
+      el.appendChild(feLbl);
     } else if (pl !== null && dr) {
       const amtEl = document.createElement('div');
       amtEl.className = 'day-amount';
-      amtEl.style.cssText = 'margin-top:5px;color:' + RES_INFO[dr].color;
+      amtEl.style.cssText = 'margin-top:5px;color:' + (dr === 'sp' ? spColorFor(pl) : RES_INFO[dr].color);
       amtEl.textContent = (pl > 0 ? '+' : '') + pl.toLocaleString('es-AR');
       el.appendChild(amtEl);
       const trEl = document.createElement('div');
@@ -2962,7 +3387,8 @@ function updateFondeoModalMeta(key) {
     return;
   }
   const pl = getDayPL(d);
-  let meta = RES_INFO[dr].emoji + '  ' + (pl >= 0 ? '+' : '') + pl.toLocaleString('es-AR');
+  const emoji = dr === 'sp' ? spEmojiFor(pl) : RES_INFO[dr].emoji;
+  let meta = emoji + '  ' + (pl >= 0 ? '+' : '') + pl.toLocaleString('es-AR');
   const extraParts = [];
   if (mtC) extraParts.push(mtC + ' MT');
   if (neC) extraParts.push(neC + ' NE');
@@ -3063,7 +3489,8 @@ const FIXED_AMOUNTS = {
   sl: -450,   // SL = -450 USD (automático)
   sp: null,   // SP = manual (variable)
   ne: 0,      // NE = 0 USD (automático)
-  lt: 0       // Día Lateral = 0 USD (automático)
+  lt: 0,      // Día Lateral = 0 USD (automático)
+  fe: 0       // Día Feriado = 0 USD (automático)
 };
 
 /* Valores automáticos para PRÁCTICA (independiente de Fondeo) */
@@ -3073,20 +3500,23 @@ const FIXED_AMOUNTS_PRACTICA = {
   sl: -450,   // SL = -450 (automático)
   sp: null,   // SP = manual (variable)
   ne: 0,      // NE = 0 (automático)
-  lt: 0       // Día Lateral = 0 (automático)
+  lt: 0,      // Día Lateral = 0 (automático)
+  fe: 0       // Día Feriado = 0 (automático)
 };
 
 function renderFMainSection() {
   const sec = document.getElementById('f-main-content');
   if (!sec) return;
   const r    = fondeoModalMain.result;
-  const isTP = r==='tp', isBE = r==='be', isSL = r==='sl', isSP = r==='sp', isNE = r==='ne', isLT = r==='lt';
+  const isTP = r==='tp', isBE = r==='be', isSL = r==='sl', isSP = r==='sp', isNE = r==='ne', isLT = r==='lt', isFE = r==='fe';
 
   let amtHTML = '';
   if (isNE) {
     amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--nebg);border:1px solid var(--neborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--ne)"><span class="res-dot" style="background:var(--ne)"></span>Sin entrada — día sin trade</div>';
   } else if (isLT) {
     amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--ltbg);border:1px solid var(--ltborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--lt)"><span class="res-dot" style="background:var(--lt)"></span>Día lateral — sin operar</div>';
+  } else if (isFE) {
+    amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--febg);border:1px solid var(--feborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--fe)"><span class="res-dot" style="background:var(--fe)"></span>Día feriado — sin operar</div>';
   } else if (isBE) {
     amtHTML = '<div style="margin-top:8px;text-align:center;font-size:26px;font-weight:900;color:var(--yellow);letter-spacing:1px">= 0</div>';
   } else if (isTP) {
@@ -3101,7 +3531,7 @@ function renderFMainSection() {
   }
 
   let summaryHTML = '';
-  if (r && !isNE && !isLT) {
+  if (r && !isNE && !isLT && !isFE) {
     const pl = fondeoModalMain.amount !== undefined ? fondeoModalMain.amount : 0;
     const plColor = pl>0?'var(--green)':pl<0?'var(--red)':'var(--yellow)';
     summaryHTML = '<div class="f-day-summary" style="margin-top:12px" id="fMainSummary">'+
@@ -3124,6 +3554,9 @@ function renderFMainSection() {
     '<div style="margin-top:8px">'+
       '<button class="res-sel-btn lt" style="width:100%;padding:10px;'+(isLT?'border-color:var(--lt);color:var(--lt);background:var(--ltbg)':'')+'" onclick="setFMainResult(\'lt\')"><span class="res-dot" style="background:var(--lt)"></span>Día Lateral</button>'+
     '</div>'+
+    '<div style="margin-top:8px">'+
+      '<button class="res-sel-btn fe" style="width:100%;padding:10px;'+(isFE?'border-color:var(--fe);color:var(--fe);background:var(--febg)':'')+'" onclick="setFMainResult(\'fe\')"><span class="res-dot" style="background:var(--fe)"></span>Día Feriado</button>'+
+    '</div>'+
     amtHTML+summaryHTML;
 
 }
@@ -3145,6 +3578,8 @@ function setFMainResult(result) {
     fondeoModalMain.amount = FIXED_AMOUNTS.ne; // 0
   } else if (result === 'lt') {
     fondeoModalMain.amount = FIXED_AMOUNTS.lt; // 0
+  } else if (result === 'fe') {
+    fondeoModalMain.amount = FIXED_AMOUNTS.fe; // 0
   }
 
   renderFMainSection();
@@ -3277,7 +3712,8 @@ async function handleFFiles(files, key) {
     const dataUrl = await fileToDataUrl(f);
     await idbSave(imgId, dataUrl);
     imgCache[imgId] = dataUrl;
-    d.photos.push({ imgId, data: dataUrl, name: f.name, size: f.size });
+    const path = await uploadPhotoToStorage(imgId, f);
+    d.photos.push({ imgId, data: dataUrl, name: f.name, size: f.size, path });
   }
   saveDayFondeo(key, d);
   if (currentFondeoKey === key) { renderFondeoModalBody(key); updateFondeoModalMeta(key); }
@@ -3288,6 +3724,7 @@ function delFPhoto(e, key, idx) {
   const d       = getDayFondeo(key);
   const removed = d.photos.splice(idx, 1)[0];
   if (removed?.imgId) { delete imgCache[removed.imgId]; idbDelete(removed.imgId); }
+  if (removed?.path)  deletePhotoFromStorage(removed.path);
   saveDayFondeo(key, d);
   if (currentFondeoKey === key) { renderFondeoModalBody(key); updateFondeoModalMeta(key); }
 }
@@ -3322,7 +3759,8 @@ async function handleFCtxFiles(files, key) {
     const dataUrl = await fileToDataUrl(f);
     await idbSave(imgId, dataUrl);
     imgCache[imgId] = dataUrl;
-    d.contextPhotos.push({ imgId, data: dataUrl, name: f.name, size: f.size });
+    const path = await uploadPhotoToStorage(imgId, f);
+    d.contextPhotos.push({ imgId, data: dataUrl, name: f.name, size: f.size, path });
   }
   saveDayFondeo(key, d);
   if (currentFondeoKey === key) { renderFondeoModalBody(key); updateFondeoModalMeta(key); }
@@ -3333,6 +3771,7 @@ function delFCtx(e, key, idx) {
   const d       = getDayFondeo(key);
   const removed = (d.contextPhotos||[]).splice(idx, 1)[0];
   if (removed?.imgId) { delete imgCache[removed.imgId]; idbDelete(removed.imgId); }
+  if (removed?.path)  deletePhotoFromStorage(removed.path);
   saveDayFondeo(key, d);
   if (currentFondeoKey === key) { renderFondeoModalBody(key); updateFondeoModalMeta(key); }
 }
@@ -3400,7 +3839,7 @@ function getFondeoCycleKeys(refY, refM, refD) {
 }
 
 function calcStats(keys) {
-  let tradesTotal=0, tpCount=0, beCount=0, slCount=0, spCount=0, neCount=0, ltCount=0, mtCount=0, totalPL=0, grossProfit=0, grossLoss=0;
+  let tradesTotal=0, tpCount=0, beCount=0, slCount=0, spCount=0, neCount=0, ltCount=0, feCount=0, mtCount=0, totalPL=0, grossProfit=0, grossLoss=0;
   let tpDays=0, beDays=0, slDays=0, spDays=0;
   let bestKey=null, bestAmt=-Infinity, worstKey=null, worstAmt=Infinity;
   let tradingDays=0;
@@ -3419,9 +3858,10 @@ function calcStats(keys) {
     spCount += st.sp;
     neCount += st.ne;
     ltCount += st.lt;
+    feCount += st.fe;
     mtCount += st.mt;
     tradesTotal += st.total;
-    if (!dr || dr === 'ne' || dr === 'lt') return;
+    if (!dr || dr === 'ne' || dr === 'lt' || dr === 'fe') return;
     tradingDays++;
     totalPL += st.pl;
     if (st.pl > 0) grossProfit += st.pl;
@@ -3442,7 +3882,7 @@ function calcStats(keys) {
   const esperanza = tradesTotal > 0 ? totalPL / tradesTotal : null;
   const estrategiaTot = estrategiaSi + estrategiaNo + estrategiaDudoso;
   const estrategiaPct = estrategiaTot > 0 ? Math.round(estrategiaSi/estrategiaTot*100) : null;
-  return { tradesTotal, tpCount, beCount, slCount, spCount, neCount, ltCount, mtCount, totalPL, grossProfit, grossLoss, pf, esperanza, tpDays, beDays, slDays, spDays, wr, bestKey, bestAmt, worstKey, worstAmt, tradingDays, estrategiaSi, estrategiaNo, estrategiaDudoso, estrategiaTot, estrategiaPct };
+  return { tradesTotal, tpCount, beCount, slCount, spCount, neCount, ltCount, feCount, mtCount, totalPL, grossProfit, grossLoss, pf, esperanza, tpDays, beDays, slDays, spDays, wr, bestKey, bestAmt, worstKey, worstAmt, tradingDays, estrategiaSi, estrategiaNo, estrategiaDudoso, estrategiaTot, estrategiaPct };
 }
 
 function formatStatRatio(value) {
@@ -3461,7 +3901,7 @@ function formatEsperanza(value) {
 function drawPieChart(canvasId, counts) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
-  const order = ['tp','be','sl','sp','ne','lt','mt'];
+  const order = ['tp','be','sl','sp','ne','lt','fe','mt'];
   const slices = order.map(k => ({ label:RES_INFO[k].label, count:counts[k]||0, color:RES_INFO[k].color }))
                       .filter(s => s.count > 0);
   const total = slices.reduce((s,sl) => s+sl.count, 0);
@@ -3502,7 +3942,7 @@ function drawPieChart(canvasId, counts) {
 
 function pieChartHTML(id, counts) {
   const realOrder   = ['tp','be','sl','sp'];
-  const missedOrder = ['mt','ne','lt'];
+  const missedOrder = ['mt','ne','lt','fe'];
   const allOrder    = [...realOrder, ...missedOrder];
   const allSlices   = allOrder.map(k => ({ key:k, label:RES_INFO[k].label, emoji:RES_INFO[k].emoji, count:counts[k]||0, color:RES_INFO[k].color }))
                               .filter(s => s.count > 0);
@@ -3559,13 +3999,13 @@ function fEstrategiaStatsHTML(st) {
   let html = '<hr class="stat-divider">' +
     '<div style="font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;opacity:.85">Disciplina de estrategia</div>' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-      '<span style="font-size:14px;color:var(--t2)">% Sí cumplí</span>' +
-      '<span style="font-size:18px;font-weight:900;color:'+pctColor+'">'+siPct+'%</span>' +
+      '<span style="font-size:13px;color:var(--t2)">% Sí cumplí</span>' +
+      '<span style="font-size:20px;font-weight:900;color:'+pctColor+'">'+siPct+'%</span>' +
     '</div>' +
-    '<div class="stat-row"><span class="stat-label">Sí cumplí</span><span class="stat-value pos">'+st.estrategiaSi+' <small style="color:var(--t3);font-size:12px">('+siPct+'%)</small></span></div>' +
-    '<div class="stat-row"><span class="stat-label">No cumplí</span><span class="stat-value neg">'+st.estrategiaNo+' <small style="color:var(--t3);font-size:12px">('+noPct+'%)</small></span></div>';
+    '<div class="stat-row"><span class="stat-label">Sí cumplí</span><span class="stat-value pos">'+st.estrategiaSi+' <small style="color:var(--t3);font-size:14px">('+siPct+'%)</small></span></div>' +
+    '<div class="stat-row"><span class="stat-label">No cumplí</span><span class="stat-value neg">'+st.estrategiaNo+' <small style="color:var(--t3);font-size:14px">('+noPct+'%)</small></span></div>';
   if (st.estrategiaDudoso) {
-    html += '<div class="stat-row"><span class="stat-label">No sé / Dudoso</span><span class="stat-value neu">'+(st.estrategiaDudoso)+' <small style="color:var(--t3);font-size:12px">('+dubPct+'%)</small></span></div>';
+    html += '<div class="stat-row"><span class="stat-label">No sé / Dudoso</span><span class="stat-value neu">'+(st.estrategiaDudoso)+' <small style="color:var(--t3);font-size:14px">('+dubPct+'%)</small></span></div>';
   }
   return html;
 }
@@ -3605,19 +4045,22 @@ function renderDayStats() {
 
   // Real trade result
   const ri = RES_INFO[dr];
-  const drColor = ({tp:'green', sp:'sp', be:'yellow', sl:'red'})[dr] || 'yellow';
+  const isSpDay = dr === 'sp';
+  const drEmoji = isSpDay ? spEmojiFor(st.pl) : ri.emoji;
+  const drColorVal = isSpDay ? spColorFor(st.pl) : ({tp:'var(--green)', be:'var(--yellow)', sl:'var(--red)'})[dr] || 'var(--yellow)';
   html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 10px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">'+
-    '<span style="font-size:20px">'+ri.emoji+'</span>'+
-    '<span style="font-size:14px;font-weight:800;color:var(--'+drColor+')">'+ri.full+'</span>'+
+    '<span style="font-size:20px">'+drEmoji+'</span>'+
+    '<span style="font-size:14px;font-weight:800;color:'+drColorVal+'">'+ri.full+'</span>'+
   '</div>';
   html += '<div class="stat-pl-big" style="color:var(--'+(st.pl>0?'green':st.pl<0?'red':'yellow')+')">'+(st.pl>=0?'+':'')+st.pl.toLocaleString('es-AR')+'</div>';
 
-  if (st.mt || st.ne || st.lt) {
+  if (st.mt || st.ne || st.lt || st.fe) {
     html += '<hr class="stat-divider">';
     html += '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Oportunidades perdidas</div>';
     if (st.mt) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#a855f7"></span>Miss Trades</span><span class="stat-value mt">'+st.mt+'</span></div>';
     if (st.ne) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--ne)"></span>No Entry</span><span class="stat-value ne">'+st.ne+'</span></div>';
     if (st.lt) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--lt)"></span>Día Lateral</span><span class="stat-value lt">'+st.lt+'</span></div>';
+    if (st.fe) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--fe)"></span>Día Feriado</span><span class="stat-value fe">'+st.fe+'</span></div>';
   }
 
   // Estrategia del día
@@ -3646,7 +4089,7 @@ function renderWeekStats() {
   const rangeStr = p1.d + ' ' + MONTHS[p1.m].slice(0,3) + ' – ' + p2.d + ' ' + MONTHS[p2.m].slice(0,3);
 
   let html = '<div class="stat-card-title">' + rangeStr + '</div>';
-  const counts = {tp:st.tpCount, be:st.beCount, sl:st.slCount, sp:st.spCount, ne:st.neCount, lt:st.ltCount, mt:st.mtCount};
+  const counts = {tp:st.tpCount, be:st.beCount, sl:st.slCount, sp:st.spCount, ne:st.neCount, lt:st.ltCount, fe:st.feCount, mt:st.mtCount};
 
   if (st.tradingDays === 0 && !Object.values(counts).some(v=>v>0)) {
     html += '<div class="stat-empty">Sin datos esta semana</div>';
@@ -3671,12 +4114,13 @@ function renderWeekStats() {
       if (st.slDays) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#f43f5e"></span>SL</span><span class="stat-value neg">'+st.slDays+'</span></div>';
     }
     // Oportunidades perdidas
-    if (st.mtCount || st.neCount || st.ltCount) {
+    if (st.mtCount || st.neCount || st.ltCount || st.feCount) {
       html += '<hr class="stat-divider">';
       html += '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Oportunidades perdidas</div>';
       if (st.mtCount) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#a855f7"></span>MT</span><span class="stat-value mt">'+st.mtCount+'</span></div>';
       if (st.neCount) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--ne)"></span>NE</span><span class="stat-value ne">'+st.neCount+'</span></div>';
       if (st.ltCount) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--lt)"></span>Día Lateral</span><span class="stat-value lt">'+st.ltCount+'</span></div>';
+      if (st.feCount) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--fe)"></span>Día Feriado</span><span class="stat-value fe">'+st.feCount+'</span></div>';
     }
     // Torta
     if (Object.values(counts).some(v=>v>0)) {
@@ -3756,7 +4200,7 @@ function renderCycleStats() {
       '</div>'+
     '</div>';
 
-  if (!st.tradingDays && !st.mtCount && !st.neCount && !st.ltCount) {
+  if (!st.tradingDays && !st.mtCount && !st.neCount && !st.ltCount && !st.feCount) {
     html += '<div class="stat-empty">Sin datos'+(mode==='overall'?' registrados':' en este ciclo')+'</div>';
     card.innerHTML = html;
     return;
@@ -3769,8 +4213,8 @@ function renderCycleStats() {
 
   const winsPct = st.tradingDays>0 ? Math.round(st.tpDays/st.tradingDays*100) : 0;
   const lossPct = st.tradingDays>0 ? Math.round(st.slDays/st.tradingDays*100) : 0;
-  html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#22c55e"></span>Wins</span><span class="stat-value pos">'+st.tpDays+' <small style="color:var(--t3);font-size:12px">('+winsPct+'%)</small></span></div>';
-  html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#f43f5e"></span>Losses</span><span class="stat-value neg">'+st.slDays+' <small style="color:var(--t3);font-size:12px">('+lossPct+'%)</small></span></div>';
+  html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#22c55e"></span>Wins</span><span class="stat-value pos">'+st.tpDays+' <small style="color:var(--t3);font-size:14px">('+winsPct+'%)</small></span></div>';
+  html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#f43f5e"></span>Losses</span><span class="stat-value neg">'+st.slDays+' <small style="color:var(--t3);font-size:14px">('+lossPct+'%)</small></span></div>';
 
   const wrPct   = st.wr != null ? st.wr : 0;
   const wrColor = st.wr != null && st.wr >= 50 ? 'var(--green)' : 'var(--red)';
@@ -3783,13 +4227,14 @@ function renderCycleStats() {
     gaugeHTML('Net Profit Ratio', pfVal, pfPct, pfColor)+
   '</div>';
 
-  if (st.mtCount||st.neCount||st.ltCount||st.estrategiaTot) {
+  if (st.mtCount||st.neCount||st.ltCount||st.feCount||st.estrategiaTot) {
     html += '<div class="stat-secondary">';
-    if (st.mtCount||st.neCount||st.ltCount) {
+    if (st.mtCount||st.neCount||st.ltCount||st.feCount) {
       html += '<hr class="stat-divider"><div class="stat-sub-title">Oportunidades perdidas</div>';
       if (st.mtCount) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#a855f7"></span>MT</span><span class="stat-value mt">'+st.mtCount+'</span></div>';
       if (st.neCount) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--ne)"></span>NE</span><span class="stat-value ne">'+st.neCount+'</span></div>';
       if (st.ltCount) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--lt)"></span>Día Lateral</span><span class="stat-value lt">'+st.ltCount+'</span></div>';
+      if (st.feCount) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--fe)"></span>Día Feriado</span><span class="stat-value fe">'+st.feCount+'</span></div>';
     }
     html += fEstrategiaStatsHTML(st);
     html += '</div>';
@@ -4828,14 +5273,17 @@ async function importBackup(event) {
       }
     }
 
-    // 4. Recargar la interfaz
-    loadPracticaData();
-    loadFondeoData();
+    // 4. Recargar la interfaz (desde la copia local recién restaurada)
+    loadPracticaDataLocal();
+    loadFondeoDataLocal();
     renderStats();
     if (currentPracticaKey) closePracticaModal();
     if (currentFondeoKey)   closeFondeoModal();
 
     showToast('✓ Copia cargada (' + ids.length + ' foto' + (ids.length!==1?'s':'') + ')');
+
+    // 5. Subir la copia restaurada a la nube
+    if (currentUser) await pushAllLocalToCloud(true);
   } catch(e) {
     alert('Error al cargar la copia de seguridad:\n' + e.message);
   } finally {
@@ -4880,6 +5328,8 @@ function _aplicarMigracion900450(afectados) {
   renderFondeoCal();
   renderStats();
   renderPStats();
+
+  if (currentUser) pushAllLocalToCloud(true);
 }
 
 function runMigracion900450(force) {
@@ -4937,14 +5387,25 @@ function restaurarBackupMigracion900450() {
   if (bp) localStorage.setItem(PRACTICA_KEY, bp);
   if (bf) localStorage.setItem(FONDEO_KEY, bf);
   localStorage.removeItem(MIGRACION_900_450_FLAG);
-  loadPracticaData();
-  loadFondeoData();
+  loadPracticaDataLocal();
+  loadFondeoDataLocal();
   renderStats();
   renderPStats();
+  if (currentUser) pushAllLocalToCloud(true);
   alert('✓ Backup restaurado.');
 }
 
 /* ── INIT ────────────────────────────────────────────────────── */
+async function startApp() {
+  await loadPracticaData();
+  await loadFondeoData();
+  renderStats();
+  renderPStats();
+  runMigracion900450();
+  initEditorUI();
+  migrarDatosLocalesANube();
+}
+
 window.onload = async function() {
   // Solicitar al navegador que NUNCA limpie automáticamente estos datos
   if (navigator.storage && navigator.storage.persist) {
@@ -4957,12 +5418,15 @@ window.onload = async function() {
   } catch(e) {
     console.warn('IndexedDB no disponible:', e);
   }
-  loadPracticaData();
-  loadFondeoData();
-  renderStats();
-  renderPStats();
-  runMigracion900450();
-  initEditorUI();
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && session.user) {
+    currentUser = session.user;
+    document.getElementById('authOverlay').style.display = 'none';
+    await startApp();
+  } else {
+    document.getElementById('authOverlay').style.display = 'flex';
+  }
 };
 </script>
 

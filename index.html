@@ -1068,6 +1068,37 @@ body{
   text-align:center;padding:4px 0;
 }
 
+/* ── Repaso SL ────────────────────────────────────────────── */
+.repaso-subnav{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;margin-bottom:14px;flex-shrink:0;
+}
+.repaso-range{font-size:13px;font-weight:700;color:var(--t1);min-width:150px;text-align:center}
+.repaso-summary{
+  flex-shrink:0;background:var(--cal-bg);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;margin-bottom:14px;
+}
+.repaso-summary-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:9px}
+.repaso-summary-bar{height:6px;border-radius:4px;background:var(--redbg);overflow:hidden}
+.repaso-summary-bar-fill{height:100%;background:var(--green);border-radius:4px;transition:width .25s}
+.repaso-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:0}
+.repaso-card{background:var(--cal-bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;flex-shrink:0}
+.repaso-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:10px}
+.repaso-card-date{font-size:13px;font-weight:700;color:var(--t1)}
+.repaso-card-amt{font-size:16px;font-weight:800;color:var(--red);white-space:nowrap}
+.repaso-card-note{font-size:12px;color:var(--t2);margin-bottom:12px;line-height:1.5}
+.repaso-card-note.empty{color:var(--t3);font-style:italic}
+.repaso-toggle-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.repaso-toggle-btn{
+  padding:9px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg3);
+  color:var(--t2);font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;
+  font-family:var(--font-body);
+}
+.repaso-toggle-btn:hover{border-color:var(--borderl);color:var(--t1)}
+.repaso-toggle-btn.stat:hover,.repaso-toggle-btn.stat.active{border-color:var(--green);color:var(--green);background:var(--greenbg)}
+.repaso-toggle-btn.nostat:hover,.repaso-toggle-btn.nostat.active{border-color:var(--red);color:var(--red);background:var(--redbg)}
+.repaso-empty{padding:36px 0;text-align:center;color:var(--t3);font-size:13px;flex:1}
+
 /* ── Botón Eliminar/Reiniciar día ─────────────────────────── */
 .btn-reset-day{
   display:flex;align-items:center;gap:5px;
@@ -1352,6 +1383,7 @@ body{
                   <button class="cal-title-btn" onclick="toggleSectionMenu(this)">Práctica <span class="cal-title-caret">▾</span></button>
                   <div class="cal-title-menu">
                     <button onclick="switchTab('fondeo');closeSectionMenus()">Fondeo</button>
+                    <button onclick="switchTab('repaso','practica');closeSectionMenus()">Repaso SL</button>
                   </div>
                 </div>
                 <div class="cal-subtitle" id="pCalSubtitle">Sin datos este mes</div>
@@ -1408,6 +1440,7 @@ body{
                   <button class="cal-title-btn" onclick="toggleSectionMenu(this)">Fondeo <span class="cal-title-caret">▾</span></button>
                   <div class="cal-title-menu">
                     <button onclick="switchTab('practica');closeSectionMenus()">Práctica</button>
+                    <button onclick="switchTab('repaso','fondeo');closeSectionMenus()">Repaso SL</button>
                   </div>
                 </div>
                 <div class="cal-subtitle" id="fCalSubtitle">Sin datos en este ciclo</div>
@@ -1437,6 +1470,49 @@ body{
         </div>
       </div>
     </div><!-- /pane-fondeo -->
+
+    <!-- TAB: REPASO SL -->
+    <div class="tab-pane" id="pane-repaso">
+      <div class="fondeo-layout">
+        <div class="fondeo-body">
+          <div class="fondeo-cal-side">
+            <div class="cal-header">
+              <div class="cal-title-group">
+                <div class="cal-title-wrap">
+                  <button class="cal-title-btn" onclick="toggleSectionMenu(this)">Repaso SL <span class="cal-title-caret">▾</span></button>
+                  <div class="cal-title-menu">
+                    <button onclick="switchTab('practica');closeSectionMenus()">Práctica</button>
+                    <button onclick="switchTab('fondeo');closeSectionMenus()">Fondeo</button>
+                  </div>
+                </div>
+                <div class="cal-subtitle">Revisá tus pérdidas y marcá si fueron parte normal del sistema</div>
+              </div>
+              <div class="cal-controls">
+                <div class="stat-toggle" id="repasoScopeToggle">
+                  <button data-scope="practica" onclick="setRepasoScope('practica')">Práctica</button>
+                  <button data-scope="fondeo" onclick="setRepasoScope('fondeo')">Fondeo</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="repaso-subnav">
+              <div class="stat-toggle" id="repasoViewToggle">
+                <button data-view="week" onclick="setRepasoView('week')">Semanal</button>
+                <button data-view="month" onclick="setRepasoView('month')">Mensual</button>
+              </div>
+              <div class="cal-controls">
+                <button class="nbtn" onclick="changeRepaso(-1)">‹</button>
+                <div class="repaso-range" id="repasoRange">—</div>
+                <button class="nbtn" onclick="changeRepaso(1)">›</button>
+              </div>
+            </div>
+
+            <div class="repaso-summary" id="repasoSummary"></div>
+            <div class="repaso-list" id="repasoList"></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /pane-repaso -->
 
   </main>
 </div><!-- /app -->
@@ -1566,6 +1642,7 @@ const DAYS_C  = ['D','L','M','X','J','V','S'];
 /* ── ESTADO GLOBAL ───────────────────────────────────────────── */
 const _n = new Date();
 const PS = { y: _n.getFullYear(), m: _n.getMonth() };
+const RS = { scope: 'fondeo', view: 'week', weekRef: mkKey(_n.getFullYear(), _n.getMonth(), _n.getDate()), y: _n.getFullYear(), m: _n.getMonth() };
 let _practica               = {};
 let currentPracticaKey      = null;
 let pCtxTarget              = null;
@@ -1719,6 +1796,7 @@ function dayToCloudRow(key, d) {
     main_amount:         d.mainAmount || 0,
     missed_ops:          d.missedOps || [],
     estrategia_cumplida: d.estrategiaCumplida ?? null,
+    sl_status:           d.slStatus ?? null,
     reviewed:            d.reviewed || false,
     context_photos:      (d.contextPhotos||[]).filter(Boolean).map(p => ({ imgId:p.imgId||null, name:p.name||null, size:p.size||null, path:p.path||null })),
     photos:              (d.photos||[]).filter(Boolean).map(p => ({ imgId:p.imgId||null, name:p.name||null, size:p.size||null, path:p.path||null })),
@@ -1735,6 +1813,7 @@ function cloudRowToDay(row) {
     missedOps:          row.missed_ops || [],
     reviewed:           row.reviewed || false,
     estrategiaCumplida: row.estrategia_cumplida ?? null,
+    slStatus:           row.sl_status ?? null,
   };
 }
 async function upsertPracticaDayCloud(key, d) {
@@ -1832,6 +1911,7 @@ function savePracticaData() {
           missedOps:          (d.missedOps||[]).map(op=>({id:op.id,type:op.type})),
           reviewed:           d.reviewed || false,
           estrategiaCumplida: d.estrategiaCumplida ?? null,
+          slStatus:           d.slStatus ?? null,
         };
       }
     });
@@ -1878,6 +1958,7 @@ function loadPracticaDataLocal() {
         missedOps:          mo,
         reviewed:           d.reviewed || false,
         estrategiaCumplida: d.estrategiaCumplida ?? null,
+        slStatus:           d.slStatus ?? null,
       };
     });
   } catch { _practica = {}; }
@@ -1906,13 +1987,14 @@ async function loadPracticaData() {
 }
 
 function getPracticaDay(k) {
-  if (!_practica[k]) _practica[k] = {contextNote:'',contextPhotos:[],photos:[],mainResult:null,mainAmount:0,missedOps:[],reviewed:false,estrategiaCumplida:null};
+  if (!_practica[k]) _practica[k] = {contextNote:'',contextPhotos:[],photos:[],mainResult:null,mainAmount:0,missedOps:[],reviewed:false,estrategiaCumplida:null,slStatus:null};
   const d = _practica[k];
   if (!d.contextPhotos)              d.contextPhotos    = [];
   if (!d.photos)                     d.photos           = [];
   if (!d.missedOps)                  d.missedOps        = [];
   if (d.reviewed===undefined)        d.reviewed         = false;
   if (d.estrategiaCumplida===undefined) d.estrategiaCumplida = null;
+  if (d.slStatus===undefined)        d.slStatus         = null;
   if (d.mainAmount===undefined)      d.mainAmount       = 0;
   d.contextPhotos = d.contextPhotos.map(p=>({...p,data:p.data||imgCache[p.imgId]||null}));
   d.photos        = d.photos.map(p=>({...p,data:p.data||imgCache[p.imgId]||null}));
@@ -2063,6 +2145,7 @@ function _resetDayFields(d) {
   d.missedOps          = [];
   d.contextNote        = '';
   d.estrategiaCumplida = null;
+  d.slStatus           = null;
   d.reviewed           = false;
 }
 
@@ -2141,11 +2224,12 @@ async function clearLocalData() {
 /* ══════════════════════════════════════════════════════════════
    PESTAÑAS
 ══════════════════════════════════════════════════════════════ */
-function switchTab(name) {
+function switchTab(name, repasoScope) {
   document.querySelectorAll('.tab-pane').forEach(p =>
     p.classList.toggle('active', p.id === 'pane-' + name));
   if (name === 'fondeo')   { renderFondeoCal(); renderStats(); }
   if (name === 'practica') { renderPracticaCal(); renderPStats(); }
+  if (name === 'repaso')   { if (repasoScope) RS.scope = repasoScope; renderRepaso(); }
 }
 
 /* ── Selector de sección (dropdown en el título del calendario) ── */
@@ -3089,6 +3173,7 @@ function saveFondeoData() {
           mainAmount:         d.mainAmount || 0,
           missedOps:          (d.missedOps||[]).map(op=>({id:op.id, type:op.type})),
           estrategiaCumplida: d.estrategiaCumplida ?? null,
+          slStatus:           d.slStatus ?? null,
           reviewed:           d.reviewed || false,
         };
       }
@@ -3141,6 +3226,7 @@ function loadFondeoDataLocal() {
           mainAmount:         (mr === 'ne' || mr === 'lt') ? 0 : (d.mainAmount || 0),
           missedOps:          mo,
           estrategiaCumplida: d.estrategiaCumplida ?? null,
+          slStatus:           d.slStatus ?? null,
           reviewed:           d.reviewed || false,
         };
         return;
@@ -3168,13 +3254,14 @@ function loadFondeoDataLocal() {
 
 function getDayFondeo(k) {
   if (!_fondeo[k]) {
-    _fondeo[k] = { contextNote:'', contextPhotos:[], photos:[], mainResult:null, mainAmount:0, missedOps:[], estrategiaCumplida:null, reviewed:false };
+    _fondeo[k] = { contextNote:'', contextPhotos:[], photos:[], mainResult:null, mainAmount:0, missedOps:[], estrategiaCumplida:null, slStatus:null, reviewed:false };
   }
   const d = _fondeo[k];
   if (d.mainResult === undefined)         d.mainResult = null;
   if (d.mainAmount === undefined)         d.mainAmount = 0;
   if (!d.missedOps)                       d.missedOps  = [];
   if (d.estrategiaCumplida === undefined) d.estrategiaCumplida = null;
+  if (d.slStatus === undefined)           d.slStatus = null;
   if (d.reviewed === undefined)           d.reviewed = false;
   d.contextPhotos = (d.contextPhotos || []).map(p => ({...p, data: p.data || imgCache[p.imgId] || null}));
   d.photos        = (d.photos || []).map(p => ({...p, data: p.data || imgCache[p.imgId] || null}));
@@ -3896,6 +3983,118 @@ function formatEsperanza(value) {
   if (value === null || value === undefined) return '—';
   const formatted = value.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
   return value > 0 ? '+' + formatted : formatted;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REPASO DE SL — repaso semanal/mensual de pérdidas, por sección
+══════════════════════════════════════════════════════════════ */
+function repasoStore()          { return RS.scope === 'practica' ? _practica : _fondeo; }
+function repasoGetDay(k)        { return RS.scope === 'practica' ? getPracticaDay(k) : getDayFondeo(k); }
+function repasoSaveDay(k, data) { if (RS.scope === 'practica') saveDayPractica(k, data); else saveDayFondeo(k, data); }
+
+function monthKeysOf(y, m) {
+  const total = new Date(y, m + 1, 0).getDate();
+  const keys = [];
+  for (let d = 1; d <= total; d++) keys.push(mkKey(y, m, d));
+  return keys;
+}
+
+function setRepasoScope(scope) { RS.scope = scope; renderRepaso(); }
+function setRepasoView(view)   { RS.view  = view;  renderRepaso(); }
+
+function changeRepaso(dir) {
+  if (RS.view === 'week') {
+    const p = parseKey(RS.weekRef);
+    const d = new Date(p.y, p.m, p.d);
+    d.setDate(d.getDate() + dir * 7);
+    RS.weekRef = mkKey(d.getFullYear(), d.getMonth(), d.getDate());
+  } else {
+    RS.m += dir;
+    if (RS.m > 11) { RS.m = 0; RS.y++; }
+    if (RS.m < 0)  { RS.m = 11; RS.y--; }
+  }
+  renderRepaso();
+}
+
+function setSlStatus(key, val) {
+  const d = repasoGetDay(key);
+  d.slStatus = d.slStatus === val ? null : val;
+  repasoSaveDay(key, d);
+  renderRepaso();
+}
+
+function renderRepaso() {
+  document.querySelectorAll('#repasoScopeToggle button').forEach(b =>
+    b.classList.toggle('active', b.dataset.scope === RS.scope));
+  document.querySelectorAll('#repasoViewToggle button').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === RS.view));
+
+  const store = repasoStore();
+  let keys, rangeLabel;
+  if (RS.view === 'week') {
+    keys = getWeekKeys(RS.weekRef);
+    const p1 = parseKey(keys[0]), p2 = parseKey(keys[6]);
+    rangeLabel = p1.d + ' ' + MONTHS[p1.m].slice(0,3) + ' – ' + p2.d + ' ' + MONTHS[p2.m].slice(0,3) + ' ' + p2.y;
+  } else {
+    keys = monthKeysOf(RS.y, RS.m);
+    rangeLabel = MONTHS[RS.m] + ' ' + RS.y;
+  }
+  const rangeEl = document.getElementById('repasoRange');
+  if (rangeEl) rangeEl.textContent = rangeLabel;
+
+  const slKeys = keys.filter(k => store[k] && getDayResult(store[k]) === 'sl').sort();
+  const total     = slKeys.length;
+  const estCount  = slKeys.filter(k => store[k].slStatus === 'estadistico').length;
+  const pendCount = slKeys.filter(k => store[k].slStatus == null).length;
+  const pct       = total ? Math.round(estCount / total * 100) : null;
+
+  const summaryEl = document.getElementById('repasoSummary');
+  if (summaryEl) {
+    if (!total) {
+      summaryEl.innerHTML = '<div class="repaso-summary-title">Sin SL en este período</div>';
+    } else {
+      summaryEl.innerHTML =
+        '<div class="repaso-summary-title">' + estCount + ' de ' + total + ' SL fueron estadísticos (' + pct + '%)' +
+          (pendCount ? ' <span style="color:var(--t3);font-weight:600">· ' + pendCount + ' sin marcar</span>' : '') +
+        '</div>' +
+        '<div class="repaso-summary-bar"><div class="repaso-summary-bar-fill" style="width:' + pct + '%"></div></div>';
+    }
+  }
+
+  const listEl = document.getElementById('repasoList');
+  if (!listEl) return;
+  if (!total) {
+    listEl.innerHTML = '<div class="repaso-empty">No hay días con SL en este período.</div>';
+    return;
+  }
+
+  listEl.innerHTML = slKeys.map(k => {
+    const d   = store[k];
+    const p   = parseKey(k);
+    const dow = new Date(p.y, p.m, p.d).getDay();
+    const dateLbl = DAYS_S[dow] + ' ' + p.d + ' ' + MONTHS[p.m].slice(0,3);
+    const amt  = getDayPL(d);
+    const note = (d.contextNote || '').trim();
+    const statActive   = d.slStatus === 'estadistico'    ? ' active' : '';
+    const noStatActive = d.slStatus === 'no_estadistico' ? ' active' : '';
+    return (
+      '<div class="repaso-card">' +
+        '<div class="repaso-card-top">' +
+          '<div class="repaso-card-date">' + dateLbl + '</div>' +
+          '<div class="repaso-card-amt">' + amt.toLocaleString('es-AR') + '</div>' +
+        '</div>' +
+        '<div class="repaso-card-note' + (note ? '' : ' empty') + '">' + (note ? escapeHtml(note) : 'Sin nota') + '</div>' +
+        '<div class="repaso-toggle-btns">' +
+          '<button class="repaso-toggle-btn stat' + statActive + '" onclick="setSlStatus(\'' + k + '\',\'estadistico\')">Estadístico</button>' +
+          '<button class="repaso-toggle-btn nostat' + noStatActive + '" onclick="setSlStatus(\'' + k + '\',\'no_estadistico\')">No estadístico</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
 }
 
 /* ── Pie Chart ────────────────────────────────────────────────── */

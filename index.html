@@ -1069,11 +1069,6 @@ body{
 }
 
 /* ── Repaso SL ────────────────────────────────────────────── */
-.repaso-subnav{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px;flex-wrap:wrap;margin-bottom:14px;flex-shrink:0;
-}
-.repaso-range{font-size:13px;font-weight:700;color:var(--t1);min-width:150px;text-align:center}
 .repaso-summary{
   flex-shrink:0;background:var(--cal-bg);border:1px solid var(--border);
   border-radius:10px;padding:14px 16px;margin-bottom:14px;
@@ -1398,7 +1393,6 @@ body{
                   <button class="cal-title-btn" onclick="toggleSectionMenu(this)">Práctica <span class="cal-title-caret">▾</span></button>
                   <div class="cal-title-menu">
                     <button onclick="switchTab('fondeo');closeSectionMenus()">Fondeo</button>
-                    <button onclick="switchTab('repaso','practica');closeSectionMenus()">Repaso SL</button>
                   </div>
                 </div>
                 <div class="cal-subtitle" id="pCalSubtitle">Sin datos este mes</div>
@@ -1456,7 +1450,6 @@ body{
                   <button class="cal-title-btn" onclick="toggleSectionMenu(this)">Fondeo <span class="cal-title-caret">▾</span></button>
                   <div class="cal-title-menu">
                     <button onclick="switchTab('practica');closeSectionMenus()">Práctica</button>
-                    <button onclick="switchTab('repaso','fondeo');closeSectionMenus()">Repaso SL</button>
                   </div>
                 </div>
                 <div class="cal-subtitle" id="fCalSubtitle">Sin datos en este ciclo</div>
@@ -1487,49 +1480,6 @@ body{
         </div>
       </div>
     </div><!-- /pane-fondeo -->
-
-    <!-- TAB: REPASO SL -->
-    <div class="tab-pane" id="pane-repaso">
-      <div class="fondeo-layout">
-        <div class="fondeo-body">
-          <div class="fondeo-cal-side">
-            <div class="cal-header">
-              <div class="cal-title-group">
-                <div class="cal-title-wrap">
-                  <button class="cal-title-btn" onclick="toggleSectionMenu(this)">Repaso SL <span class="cal-title-caret">▾</span></button>
-                  <div class="cal-title-menu">
-                    <button onclick="switchTab('practica');closeSectionMenus()">Práctica</button>
-                    <button onclick="switchTab('fondeo');closeSectionMenus()">Fondeo</button>
-                  </div>
-                </div>
-                <div class="cal-subtitle">Revisá tus pérdidas y marcá si fueron parte normal del sistema</div>
-              </div>
-              <div class="cal-controls">
-                <div class="stat-toggle" id="repasoScopeToggle">
-                  <button data-scope="practica" onclick="setRepasoScope('practica')">Práctica</button>
-                  <button data-scope="fondeo" onclick="setRepasoScope('fondeo')">Fondeo</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="repaso-subnav">
-              <div class="stat-toggle" id="repasoViewToggle">
-                <button data-view="week" onclick="setRepasoView('week')">Semanal</button>
-                <button data-view="month" onclick="setRepasoView('month')">Mensual</button>
-              </div>
-              <div class="cal-controls">
-                <button class="nbtn" onclick="changeRepaso(-1)">‹</button>
-                <div class="repaso-range" id="repasoRange">—</div>
-                <button class="nbtn" onclick="changeRepaso(1)">›</button>
-              </div>
-            </div>
-
-            <div class="repaso-summary" id="repasoSummary"></div>
-            <div class="repaso-list" id="repasoList"></div>
-          </div>
-        </div>
-      </div>
-    </div><!-- /pane-repaso -->
 
   </main>
 </div><!-- /app -->
@@ -1680,7 +1630,6 @@ const DAYS_C  = ['D','L','M','X','J','V','S'];
 /* ── ESTADO GLOBAL ───────────────────────────────────────────── */
 const _n = new Date();
 const PS = { y: _n.getFullYear(), m: _n.getMonth() };
-const RS = { scope: 'fondeo', view: 'week', weekRef: mkKey(_n.getFullYear(), _n.getMonth(), _n.getDate()), y: _n.getFullYear(), m: _n.getMonth() };
 let _practica               = {};
 let currentPracticaKey      = null;
 let pCtxTarget              = null;
@@ -2262,12 +2211,11 @@ async function clearLocalData() {
 /* ══════════════════════════════════════════════════════════════
    PESTAÑAS
 ══════════════════════════════════════════════════════════════ */
-function switchTab(name, repasoScope) {
+function switchTab(name) {
   document.querySelectorAll('.tab-pane').forEach(p =>
     p.classList.toggle('active', p.id === 'pane-' + name));
   if (name === 'fondeo')   { renderFondeoCal(); renderStats(); }
   if (name === 'practica') { renderPracticaCal(); renderPStats(); }
-  if (name === 'repaso')   { if (repasoScope) RS.scope = repasoScope; renderRepaso(); }
 }
 
 /* ── Selector de sección (dropdown en el título del calendario) ── */
@@ -4035,10 +3983,6 @@ function scopedStore(scope)          { return scope === 'practica' ? _practica :
 function scopedGetDay(scope, k)      { return scope === 'practica' ? getPracticaDay(k) : getDayFondeo(k); }
 function scopedSaveDay(scope, k, d)  { if (scope === 'practica') saveDayPractica(k, d); else saveDayFondeo(k, d); }
 
-function repasoStore()          { return scopedStore(RS.scope); }
-function repasoGetDay(k)        { return scopedGetDay(RS.scope, k); }
-function repasoSaveDay(k, data) { return scopedSaveDay(RS.scope, k, data); }
-
 // Días con SL, sin marcar (ni Estadístico ni No estadístico), en la semana/mes real actual.
 function slPendingCount(scope, period) {
   const today = new Date();
@@ -4083,68 +4027,9 @@ function slCardHTML(scope, k, onToggleFn) {
   );
 }
 
-function setRepasoScope(scope) { RS.scope = scope; renderRepaso(); }
-function setRepasoView(view)   { RS.view  = view;  renderRepaso(); }
-
-function changeRepaso(dir) {
-  if (RS.view === 'week') {
-    const p = parseKey(RS.weekRef);
-    const d = new Date(p.y, p.m, p.d);
-    d.setDate(d.getDate() + dir * 7);
-    RS.weekRef = mkKey(d.getFullYear(), d.getMonth(), d.getDate());
-  } else {
-    RS.m += dir;
-    if (RS.m > 11) { RS.m = 0; RS.y++; }
-    if (RS.m < 0)  { RS.m = 11; RS.y--; }
-  }
-  renderRepaso();
-}
-
-function setSlStatus(scope, key, val) {
-  const d = scopedGetDay(scope, key);
-  d.slStatus = d.slStatus === val ? null : val;
-  scopedSaveDay(scope, key, d);
-  renderRepaso();
-  renderSlAlerts(scope);
-}
-
-function renderRepaso() {
-  document.querySelectorAll('#repasoScopeToggle button').forEach(b =>
-    b.classList.toggle('active', b.dataset.scope === RS.scope));
-  document.querySelectorAll('#repasoViewToggle button').forEach(b =>
-    b.classList.toggle('active', b.dataset.view === RS.view));
-
-  const store = repasoStore();
-  let keys, rangeLabel;
-  if (RS.view === 'week') {
-    keys = getWeekKeys(RS.weekRef);
-    const p1 = parseKey(keys[0]), p2 = parseKey(keys[6]);
-    rangeLabel = p1.d + ' ' + MONTHS[p1.m].slice(0,3) + ' – ' + p2.d + ' ' + MONTHS[p2.m].slice(0,3) + ' ' + p2.y;
-  } else {
-    keys = getMonthKeys(RS.y, RS.m);
-    rangeLabel = MONTHS[RS.m] + ' ' + RS.y;
-  }
-  const rangeEl = document.getElementById('repasoRange');
-  if (rangeEl) rangeEl.textContent = rangeLabel;
-
-  const slKeys = keys.filter(k => store[k] && getDayResult(store[k]) === 'sl').sort();
-  const total     = slKeys.length;
-  const estCount  = slKeys.filter(k => store[k].slStatus === 'estadistico').length;
-  const pendCount = slKeys.filter(k => store[k].slStatus == null).length;
-
-  const summaryEl = document.getElementById('repasoSummary');
-  if (summaryEl) summaryEl.innerHTML = slSummaryHTML(total, estCount, pendCount);
-
-  const listEl = document.getElementById('repasoList');
-  if (!listEl) return;
-  listEl.innerHTML = total
-    ? slKeys.map(k => slCardHTML(RS.scope, k, 'setSlStatus')).join('')
-    : '<div class="repaso-empty">No hay días con SL en este período.</div>';
-}
-
 /* ── Avisos "Ya podés repasar SL" (semana/mes real actual) ──────
    Se muestran junto al calendario de cada sección y abren un modal
-   de repaso rápido (mismo patrón que la pestaña Repaso SL). ────── */
+   de repaso rápido. ────── */
 const alertModalCtx = { scope: 'fondeo', period: 'week' };
 
 function renderSlAlerts(scope) {

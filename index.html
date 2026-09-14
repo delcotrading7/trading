@@ -1195,6 +1195,31 @@ body{
 }
 .share-gen-btn:hover{opacity:.9;transform:translateY(-1px)}
 .share-gen-btn:disabled{opacity:.5;cursor:default;transform:none}
+.share-perm-toggle{display:flex;gap:8px;margin-bottom:8px}
+.share-perm-btn{
+  flex:1;background:var(--bg3);border:1.5px solid var(--border);color:var(--t2);
+  padding:9px 10px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;
+  transition:all .2s;font-family:var(--font-body);
+}
+.share-perm-btn.active{border-color:rgba(6,182,212,.5);color:var(--sp);background:rgba(6,182,212,.1)}
+.share-perm-hint{font-size:11px;color:var(--t3);margin-bottom:16px;line-height:1.5}
+.share-link-perm{
+  display:inline-block;font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:10px;
+  margin-left:8px;letter-spacing:.3px;vertical-align:middle;
+}
+.share-link-perm.view{background:var(--bg1);color:var(--t3);border:1px solid var(--border)}
+.share-link-perm.edit{background:rgba(6,182,212,.12);color:var(--sp);border:1px solid rgba(6,182,212,.4)}
+
+/* ── Comentarios y anotaciones del mentor (dentro del modal) ─── */
+.mentor-empty{font-size:12px;color:var(--t3);padding:6px 0}
+.mentor-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.mentor-item-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.mentor-author{font-size:12px;font-weight:800;color:var(--t1)}
+.mentor-when{font-size:10.5px;color:var(--t3);flex:1}
+.mentor-del{background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;opacity:.6;padding:2px 4px}
+.mentor-del:hover{opacity:1;color:var(--red)}
+.mentor-comment-text{font-size:13px;color:var(--t2);line-height:1.55;white-space:pre-wrap}
+.mentor-drawing-thumb{max-width:200px;border-radius:8px;border:1px solid var(--border);cursor:pointer;display:block}
 
 /* ── Overlay de confirmación de reinicio ─────────────────── */
 .reset-confirm-overlay{
@@ -1652,6 +1677,11 @@ body{
       <button class="modal-close-btn" onclick="closeShareDialog()" title="Cerrar">✕</button>
     </div>
     <div class="share-sub">Cualquiera con el link puede ver este día (resultado, monto, notas y fotos) sin necesidad de loguearse en tu cuenta.</div>
+    <div class="share-perm-toggle">
+      <button class="share-perm-btn active" id="sharePermView" onclick="setSharePermission('view')">👁 Solo lectura</button>
+      <button class="share-perm-btn" id="sharePermEdit" onclick="setSharePermission('edit')">✏️ Edición</button>
+    </div>
+    <div class="share-perm-hint" id="sharePermHint">La otra persona solo puede ver el día, no puede modificar nada.</div>
     <div class="share-links-list" id="shareLinksList"></div>
     <button class="share-gen-btn" id="shareGenBtn" onclick="generateShareLink()">+ Generar nuevo link</button>
   </div>
@@ -1896,9 +1926,10 @@ async function deleteFondeoDayCloud(key) {
   if (error) console.warn('Error borrando fondeo en la nube:', error);
 }
 
-/* ── COMPARTIR DÍA (links públicos de solo lectura) ──────────── */
+/* ── COMPARTIR DÍA (links públicos de solo lectura / edición) ── */
 let _shareTargetMode = null; // 'practica' | 'fondeo'
 let _shareTargetKey  = null;
+let _sharePermission  = 'view'; // 'view' | 'edit'
 
 function shareSourceTable(mode) {
   return mode === 'fondeo' ? 'fondeo_days' : 'practica_days';
@@ -1908,11 +1939,21 @@ function shareLinkUrl(token) {
   return location.origin + '/compartir.html?token=' + token;
 }
 
+function setSharePermission(perm) {
+  _sharePermission = perm;
+  document.getElementById('sharePermView').classList.toggle('active', perm === 'view');
+  document.getElementById('sharePermEdit').classList.toggle('active', perm === 'edit');
+  document.getElementById('sharePermHint').textContent = perm === 'edit'
+    ? 'La otra persona puede comentar y dibujar sobre las fotos. Vos vas a poder ver esos cambios después, desde tu journal.'
+    : 'La otra persona solo puede ver el día, no puede modificar nada.';
+}
+
 async function openShareDialog(mode, key) {
   if (!key) return;
   if (!currentUser) { showToast('⚠ Iniciá sesión para compartir'); return; }
   _shareTargetMode = mode;
   _shareTargetKey  = key;
+  setSharePermission('view');
   document.getElementById('shareOverlay').classList.add('open');
   document.getElementById('shareLinksList').innerHTML = '<div class="share-empty">Cargando...</div>';
   await loadShareLinks();
@@ -1951,13 +1992,16 @@ function renderShareLinksList(links) {
     const url = shareLinkUrl(l.token);
     const exp = new Date(l.expires_at);
     const expStr = String(exp.getDate()).padStart(2,'0') + '/' + String(exp.getMonth()+1).padStart(2,'0') + '/' + exp.getFullYear();
+    const permTag = l.permission === 'edit'
+      ? '<span class="share-link-perm edit">✏️ EDICIÓN</span>'
+      : '<span class="share-link-perm view">👁 LECTURA</span>';
     return '<div class="share-link-row">' +
       '<div class="share-link-top">' +
         '<input class="share-link-input" type="text" readonly value="' + url + '" onclick="this.select()">' +
         '<button class="share-link-copy" onclick="copyShareLink(\'' + l.token + '\')">Copiar</button>' +
       '</div>' +
       '<div class="share-link-meta">' +
-        '<span class="share-link-expiry">Vence el ' + expStr + '</span>' +
+        '<span class="share-link-expiry">Vence el ' + expStr + permTag + '</span>' +
         '<button class="share-link-revoke" onclick="revokeShareLink(\'' + l.token + '\')">Revocar</button>' +
       '</div>' +
     '</div>';
@@ -1974,7 +2018,7 @@ async function generateShareLink() {
     owner_id: currentUser.id,
     source_table: shareSourceTable(_shareTargetMode),
     day_key: _shareTargetKey,
-    permission: 'view',
+    permission: _sharePermission,
     expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   };
   const { error } = await sb.from('shared_links').insert(row);
@@ -1999,6 +2043,57 @@ async function revokeShareLink(token) {
   const { error } = await sb.from('shared_links').update({ revoked: true }).eq('token', token).eq('owner_id', currentUser.id);
   if (error) { showToast('⚠ Error revocando el link'); return; }
   await loadShareLinks();
+}
+
+/* ── Comentarios/dibujos que dejó el mentor (modo edición) ────── */
+async function loadMentorAnnotations(mode, key) {
+  if (!currentUser || !key) return;
+  const containerId = mode === 'fondeo' ? 'f-mentor-content' : 'p-mentor-content';
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '<div class="mentor-empty">Cargando...</div>';
+
+  const { data, error } = await sb.from('shared_annotations').select('*')
+    .eq('owner_id', currentUser.id)
+    .eq('source_table', shareSourceTable(mode))
+    .eq('day_key', key)
+    .order('created_at', { ascending: false });
+
+  if (error) { el.innerHTML = '<div class="mentor-empty">Error cargando comentarios.</div>'; return; }
+  if (!data || !data.length) { el.innerHTML = '<div class="mentor-empty">Todavía no hay comentarios ni anotaciones de tu mentor en este día.</div>'; return; }
+
+  const imgPaths = data.filter(a => a.type === 'drawing' && a.image_path).map(a => a.image_path);
+  let urlMap = {};
+  if (imgPaths.length) {
+    const { data: signed } = await sb.storage.from(PHOTOS_BUCKET).createSignedUrls(imgPaths, 60*60*24*7);
+    (signed||[]).forEach((item,i) => { if (item && item.signedUrl) urlMap[imgPaths[i]] = item.signedUrl; });
+  }
+
+  el.innerHTML = data.map(a => {
+    const when = new Date(a.created_at);
+    const whenStr = String(when.getDate()).padStart(2,'0')+'/'+String(when.getMonth()+1).padStart(2,'0')+' '+String(when.getHours()).padStart(2,'0')+':'+String(when.getMinutes()).padStart(2,'0');
+    const author = escapeHtml(a.author_name || 'Mentor');
+    const head = '<div class="mentor-item-head"><span class="mentor-author">'+author+'</span><span class="mentor-when">'+whenStr+'</span>' +
+      '<button class="mentor-del" onclick="deleteMentorAnnotation(\''+a.id+'\',\''+mode+'\',\''+key+'\')" title="Borrar">✕</button></div>';
+    if (a.type === 'comment') {
+      return '<div class="mentor-item">' + head + '<div class="mentor-comment-text">'+escapeHtml(a.comment_text||'')+'</div></div>';
+    }
+    const url = urlMap[a.image_path];
+    return '<div class="mentor-item">' + head +
+      (url ? '<img class="mentor-drawing-thumb" src="'+url+'" onclick="lbShowUrl(\''+url+'\')">' : '<div class="mentor-comment-text">(No se pudo cargar la imagen)</div>') +
+    '</div>';
+  }).join('');
+}
+
+function lbShowUrl(url) {
+  window.open(url, '_blank');
+}
+
+async function deleteMentorAnnotation(id, mode, key) {
+  if (!confirm('¿Borrar este comentario/anotación? No se puede deshacer.')) return;
+  const { error } = await sb.from('shared_annotations').delete().eq('id', id).eq('owner_id', currentUser.id);
+  if (error) { showToast('⚠ Error borrando'); return; }
+  await loadMentorAnnotations(mode, key);
 }
 
 async function pushAllLocalToCloud(silent) {
@@ -2577,6 +2672,7 @@ function openPracticaModal(key) {
     practicaModalEstrategia = d.estrategiaCumplida ?? null;
     updatePracticaModalMeta(key);
     renderPracticaModalBody(key);
+    loadMentorAnnotations('practica', key);
     if (saveBar)  saveBar.style.display  = '';
     if (resetBtn) resetBtn.style.display = '';
     // Inicializar botón de revisado
@@ -2694,6 +2790,11 @@ function renderPracticaModalBody(key) {
         (hasPh ? '<span>'+photos.filter(p=>p.data).length+' fotos  <button class="btn-add-photo" onclick="triggerPPh(\''+key+'\')">+ Agregar</button></span>' : '') +
       '</div>' +
       phContent +
+    '</div>' +
+
+    '<div class="f-section" id="p-mentor-sec">' +
+      '<div class="f-sec-lbl">Comentarios y anotaciones del mentor</div>' +
+      '<div id="p-mentor-content"><div class="mentor-empty">Cargando...</div></div>' +
     '</div>';
 
   setupDrop('pcdz-'+key, files => handlePCtxFiles(files, key));
@@ -3599,6 +3700,7 @@ function openFondeoModal(key) {
     fondeoModalEstrategia = d.estrategiaCumplida ?? null;
     updateFondeoModalMeta(key);
     renderFondeoModalBody(key);
+    loadMentorAnnotations('fondeo', key);
     if (saveBar)  saveBar.style.display  = '';
     if (resetBtn) resetBtn.style.display = '';
     const rvBtn = document.getElementById('fReviewedBtn');
@@ -3725,6 +3827,11 @@ function renderFondeoModalBody(key) {
         (hasPh?'<span>'+photos.filter(p=>p.data).length+' fotos  <button class="btn-add-photo" onclick="triggerFUpload(\''+key+'\')">+ Agregar</button></span>':'')+
       '</div>'+
       phContent+
+    '</div>'+
+
+    '<div class="f-section" id="f-mentor-sec">'+
+      '<div class="f-sec-lbl">Comentarios y anotaciones del mentor</div>'+
+      '<div id="f-mentor-content"><div class="mentor-empty">Cargando...</div></div>'+
     '</div>';
 
   setupDrop('fcdz-' + key, files => handleFCtxFiles(files, key));

@@ -1069,20 +1069,6 @@ body{
 }
 
 /* ── Repaso SL ────────────────────────────────────────────── */
-.repaso-summary{
-  flex-shrink:0;background:var(--cal-bg);border:1px solid var(--border);
-  border-radius:10px;padding:14px 16px;margin-bottom:14px;
-}
-.repaso-summary-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:9px}
-.repaso-summary-bar{height:6px;border-radius:4px;background:var(--redbg);overflow:hidden}
-.repaso-summary-bar-fill{height:100%;background:var(--green);border-radius:4px;transition:width .25s}
-.repaso-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:0}
-.repaso-card{background:var(--cal-bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;flex-shrink:0}
-.repaso-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:10px}
-.repaso-card-date{font-size:13px;font-weight:700;color:var(--t1)}
-.repaso-card-amt{font-size:16px;font-weight:800;color:var(--red);white-space:nowrap}
-.repaso-card-note{font-size:12px;color:var(--t2);margin-bottom:12px;line-height:1.5}
-.repaso-card-note.empty{color:var(--t3);font-style:italic}
 .repaso-toggle-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .repaso-toggle-btn{
   padding:9px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg3);
@@ -1092,7 +1078,17 @@ body{
 .repaso-toggle-btn:hover{border-color:var(--borderl);color:var(--t1)}
 .repaso-toggle-btn.stat:hover,.repaso-toggle-btn.stat.active{border-color:var(--green);color:var(--green);background:var(--greenbg)}
 .repaso-toggle-btn.nostat:hover,.repaso-toggle-btn.nostat.active{border-color:var(--red);color:var(--red);background:var(--redbg)}
-.repaso-empty{padding:36px 0;text-align:center;color:var(--t3);font-size:13px;flex:1}
+
+/* ── Barra de modo repaso (dentro del modal de día de Fondeo) ── */
+.repaso-mode-bar{
+  flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 22px;border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,rgba(227,228,231,.03) 0%,transparent 60%);
+}
+.repaso-mode-nav{display:flex;align-items:center;gap:10px}
+.repaso-mode-pos{font-size:12px;font-weight:700;color:var(--t2);min-width:34px;text-align:center}
+.repaso-mode-status{width:min(320px,50%)}
+.repaso-mode-bar .nbtn:disabled{opacity:.35;cursor:default;pointer-events:none}
 
 /* ── Avisos de Repaso SL (junto al calendario) ───────────────── */
 .repaso-alerts-side{width:230px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;align-self:flex-start}
@@ -1127,6 +1123,78 @@ body{
   font-family:var(--font-body);opacity:.75;
 }
 .btn-reset-data:hover{background:var(--goldbg);opacity:1;box-shadow:0 2px 12px rgba(227,228,231,.2)}
+
+/* ── Botón Compartir día ──────────────────────────────────── */
+.btn-share-day{
+  display:flex;align-items:center;gap:5px;
+  background:transparent;border:1.5px solid rgba(6,182,212,.4);
+  color:var(--sp);padding:6px 13px;border-radius:8px;
+  font-size:11px;font-weight:800;cursor:pointer;
+  transition:all .2s;letter-spacing:.5px;white-space:nowrap;
+  font-family:var(--font-body);opacity:.85;
+}
+.btn-share-day:hover{background:rgba(6,182,212,.1);opacity:1;box-shadow:0 2px 12px rgba(6,182,212,.2)}
+
+/* ── Overlay "Compartir día" ──────────────────────────────── */
+.share-overlay{
+  position:fixed;inset:0;z-index:9600;
+  background:rgba(5,5,6,.9);
+  backdrop-filter:blur(12px) brightness(.55);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  opacity:0;pointer-events:none;
+  transition:opacity .22s ease;
+}
+.share-overlay.open{opacity:1;pointer-events:all}
+.share-box{
+  background:linear-gradient(160deg,var(--bg2) 0%,var(--bg1) 100%);
+  border:1px solid rgba(6,182,212,.3);
+  border-radius:18px;
+  box-shadow:0 40px 100px rgba(0,0,0,.95),0 0 0 1px rgba(6,182,212,.08);
+  width:min(480px,calc(100vw - 40px));
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+  padding:26px 26px 24px;
+  transform:scale(.95) translateY(16px);
+  transition:transform .22s ease;
+}
+.share-overlay.open .share-box{transform:scale(1) translateY(0)}
+.share-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.share-title{font-size:17px;font-weight:800;color:var(--t1)}
+.share-sub{font-size:12.5px;color:var(--t3);line-height:1.55;margin-bottom:18px}
+.share-links-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.share-link-row{
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;
+}
+.share-link-top{display:flex;gap:8px;align-items:center}
+.share-link-input{
+  flex:1;min-width:0;background:var(--bg1);border:1px solid var(--border);
+  color:var(--t2);font-size:11.5px;padding:7px 9px;border-radius:7px;
+  font-family:var(--font-body);
+}
+.share-link-copy{
+  background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.4);
+  color:var(--sp);padding:7px 12px;border-radius:7px;font-size:11px;font-weight:800;
+  cursor:pointer;white-space:nowrap;transition:all .2s;font-family:var(--font-body);
+}
+.share-link-copy:hover{background:rgba(6,182,212,.22)}
+.share-link-meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.share-link-expiry{font-size:10.5px;color:var(--t3)}
+.share-link-revoke{
+  background:none;border:none;color:var(--red);font-size:10.5px;font-weight:700;
+  cursor:pointer;opacity:.75;font-family:var(--font-body);
+}
+.share-link-revoke:hover{opacity:1;text-decoration:underline}
+.share-empty{font-size:12px;color:var(--t3);text-align:center;padding:14px 0}
+.share-gen-btn{
+  width:100%;background:linear-gradient(135deg,var(--sp) 0%,#0891b2 100%);
+  color:#04202a;border:none;padding:11px 16px;border-radius:10px;
+  font-size:13px;font-weight:800;cursor:pointer;transition:all .22s;
+  box-shadow:0 4px 16px rgba(6,182,212,.3);letter-spacing:.3px;font-family:var(--font-body);
+}
+.share-gen-btn:hover{opacity:.9;transform:translateY(-1px)}
+.share-gen-btn:disabled{opacity:.5;cursor:default;transform:none}
 
 /* ── Overlay de confirmación de reinicio ─────────────────── */
 .reset-confirm-overlay{
@@ -1418,7 +1486,6 @@ body{
             <div class="cal-dow" id="calDowP"></div>
             <div class="cal-grid" id="calGridP"></div>
           </div>
-          <div class="repaso-alerts-side" id="pRepasoAlerts"></div>
         </div>
       </div>
     </div><!-- /pane-practica -->
@@ -1495,6 +1562,7 @@ body{
         <div class="modal-meta" id="practicaModalMeta">Sin datos</div>
       </div>
       <div class="modal-head-right">
+        <button class="btn-share-day" id="pShareBtn" onclick="openShareDialog('practica',currentPracticaKey)" title="Generar un link para compartir este día">COMPARTIR</button>
         <button class="btn-reset-data" id="pResetDataBtn" onclick="showResetDataConfirm('practica',currentPracticaKey)" title="Reiniciar resultado, notas y estrategia — conserva las fotos">REINICIAR DÍA</button>
         <button class="btn-reset-day" id="pResetBtn" onclick="showResetDayConfirm('practica',currentPracticaKey)" title="Eliminar todos los datos de este día, incluidas las fotos">ELIMINAR</button>
         <button class="modal-close-btn" onclick="closePracticaModal()" title="Cerrar">✕</button>
@@ -1522,9 +1590,21 @@ body{
         <div class="modal-meta" id="fondeoModalMeta">Sin datos</div>
       </div>
       <div class="modal-head-right">
+        <button class="btn-share-day" id="fShareBtn" onclick="openShareDialog('fondeo',currentFondeoKey)" title="Generar un link para compartir este día">COMPARTIR</button>
         <button class="btn-reset-data" id="fResetDataBtn" onclick="showResetDataConfirm('fondeo',currentFondeoKey)" title="Reiniciar resultado, notas y estrategia — conserva las fotos">REINICIAR DÍA</button>
         <button class="btn-reset-day" id="fResetBtn" onclick="showResetDayConfirm('fondeo',currentFondeoKey)" title="Eliminar todos los datos de este día, incluidas las fotos">ELIMINAR</button>
         <button class="modal-close-btn" onclick="closeFondeoModal()" title="Cerrar">✕</button>
+      </div>
+    </div>
+    <div class="repaso-mode-bar" id="repasoModeBar" style="display:none">
+      <div class="repaso-mode-nav">
+        <button class="nbtn" id="repasoPrevBtn" onclick="repasoModalNav(-1)" title="SL anterior">‹</button>
+        <span class="repaso-mode-pos" id="repasoModePos">1/1</span>
+        <button class="nbtn" id="repasoNextBtn" onclick="repasoModalNav(1)" title="SL siguiente">›</button>
+      </div>
+      <div class="repaso-toggle-btns repaso-mode-status">
+        <button class="repaso-toggle-btn stat" id="repasoModeStatBtn" onclick="setRepasoModalStatus('estadistico')">Estadístico</button>
+        <button class="repaso-toggle-btn nostat" id="repasoModeNostatBtn" onclick="setRepasoModalStatus('no_estadistico')">No estadístico</button>
       </div>
     </div>
     <div class="modal-body" id="fondeoModalBody" style="padding:0"></div>
@@ -1534,27 +1614,6 @@ body{
         ○ Marcar revisado
       </button>
       <button class="f-save-btn" id="fSaveBtn" onclick="saveFondeoDay()">Guardar Día</button>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════
-     MODAL — REPASO RÁPIDO DE SL (semana/mes actual)
-════════════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="slAlertModal" onclick="slAlertBgClick(event)">
-  <div class="modal" role="dialog" aria-modal="true" style="display:flex;flex-direction:column;max-width:560px">
-    <div class="modal-head">
-      <div>
-        <div class="modal-date" id="slAlertModalTitle">Repaso de Stop Loss</div>
-        <div class="modal-meta" id="slAlertModalMeta">—</div>
-      </div>
-      <div class="modal-head-right">
-        <button class="modal-close-btn" onclick="closeSlAlertModal()" title="Cerrar">✕</button>
-      </div>
-    </div>
-    <div class="modal-body">
-      <div class="repaso-summary" id="slAlertModalSummary" style="margin-bottom:14px"></div>
-      <div class="repaso-list" id="slAlertModalList" style="gap:10px;display:flex;flex-direction:column"></div>
     </div>
   </div>
 </div>
@@ -1582,6 +1641,19 @@ body{
       <button class="reset-cancel-btn" onclick="closeResetDataConfirm()">Cancelar</button>
       <button class="reset-data-confirm-btn" onclick="confirmResetData()">Sí, reiniciar datos</button>
     </div>
+  </div>
+</div>
+
+<!-- COMPARTIR DÍA -->
+<div class="share-overlay" id="shareOverlay" onclick="if(event.target===this)closeShareDialog()">
+  <div class="share-box">
+    <div class="share-head">
+      <div class="share-title">Compartir día</div>
+      <button class="modal-close-btn" onclick="closeShareDialog()" title="Cerrar">✕</button>
+    </div>
+    <div class="share-sub">Cualquiera con el link puede ver este día (resultado, monto, notas y fotos) sin necesidad de loguearse en tu cuenta.</div>
+    <div class="share-links-list" id="shareLinksList"></div>
+    <button class="share-gen-btn" id="shareGenBtn" onclick="generateShareLink()">+ Generar nuevo link</button>
   </div>
 </div>
 
@@ -1822,6 +1894,111 @@ async function deleteFondeoDayCloud(key) {
   if (!currentUser) return;
   const { error } = await sb.from('fondeo_days').delete().eq('user_id', currentUser.id).eq('day', key);
   if (error) console.warn('Error borrando fondeo en la nube:', error);
+}
+
+/* ── COMPARTIR DÍA (links públicos de solo lectura) ──────────── */
+let _shareTargetMode = null; // 'practica' | 'fondeo'
+let _shareTargetKey  = null;
+
+function shareSourceTable(mode) {
+  return mode === 'fondeo' ? 'fondeo_days' : 'practica_days';
+}
+
+function shareLinkUrl(token) {
+  return location.origin + '/compartir.html?token=' + token;
+}
+
+async function openShareDialog(mode, key) {
+  if (!key) return;
+  if (!currentUser) { showToast('⚠ Iniciá sesión para compartir'); return; }
+  _shareTargetMode = mode;
+  _shareTargetKey  = key;
+  document.getElementById('shareOverlay').classList.add('open');
+  document.getElementById('shareLinksList').innerHTML = '<div class="share-empty">Cargando...</div>';
+  await loadShareLinks();
+}
+
+function closeShareDialog() {
+  document.getElementById('shareOverlay').classList.remove('open');
+  _shareTargetMode = null;
+  _shareTargetKey  = null;
+}
+
+async function loadShareLinks() {
+  const listEl = document.getElementById('shareLinksList');
+  const { data, error } = await sb.from('shared_links').select('*')
+    .eq('owner_id', currentUser.id)
+    .eq('source_table', shareSourceTable(_shareTargetMode))
+    .eq('day_key', _shareTargetKey)
+    .eq('revoked', false)
+    .order('created_at', { ascending: false });
+  if (error) {
+    listEl.innerHTML = '<div class="share-empty">Error cargando links: ' + error.message + '</div>';
+    return;
+  }
+  const now = Date.now();
+  const active = (data || []).filter(l => !l.expires_at || new Date(l.expires_at).getTime() > now);
+  renderShareLinksList(active);
+}
+
+function renderShareLinksList(links) {
+  const listEl = document.getElementById('shareLinksList');
+  if (!links.length) {
+    listEl.innerHTML = '<div class="share-empty">Todavía no generaste ningún link para este día.</div>';
+    return;
+  }
+  listEl.innerHTML = links.map(l => {
+    const url = shareLinkUrl(l.token);
+    const exp = new Date(l.expires_at);
+    const expStr = String(exp.getDate()).padStart(2,'0') + '/' + String(exp.getMonth()+1).padStart(2,'0') + '/' + exp.getFullYear();
+    return '<div class="share-link-row">' +
+      '<div class="share-link-top">' +
+        '<input class="share-link-input" type="text" readonly value="' + url + '" onclick="this.select()">' +
+        '<button class="share-link-copy" onclick="copyShareLink(\'' + l.token + '\')">Copiar</button>' +
+      '</div>' +
+      '<div class="share-link-meta">' +
+        '<span class="share-link-expiry">Vence el ' + expStr + '</span>' +
+        '<button class="share-link-revoke" onclick="revokeShareLink(\'' + l.token + '\')">Revocar</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function generateShareLink() {
+  if (!_shareTargetKey || !currentUser) return;
+  const btn = document.getElementById('shareGenBtn');
+  btn.disabled = true; btn.textContent = 'Generando...';
+  const token = (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2))).replace(/-/g, '');
+  const row = {
+    token,
+    owner_id: currentUser.id,
+    source_table: shareSourceTable(_shareTargetMode),
+    day_key: _shareTargetKey,
+    permission: 'view',
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  };
+  const { error } = await sb.from('shared_links').insert(row);
+  btn.disabled = false; btn.textContent = '+ Generar nuevo link';
+  if (error) { showToast('⚠ Error generando el link: ' + error.message); return; }
+  await loadShareLinks();
+  await copyShareLink(token);
+}
+
+async function copyShareLink(token) {
+  const url = shareLinkUrl(token);
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('✓ Link copiado');
+  } catch (e) {
+    showToast('Link: ' + url);
+  }
+}
+
+async function revokeShareLink(token) {
+  if (!confirm('¿Revocar este link? Quien lo tenga ya no va a poder verlo.')) return;
+  const { error } = await sb.from('shared_links').update({ revoked: true }).eq('token', token).eq('owner_id', currentUser.id);
+  if (error) { showToast('⚠ Error revocando el link'); return; }
+  await loadShareLinks();
 }
 
 async function pushAllLocalToCloud(silent) {
@@ -2861,7 +3038,6 @@ function pEstrategiaStatsHTML(st) {
 function renderPStats() {
   renderPPnl();
   renderPMonthStats();
-  renderSlAlerts('practica');
 }
 
 function renderPPnl() {
@@ -3439,6 +3615,8 @@ function openFondeoModal(key) {
 function closeFondeoModal() {
   document.getElementById('fondeoModal').classList.remove('open');
   currentFondeoKey = null;
+  repasoNavCtx = null;
+  updateRepasoModeBar();
   renderFondeoCal();
   renderStats();
 }
@@ -3977,71 +4155,29 @@ function escapeHtml(s) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   REPASO DE SL — repaso semanal/mensual de pérdidas, por sección
+   REPASO DE SL — repaso semanal/mensual de pérdidas (Fondeo)
 ══════════════════════════════════════════════════════════════ */
-function scopedStore(scope)          { return scope === 'practica' ? _practica : _fondeo; }
-function scopedGetDay(scope, k)      { return scope === 'practica' ? getPracticaDay(k) : getDayFondeo(k); }
-function scopedSaveDay(scope, k, d)  { if (scope === 'practica') saveDayPractica(k, d); else saveDayFondeo(k, d); }
-
 // Días con SL, sin marcar (ni Estadístico ni No estadístico), en la semana/mes real actual.
-function slPendingCount(scope, period) {
+function slPendingCount(period) {
   const today = new Date();
   const keys = period === 'week'
     ? getWeekKeys(mkKey(today.getFullYear(), today.getMonth(), today.getDate()))
     : getMonthKeys(today.getFullYear(), today.getMonth());
-  const store = scopedStore(scope);
-  return keys.filter(k => store[k] && getDayResult(store[k]) === 'sl' && store[k].slStatus == null).length;
+  return keys.filter(k => _fondeo[k] && getDayResult(_fondeo[k]) === 'sl' && _fondeo[k].slStatus == null).length;
 }
 
-function slSummaryHTML(total, estCount, pendCount) {
-  if (!total) return '<div class="repaso-summary-title">Sin SL en este período</div>';
-  const pct = Math.round(estCount / total * 100);
-  return '<div class="repaso-summary-title">' + estCount + ' de ' + total + ' SL fueron estadísticos (' + pct + '%)' +
-      (pendCount ? ' <span style="color:var(--t3);font-weight:600">· ' + pendCount + ' sin marcar</span>' : '') +
-    '</div>' +
-    '<div class="repaso-summary-bar"><div class="repaso-summary-bar-fill" style="width:' + pct + '%"></div></div>';
-}
-
-function slCardHTML(scope, k, onToggleFn) {
-  const store = scopedStore(scope);
-  const d   = store[k];
-  const p   = parseKey(k);
-  const dow = new Date(p.y, p.m, p.d).getDay();
-  const dateLbl = DAYS_S[dow] + ' ' + p.d + ' ' + MONTHS[p.m].slice(0,3);
-  const amt  = getDayPL(d);
-  const note = (d.contextNote || '').trim();
-  const statActive   = d.slStatus === 'estadistico'    ? ' active' : '';
-  const noStatActive = d.slStatus === 'no_estadistico' ? ' active' : '';
-  return (
-    '<div class="repaso-card">' +
-      '<div class="repaso-card-top">' +
-        '<div class="repaso-card-date">' + dateLbl + '</div>' +
-        '<div class="repaso-card-amt">' + amt.toLocaleString('es-AR') + '</div>' +
-      '</div>' +
-      '<div class="repaso-card-note' + (note ? '' : ' empty') + '">' + (note ? escapeHtml(note) : 'Sin nota') + '</div>' +
-      '<div class="repaso-toggle-btns">' +
-        '<button class="repaso-toggle-btn stat' + statActive + '" onclick="' + onToggleFn + '(\'' + scope + '\',\'' + k + '\',\'estadistico\')">Estadístico</button>' +
-        '<button class="repaso-toggle-btn nostat' + noStatActive + '" onclick="' + onToggleFn + '(\'' + scope + '\',\'' + k + '\',\'no_estadistico\')">No estadístico</button>' +
-      '</div>' +
-    '</div>'
-  );
-}
-
-/* ── Avisos "Ya podés repasar SL" (semana/mes real actual) ──────
-   Se muestran junto al calendario de cada sección y abren un modal
-   de repaso rápido. ────── */
-const alertModalCtx = { scope: 'fondeo', period: 'week' };
-
-function renderSlAlerts(scope) {
-  const containerId = scope === 'practica' ? 'pRepasoAlerts' : 'fRepasoAlerts';
-  const el = document.getElementById(containerId);
+/* ── Avisos "Ya podés repasar SL" (semana/mes real actual, solo Fondeo) ──
+   Se muestran junto al calendario de Fondeo y abren el modal de día
+   completo en modo repaso (con navegación entre los SL del período). ── */
+function renderSlAlerts() {
+  const el = document.getElementById('fRepasoAlerts');
   if (!el) return;
 
-  const weekCount  = slPendingCount(scope, 'week');
-  const monthCount = slPendingCount(scope, 'month');
+  const weekCount  = slPendingCount('week');
+  const monthCount = slPendingCount('month');
   let html = '';
   if (weekCount > 0) {
-    html += '<button class="sl-alert-card" onclick="openSlAlertModal(\'' + scope + '\',\'week\')">' +
+    html += '<button class="sl-alert-card" onclick="openFondeoModalForRepaso(\'week\')">' +
       '<span class="sl-alert-icon">⚠</span>' +
       '<span class="sl-alert-text">Ya podés repasar el Stop Loss de la semana' +
         '<span class="sl-alert-count">' + weekCount + ' pendiente' + (weekCount > 1 ? 's' : '') + '</span>' +
@@ -4049,7 +4185,7 @@ function renderSlAlerts(scope) {
     '</button>';
   }
   if (monthCount > 0) {
-    html += '<button class="sl-alert-card" onclick="openSlAlertModal(\'' + scope + '\',\'month\')">' +
+    html += '<button class="sl-alert-card" onclick="openFondeoModalForRepaso(\'month\')">' +
       '<span class="sl-alert-icon">⚠</span>' +
       '<span class="sl-alert-text">Ya podés repasar el Stop Loss del mes' +
         '<span class="sl-alert-count">' + monthCount + ' pendiente' + (monthCount > 1 ? 's' : '') + '</span>' +
@@ -4059,55 +4195,58 @@ function renderSlAlerts(scope) {
   el.innerHTML = html;
 }
 
-function openSlAlertModal(scope, period) {
-  alertModalCtx.scope = scope;
-  alertModalCtx.period = period;
-  renderSlAlertModal();
-  document.getElementById('slAlertModal').classList.add('open');
-}
-function closeSlAlertModal() {
-  document.getElementById('slAlertModal').classList.remove('open');
-}
-function slAlertBgClick(e) {
-  if (e.target === document.getElementById('slAlertModal')) closeSlAlertModal();
-}
+/* ── Modo repaso dentro del modal de día de Fondeo ───────────────
+   Navega, dentro del mismo modal completo del día, por todos los
+   días con SL de la semana/mes elegido. ─────────────────────── */
+let repasoNavCtx = null; // { keys: [...], idx: 0 }
 
-function setSlAlertStatus(scope, key, val) {
-  const d = scopedGetDay(scope, key);
-  d.slStatus = d.slStatus === val ? null : val;
-  scopedSaveDay(scope, key, d);
-  renderSlAlertModal();
-  renderSlAlerts(scope);
-}
-
-function renderSlAlertModal() {
-  const { scope, period } = alertModalCtx;
-  const store = scopedStore(scope);
+function openFondeoModalForRepaso(period) {
   const today = new Date();
-  let keys, rangeLabel;
-  if (period === 'week') {
-    keys = getWeekKeys(mkKey(today.getFullYear(), today.getMonth(), today.getDate()));
-    const p1 = parseKey(keys[0]), p2 = parseKey(keys[6]);
-    rangeLabel = 'Semana · ' + p1.d + ' ' + MONTHS[p1.m].slice(0,3) + ' – ' + p2.d + ' ' + MONTHS[p2.m].slice(0,3);
-  } else {
-    keys = getMonthKeys(today.getFullYear(), today.getMonth());
-    rangeLabel = MONTHS[today.getMonth()] + ' ' + today.getFullYear();
-  }
+  const keys = period === 'week'
+    ? getWeekKeys(mkKey(today.getFullYear(), today.getMonth(), today.getDate()))
+    : getMonthKeys(today.getFullYear(), today.getMonth());
+  const slKeys = keys.filter(k => _fondeo[k] && getDayResult(_fondeo[k]) === 'sl').sort();
+  if (!slKeys.length) return;
+  repasoNavCtx = { keys: slKeys, idx: 0 };
+  openRepasoModalAt(0);
+}
 
-  const slKeys   = keys.filter(k => store[k] && getDayResult(store[k]) === 'sl').sort();
-  const total     = slKeys.length;
-  const estCount  = slKeys.filter(k => store[k].slStatus === 'estadistico').length;
-  const pendCount = slKeys.filter(k => store[k].slStatus == null).length;
+function openRepasoModalAt(idx) {
+  if (!repasoNavCtx) return;
+  repasoNavCtx.idx = idx;
+  openFondeoModal(repasoNavCtx.keys[idx]);
+  updateRepasoModeBar();
+}
 
-  document.getElementById('slAlertModalTitle').textContent =
-    'Repaso de Stop Loss — ' + (scope === 'practica' ? 'Práctica' : 'Fondeo');
-  document.getElementById('slAlertModalMeta').textContent = rangeLabel;
-  document.getElementById('slAlertModalSummary').innerHTML = slSummaryHTML(total, estCount, pendCount);
+function repasoModalNav(dir) {
+  if (!repasoNavCtx) return;
+  const newIdx = repasoNavCtx.idx + dir;
+  if (newIdx < 0 || newIdx >= repasoNavCtx.keys.length) return;
+  openRepasoModalAt(newIdx);
+}
 
-  const listEl = document.getElementById('slAlertModalList');
-  listEl.innerHTML = total
-    ? slKeys.map(k => slCardHTML(scope, k, 'setSlAlertStatus')).join('')
-    : '<div class="repaso-empty">No hay días con SL en este período.</div>';
+function updateRepasoModeBar() {
+  const bar = document.getElementById('repasoModeBar');
+  if (!bar) return;
+  if (!repasoNavCtx) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  const { keys, idx } = repasoNavCtx;
+  document.getElementById('repasoModePos').textContent = (idx + 1) + '/' + keys.length;
+  document.getElementById('repasoPrevBtn').disabled = idx === 0;
+  document.getElementById('repasoNextBtn').disabled = idx === keys.length - 1;
+  const d = getDayFondeo(keys[idx]);
+  document.getElementById('repasoModeStatBtn').classList.toggle('active', d.slStatus === 'estadistico');
+  document.getElementById('repasoModeNostatBtn').classList.toggle('active', d.slStatus === 'no_estadistico');
+}
+
+function setRepasoModalStatus(val) {
+  if (!repasoNavCtx) return;
+  const key = repasoNavCtx.keys[repasoNavCtx.idx];
+  const d = getDayFondeo(key);
+  d.slStatus = d.slStatus === val ? null : val;
+  saveDayFondeo(key, d);
+  updateRepasoModeBar();
+  renderSlAlerts();
 }
 
 /* ── Pie Chart ────────────────────────────────────────────────── */
@@ -4228,7 +4367,7 @@ function renderStats() {
   renderWeekStats();
   renderCyclePnl();
   renderCycleStats();
-  renderSlAlerts('fondeo');
+  renderSlAlerts();
 }
 
 function renderDayStats() {

@@ -200,6 +200,18 @@ body{
   .ann-toolbar{gap:6px}
   .ann-textbox{width:140px}
 }
+
+/* — Tap-targets más grandes para dedo, sin importar el ancho de
+     pantalla (un touchscreen puede ser angosto o no) — */
+@media (pointer:coarse){
+  .ann-tool-btn,.ann-size-btn,.ann-action-btn,.ann-save-btn{min-height:44px}
+  .ann-swatch{width:26px;height:26px}
+  .ann-textbox-handle{padding:7px 8px 7px 10px;font-size:12px}
+  .ann-textbox-del-btn{padding:4px 8px;font-size:14px}
+  .annotate-btn{padding:10px 0;font-size:11.5px}
+  .comment-submit{min-height:44px;padding:12px 20px}
+  .name-box input{padding:11px 12px;min-height:44px}
+}
 </style>
 </head>
 <body>

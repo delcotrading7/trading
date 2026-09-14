@@ -3552,6 +3552,8 @@ function toggleFReviewed(key) {
       ? 'background:var(--goldbg);border:1px solid var(--gold);color:var(--gold);padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.2px;'
       : 'background:var(--bg3);border:1px solid var(--border);color:var(--t3);padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.2px;';
   }
+  renderSlAlerts();
+  updateRepasoModeBar();
 }
 
 /* ── Navegación Fondeo ───────────────────────────────────────── */
@@ -4264,13 +4266,15 @@ function escapeHtml(s) {
 /* ══════════════════════════════════════════════════════════════
    REPASO DE SL — repaso semanal/mensual de pérdidas (Fondeo)
 ══════════════════════════════════════════════════════════════ */
-// Días con SL, sin marcar (ni Estadístico ni No estadístico), en la semana/mes real actual.
+// Días con SL, sin clasificar (ni Estadístico ni No estadístico) Y sin marcar
+// como revisado, en la semana/mes real actual. Cualquiera de los dos (clasificar
+// o revisar) saca al día de "pendiente" — son datos independientes entre sí.
 function slPendingCount(period) {
   const today = new Date();
   const keys = period === 'week'
     ? getWeekKeys(mkKey(today.getFullYear(), today.getMonth(), today.getDate()))
     : getMonthKeys(today.getFullYear(), today.getMonth());
-  return keys.filter(k => _fondeo[k] && getDayResult(_fondeo[k]) === 'sl' && _fondeo[k].slStatus == null).length;
+  return keys.filter(k => _fondeo[k] && getDayResult(_fondeo[k]) === 'sl' && _fondeo[k].slStatus == null && !_fondeo[k].reviewed).length;
 }
 
 /* ── Avisos "Ya podés repasar SL" (semana/mes real actual, solo Fondeo) ──
@@ -4338,10 +4342,10 @@ function updateRepasoModeBar() {
   if (!repasoNavCtx) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
   const { keys, idx } = repasoNavCtx;
-  document.getElementById('repasoModePos').textContent = (idx + 1) + '/' + keys.length;
+  const d = getDayFondeo(keys[idx]);
+  document.getElementById('repasoModePos').textContent = (idx + 1) + '/' + keys.length + (d.reviewed ? ' ✔' : '');
   document.getElementById('repasoPrevBtn').disabled = idx === 0;
   document.getElementById('repasoNextBtn').disabled = idx === keys.length - 1;
-  const d = getDayFondeo(keys[idx]);
   document.getElementById('repasoModeStatBtn').classList.toggle('active', d.slStatus === 'estadistico');
   document.getElementById('repasoModeNostatBtn').classList.toggle('active', d.slStatus === 'no_estadistico');
 }

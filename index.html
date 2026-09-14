@@ -1098,9 +1098,24 @@ body{
   padding:14px 15px;cursor:pointer;transition:all .2s;font-family:var(--font-body);
 }
 .sl-alert-card:hover{background:var(--bgh);border-color:var(--gold);box-shadow:0 8px 22px rgba(0,0,0,.4)}
-.sl-alert-icon{font-size:15px;line-height:1;margin-top:1px;color:var(--gold);flex-shrink:0}
+.sl-alert-icon{width:17px;height:17px;line-height:1;margin-top:1px;color:var(--gold);flex-shrink:0}
+.sl-alert-icon svg{display:block}
+.sl-alert-label{display:block;font-size:9.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
 .sl-alert-text{font-size:12.5px;font-weight:700;color:var(--t1);line-height:1.45}
 .sl-alert-count{display:block;margin-top:5px;font-size:10.5px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.4px}
+
+/* — Distinción visual semana (cian) / mes (violeta) — */
+.sl-alert-card.sl-alert-week{border-color:var(--spborder)}
+.sl-alert-card.sl-alert-week:hover{border-color:var(--sp);box-shadow:0 8px 22px rgba(6,182,212,.25)}
+.sl-alert-card.sl-alert-week .sl-alert-icon,
+.sl-alert-card.sl-alert-week .sl-alert-label,
+.sl-alert-card.sl-alert-week .sl-alert-count{color:var(--sp)}
+
+.sl-alert-card.sl-alert-month{border-color:var(--mtborder)}
+.sl-alert-card.sl-alert-month:hover{border-color:var(--mt);box-shadow:0 8px 22px rgba(168,85,247,.25)}
+.sl-alert-card.sl-alert-month .sl-alert-icon,
+.sl-alert-card.sl-alert-month .sl-alert-label,
+.sl-alert-card.sl-alert-month .sl-alert-count{color:var(--mt)}
 
 /* ── Botón Eliminar/Reiniciar día ─────────────────────────── */
 .btn-reset-day{
@@ -3351,6 +3366,11 @@ const ICON_MAP = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" st
 const ICON_FOLDER = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
 const ICON_TRENDLINE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 5"/><polyline points="15 5 21 5 21 11"/></svg>';
 
+// Calendario con una sola fila resaltada → repaso SEMANAL
+const ICON_CAL_WEEK = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><rect x="5.5" y="12.5" width="13" height="4" rx="1" fill="currentColor" stroke="none" opacity=".9"/></svg>';
+// Calendario con grilla de puntos (todas las semanas) → repaso MENSUAL
+const ICON_CAL_MONTH = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><circle cx="7.5" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="16.5" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="7.5" cy="17.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="17.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="16.5" cy="17.2" r="1.1" fill="currentColor" stroke="none"/></svg>';
+
 // NOTA: RES_INFO.color se usa como fillStyle en <canvas> (drawPieChart), que no
 // puede leer variables CSS — por eso be/ne/lt/fe quedan en hex literal acá. Si se
 // cambia --yellow, --ne, --lt o --fe en :root, actualizar estos valores para que coincidan.
@@ -4307,18 +4327,24 @@ function renderSlAlerts() {
   const monthCount = slPendingCount('month');
   let html = '';
   if (weekCount > 0) {
-    html += '<button class="sl-alert-card" onclick="openFondeoModalForRepaso(\'week\')">' +
-      '<span class="sl-alert-icon">⚠</span>' +
-      '<span class="sl-alert-text">Ya podés repasar el Stop Loss de la semana' +
-        '<span class="sl-alert-count">' + weekCount + ' pendiente' + (weekCount > 1 ? 's' : '') + '</span>' +
+    html += '<button class="sl-alert-card sl-alert-week" onclick="openFondeoModalForRepaso(\'week\')">' +
+      '<span class="sl-alert-icon">' + ICON_CAL_WEEK + '</span>' +
+      '<span>' +
+        '<span class="sl-alert-label">Semanal</span>' +
+        '<span class="sl-alert-text">Ya podés repasar el Stop Loss de la semana' +
+          '<span class="sl-alert-count">' + weekCount + ' pendiente' + (weekCount > 1 ? 's' : '') + '</span>' +
+        '</span>' +
       '</span>' +
     '</button>';
   }
   if (monthCount > 0) {
-    html += '<button class="sl-alert-card" onclick="openFondeoModalForRepaso(\'month\')">' +
-      '<span class="sl-alert-icon">⚠</span>' +
-      '<span class="sl-alert-text">Ya podés repasar el Stop Loss del mes' +
-        '<span class="sl-alert-count">' + monthCount + ' pendiente' + (monthCount > 1 ? 's' : '') + '</span>' +
+    html += '<button class="sl-alert-card sl-alert-month" onclick="openFondeoModalForRepaso(\'month\')">' +
+      '<span class="sl-alert-icon">' + ICON_CAL_MONTH + '</span>' +
+      '<span>' +
+        '<span class="sl-alert-label">Mensual</span>' +
+        '<span class="sl-alert-text">Ya podés repasar el Stop Loss del mes' +
+          '<span class="sl-alert-count">' + monthCount + ' pendiente' + (monthCount > 1 ? 's' : '') + '</span>' +
+        '</span>' +
       '</span>' +
     '</button>';
   }

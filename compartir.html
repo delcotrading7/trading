@@ -144,11 +144,6 @@ body{
   flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
   padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border);
 }
-.ann-tool-btn{
-  background:var(--bg3);border:1px solid var(--border);color:var(--t2);
-  width:36px;height:36px;border-radius:8px;font-size:15px;cursor:pointer;
-}
-.ann-tool-btn.active{border-color:var(--sp);color:var(--sp);background:rgba(6,182,212,.12)}
 .ann-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent}
 .ann-swatch.active{border-color:#fff;box-shadow:0 0 0 2px var(--sp)}
 .ann-size-btn{
@@ -166,8 +161,29 @@ body{
   border:none;padding:0 18px;height:36px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:var(--font-body);
 }
 .ann-save-btn:disabled{opacity:.5;cursor:default}
+.ann-hint{flex-shrink:0;text-align:center;font-size:11.5px;color:var(--t3);padding:8px 12px 0}
 .ann-canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:14px}
-#annotatorCanvas{max-width:100%;max-height:100%;touch-action:none;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.5);background:#111}
+.ann-stage{position:relative;display:inline-block;max-width:100%}
+#annotatorCanvas{display:block;max-width:100%;max-height:70vh;touch-action:none;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.5);background:#111;cursor:crosshair}
+#annTextLayer{position:absolute;inset:0;pointer-events:none}
+
+/* Cuadros de texto sobre la foto */
+.ann-textbox{position:absolute;pointer-events:auto;width:170px}
+.ann-textbox-handle{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  background:rgba(0,0,0,.65);border-radius:6px 6px 0 0;padding:3px 4px 3px 8px;
+  cursor:grab;font-size:10.5px;color:#ccc;touch-action:none;user-select:none;
+}
+.ann-textbox-handle:active{cursor:grabbing}
+.ann-textbox-del-btn{background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;padding:2px 5px;line-height:1}
+.ann-textbox-del-btn:hover{color:#f43f5e}
+.ann-textbox-input{
+  display:block;width:100%;resize:none;overflow:hidden;box-sizing:border-box;
+  background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.22);border-top:none;
+  border-radius:0 0 6px 6px;padding:6px 8px;font-family:var(--font-body);font-weight:800;
+  line-height:1.3;outline:none;min-height:30px;
+}
+.ann-textbox-input::placeholder{color:rgba(255,255,255,.45);font-weight:600}
 
 @media (max-width:420px){
   body{padding:16px 12px 40px}
@@ -175,6 +191,7 @@ body{
   .date-title{font-size:17px}
   .amount{font-size:19px}
   .ann-toolbar{gap:6px}
+  .ann-textbox{width:140px}
 }
 </style>
 </head>
@@ -197,26 +214,26 @@ body{
 
 <div id="annotator">
   <div class="ann-toolbar">
-    <button class="ann-tool-btn active" id="toolPen" onclick="setAnnTool('pen')" title="Lápiz">✏️</button>
-    <button class="ann-tool-btn" id="toolLine" onclick="setAnnTool('line')" title="Línea">╱</button>
-    <button class="ann-tool-btn" id="toolArrow" onclick="setAnnTool('arrow')" title="Flecha">➔</button>
-    <button class="ann-tool-btn" id="toolCircle" onclick="setAnnTool('circle')" title="Círculo">◯</button>
-    <span class="ann-swatch active" style="background:#f43f5e" onclick="setAnnColor('#f43f5e',this)"></span>
-    <span class="ann-swatch" style="background:#facc15" onclick="setAnnColor('#facc15',this)"></span>
-    <span class="ann-swatch" style="background:#06b6d4" onclick="setAnnColor('#06b6d4',this)"></span>
-    <span class="ann-swatch" style="background:#22c55e" onclick="setAnnColor('#22c55e',this)"></span>
-    <span class="ann-swatch" style="background:#ffffff" onclick="setAnnColor('#ffffff',this)"></span>
-    <button class="ann-size-btn active" id="sizeS" onclick="setAnnSize(3,this)">S</button>
-    <button class="ann-size-btn" id="sizeM" onclick="setAnnSize(6,this)">M</button>
-    <button class="ann-size-btn" id="sizeL" onclick="setAnnSize(10,this)">L</button>
+    <span class="ann-swatch active" style="background:#ffffff" onclick="setAnnColor('#ffffff',this)" title="Blanco"></span>
+    <span class="ann-swatch" style="background:#f43f5e" onclick="setAnnColor('#f43f5e',this)" title="Rojo"></span>
+    <span class="ann-swatch" style="background:#facc15" onclick="setAnnColor('#facc15',this)" title="Amarillo"></span>
+    <span class="ann-swatch" style="background:#06b6d4" onclick="setAnnColor('#06b6d4',this)" title="Celeste"></span>
+    <span class="ann-swatch" style="background:#22c55e" onclick="setAnnColor('#22c55e',this)" title="Verde"></span>
+    <button class="ann-size-btn" id="sizeS" onclick="setAnnSize(18,this)">S</button>
+    <button class="ann-size-btn active" id="sizeM" onclick="setAnnSize(24,this)">M</button>
+    <button class="ann-size-btn" id="sizeL" onclick="setAnnSize(32,this)">L</button>
     <button class="ann-action-btn" onclick="annUndo()">↺ Deshacer</button>
     <button class="ann-action-btn" onclick="annClear()">Borrar todo</button>
     <div class="ann-spacer"></div>
     <button class="ann-action-btn" onclick="closeAnnotator()">Cancelar</button>
     <button class="ann-save-btn" id="annSaveBtn" onclick="saveAnnotation()">Guardar</button>
   </div>
+  <div class="ann-hint">Tocá la foto para agregar un texto ahí</div>
   <div class="ann-canvas-wrap">
-    <canvas id="annotatorCanvas"></canvas>
+    <div class="ann-stage" id="annStage">
+      <canvas id="annotatorCanvas"></canvas>
+      <div id="annTextLayer"></div>
+    </div>
   </div>
 </div>
 
@@ -481,20 +498,13 @@ async function submitComment(){
   }
 }
 
-/* ── Anotador de dibujo (canvas nativo) ──────────────────────── */
+/* ── Anotador de texto sobre la foto (canvas + cuadros de texto) ── */
 let annState = {
-  tool: 'pen', color: '#f43f5e', size: 3,
-  strokes: [], undone: [], img: null, w: 0, h: 0,
-  photoPath: null, drawing: false, current: null,
+  color: '#ffffff', size: 24,
+  textBoxes: [], img: null, w: 0, h: 0, photoPath: null,
 };
 let annCanvas, annCtx;
 
-function setAnnTool(tool){
-  annState.tool = tool;
-  ['Pen','Line','Arrow','Circle'].forEach(t => {
-    document.getElementById('tool'+t).classList.toggle('active', t.toLowerCase() === tool);
-  });
-}
 function setAnnColor(color, el){
   annState.color = color;
   document.querySelectorAll('.ann-swatch').forEach(s => s.classList.remove('active'));
@@ -508,7 +518,8 @@ function setAnnSize(size, el){
 
 function openAnnotator(url, photoPath){
   annState.photoPath = photoPath;
-  annState.strokes = [];
+  annState.textBoxes = [];
+  document.getElementById('annTextLayer').innerHTML = '';
   const overlay = document.getElementById('annotator');
   overlay.classList.add('open');
   annCanvas = document.getElementById('annotatorCanvas');
@@ -526,130 +537,179 @@ function openAnnotator(url, photoPath){
     redrawAnnCanvas();
   };
   img.onerror = () => {
-    alert('No se pudo cargar la foto para dibujar.');
+    alert('No se pudo cargar la foto para escribir sobre ella.');
     closeAnnotator();
   };
   img.src = url;
 
-  annCanvas.onpointerdown = annPointerDown;
-  annCanvas.onpointermove = annPointerMove;
-  annCanvas.onpointerup = annPointerUp;
-  annCanvas.onpointerleave = annPointerUp;
+  annCanvas.onclick = onAnnCanvasClick;
 }
 
 function closeAnnotator(){
   document.getElementById('annotator').classList.remove('open');
-  annState.strokes = [];
+  document.getElementById('annTextLayer').innerHTML = '';
+  annState.textBoxes = [];
   annState.img = null;
-}
-
-function getAnnPos(e){
-  const rect = annCanvas.getBoundingClientRect();
-  const x = (e.clientX - rect.left) * (annCanvas.width / rect.width);
-  const y = (e.clientY - rect.top) * (annCanvas.height / rect.height);
-  return { x, y };
-}
-
-function annPointerDown(e){
-  e.preventDefault();
-  const pos = getAnnPos(e);
-  annState.drawing = true;
-  if (annState.tool === 'pen') {
-    annState.current = { tool: 'pen', color: annState.color, size: annState.size, points: [pos] };
-  } else {
-    annState.current = { tool: annState.tool, color: annState.color, size: annState.size, x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y };
-  }
-}
-function annPointerMove(e){
-  if (!annState.drawing || !annState.current) return;
-  e.preventDefault();
-  const pos = getAnnPos(e);
-  if (annState.tool === 'pen') {
-    annState.current.points.push(pos);
-  } else {
-    annState.current.x2 = pos.x;
-    annState.current.y2 = pos.y;
-  }
-  redrawAnnCanvas();
-}
-function annPointerUp(){
-  if (!annState.drawing) return;
-  annState.drawing = false;
-  if (annState.current) {
-    annState.strokes.push(annState.current);
-    annState.current = null;
-  }
-  redrawAnnCanvas();
-}
-
-function drawAnnStroke(ctx, s){
-  ctx.strokeStyle = s.color;
-  ctx.fillStyle = s.color;
-  ctx.lineWidth = s.size;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  if (s.tool === 'pen') {
-    if (s.points.length < 2) {
-      ctx.beginPath();
-      ctx.arc(s.points[0].x, s.points[0].y, s.size/2, 0, Math.PI*2);
-      ctx.fill();
-      return;
-    }
-    ctx.beginPath();
-    ctx.moveTo(s.points[0].x, s.points[0].y);
-    for (let i=1;i<s.points.length;i++) ctx.lineTo(s.points[i].x, s.points[i].y);
-    ctx.stroke();
-  } else if (s.tool === 'line') {
-    ctx.beginPath();
-    ctx.moveTo(s.x1, s.y1);
-    ctx.lineTo(s.x2, s.y2);
-    ctx.stroke();
-  } else if (s.tool === 'arrow') {
-    ctx.beginPath();
-    ctx.moveTo(s.x1, s.y1);
-    ctx.lineTo(s.x2, s.y2);
-    ctx.stroke();
-    const angle = Math.atan2(s.y2 - s.y1, s.x2 - s.x1);
-    const headLen = 8 + s.size * 2;
-    ctx.beginPath();
-    ctx.moveTo(s.x2, s.y2);
-    ctx.lineTo(s.x2 - headLen*Math.cos(angle - Math.PI/6), s.y2 - headLen*Math.sin(angle - Math.PI/6));
-    ctx.lineTo(s.x2 - headLen*Math.cos(angle + Math.PI/6), s.y2 - headLen*Math.sin(angle + Math.PI/6));
-    ctx.closePath();
-    ctx.fill();
-  } else if (s.tool === 'circle') {
-    const cx = (s.x1 + s.x2) / 2, cy = (s.y1 + s.y2) / 2;
-    const rx = Math.abs(s.x2 - s.x1) / 2, ry = Math.abs(s.y2 - s.y1) / 2;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, Math.max(rx,1), Math.max(ry,1), 0, 0, Math.PI*2);
-    ctx.stroke();
-  }
 }
 
 function redrawAnnCanvas(){
   if (!annCtx || !annState.img) return;
   annCtx.clearRect(0, 0, annCanvas.width, annCanvas.height);
   annCtx.drawImage(annState.img, 0, 0, annState.w, annState.h);
-  annState.strokes.forEach(s => drawAnnStroke(annCtx, s));
-  if (annState.current) drawAnnStroke(annCtx, annState.current);
+}
+
+/* ── Cuadros de texto (overlay sobre el canvas) ──────────────── */
+function onAnnCanvasClick(e){
+  const rect = annCanvas.getBoundingClientRect();
+  addTextBoxAt(e.clientX - rect.left, e.clientY - rect.top);
+}
+
+function addTextBoxAt(x, y){
+  const box = { id: 'tb'+Date.now()+Math.random().toString(36).slice(2,7), color: annState.color, size: annState.size, el: null, textarea: null };
+  const el = document.createElement('div');
+  el.className = 'ann-textbox';
+  el.style.left = Math.max(0, x - 10) + 'px';
+  el.style.top = Math.max(0, y - 10) + 'px';
+  el.style.color = box.color;
+  el.style.fontSize = box.size + 'px';
+
+  const handle = document.createElement('div');
+  handle.className = 'ann-textbox-handle';
+  const handleLbl = document.createElement('span');
+  handleLbl.textContent = '⠿ mover';
+  const delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'ann-textbox-del-btn';
+  delBtn.textContent = '✕';
+  handle.appendChild(handleLbl);
+  handle.appendChild(delBtn);
+  el.appendChild(handle);
+
+  const ta = document.createElement('textarea');
+  ta.className = 'ann-textbox-input';
+  ta.placeholder = 'Escribí acá...';
+  ta.rows = 1;
+  ta.style.color = box.color;
+  ta.style.fontSize = box.size + 'px';
+  ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+  ta.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+  el.appendChild(ta);
+
+  delBtn.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    el.remove();
+    annState.textBoxes = annState.textBoxes.filter(b => b.id !== box.id);
+  });
+  attachTextBoxDrag(handle, el);
+
+  box.el = el;
+  box.textarea = ta;
+  document.getElementById('annTextLayer').appendChild(el);
+  annState.textBoxes.push(box);
+  ta.focus();
+}
+
+function attachTextBoxDrag(handle, el){
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX, startY = e.clientY;
+    const startLeft = parseFloat(el.style.left) || 0;
+    const startTop = parseFloat(el.style.top) || 0;
+    const onMove = (ev) => {
+      el.style.left = (startLeft + (ev.clientX - startX)) + 'px';
+      el.style.top  = (startTop  + (ev.clientY - startY)) + 'px';
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
 }
 
 function annUndo(){
-  annState.strokes.pop();
-  redrawAnnCanvas();
+  const last = annState.textBoxes.pop();
+  if (last && last.el) last.el.remove();
 }
 function annClear(){
-  annState.strokes = [];
-  redrawAnnCanvas();
+  annState.textBoxes.forEach(b => b.el && b.el.remove());
+  annState.textBoxes = [];
+}
+
+/* ── Aplanar los textos sobre el canvas al guardar ───────────── */
+function wrapCanvasText(ctx, text, maxWidth){
+  const lines = [];
+  text.split('\n').forEach(paragraph => {
+    const words = paragraph.split(' ');
+    let line = '';
+    words.forEach(w => {
+      const test = line ? line + ' ' + w : w;
+      if (line && ctx.measureText(test).width > maxWidth) {
+        lines.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
+    });
+    lines.push(line);
+  });
+  return lines;
+}
+
+function roundRectPath(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+function drawTextBoxOnCanvas(ctx, box, ratioX, ratioY, stageRect){
+  const text = box.textarea.value.trim();
+  if (!text) return;
+  const taRect = box.textarea.getBoundingClientRect();
+  const x = (taRect.left - stageRect.left) * ratioX;
+  const y = (taRect.top - stageRect.top) * ratioY;
+  const maxWidth = Math.max(40, taRect.width * ratioX - 16);
+  const fontSize = Math.max(10, Math.round(box.size * ratioX));
+
+  ctx.font = 'bold ' + fontSize + 'px Inter, "Segoe UI", sans-serif';
+  ctx.textBaseline = 'top';
+  const lines = wrapCanvasText(ctx, text, maxWidth);
+  const lineHeight = fontSize * 1.3;
+  const padding = fontSize * 0.35;
+  let blockWidth = 0;
+  lines.forEach(l => { blockWidth = Math.max(blockWidth, ctx.measureText(l).width); });
+  const blockHeight = lines.length * lineHeight;
+
+  ctx.fillStyle = 'rgba(0,0,0,.55)';
+  roundRectPath(ctx, x - padding, y - padding, blockWidth + padding*2, blockHeight + padding*2, 6*ratioX);
+  ctx.fill();
+
+  ctx.fillStyle = box.color;
+  lines.forEach((l, i) => ctx.fillText(l, x, y + i*lineHeight));
 }
 
 async function saveAnnotation(){
+  const hasText = annState.textBoxes.some(b => b.textarea.value.trim());
+  if (!hasText) { alert('Agregá al menos un texto sobre la foto antes de guardar.'); return; }
   const name = getMentorName();
   if (!name) return;
   const btn = document.getElementById('annSaveBtn');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try {
-    const dataUrl = annCanvas.toDataURL('image/jpeg', 0.85);
+    redrawAnnCanvas();
+    const canvasRect = annCanvas.getBoundingClientRect();
+    const stageRect = document.getElementById('annStage').getBoundingClientRect();
+    const ratioX = annCanvas.width / canvasRect.width;
+    const ratioY = annCanvas.height / canvasRect.height;
+    annState.textBoxes.forEach(box => drawTextBoxOnCanvas(annCtx, box, ratioX, ratioY, stageRect));
+
+    const dataUrl = annCanvas.toDataURL('image/jpeg', 0.9);
     const res = await fetch('/.netlify/functions/share-day?token=' + encodeURIComponent(TOKEN), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

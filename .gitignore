@@ -3,6 +3,7 @@
 *.jpg
 *.jpeg
 !FONDO.jpg
+!assets/**
 
 # Carpeta de deploy manual antigua (ya no se usa, Netlify despliega desde el repo)
 /deploy/

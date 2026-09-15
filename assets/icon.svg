@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="#F5F1E8"/>
+
+  <!-- Vela 1 -->
+  <line x1="184" y1="234" x2="184" y2="366" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+  <rect x="168" y="260" width="32" height="84" rx="6" fill="#1a1a1a"/>
+
+  <!-- Vela 2 -->
+  <line x1="256" y1="194" x2="256" y2="366" stroke="#9a9a9a" stroke-width="7" stroke-linecap="round"/>
+  <rect x="240" y="220" width="32" height="124" rx="6" fill="#9a9a9a"/>
+
+  <!-- Vela 3 -->
+  <line x1="328" y1="146" x2="328" y2="366" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+  <rect x="312" y="172" width="32" height="172" rx="6" fill="#1a1a1a"/>
+</svg>

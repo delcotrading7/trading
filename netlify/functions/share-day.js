@@ -178,7 +178,10 @@ async function handlePost(event, SUPABASE_URL, headers) {
         comment_text: text,
       };
       const ins = await insertAnnotation(row, SUPABASE_URL, headers);
-      if (!ins.ok) throw new Error('No se pudo guardar el comentario (' + ins.status + ')');
+      if (!ins.ok) {
+        console.error('share-day: error guardando comentario', ins.status, ins.body);
+        return json(500, { error: friendlyDbError(ins) });
+      }
       return json(200, { ok: true });
     }
 
@@ -203,7 +206,7 @@ async function handlePost(event, SUPABASE_URL, headers) {
       if (!upRes.ok) {
         const t = await upRes.text().catch(() => '');
         console.error('share-day: error subiendo dibujo', upRes.status, t);
-        throw new Error('No se pudo subir la imagen (' + upRes.status + ')');
+        return json(500, { error: friendlyDbError({ status: upRes.status, body: t }) });
       }
 
       const row = {
@@ -217,7 +220,10 @@ async function handlePost(event, SUPABASE_URL, headers) {
         image_path: imagePath,
       };
       const ins = await insertAnnotation(row, SUPABASE_URL, headers);
-      if (!ins.ok) throw new Error('No se pudo guardar la anotación (' + ins.status + ')');
+      if (!ins.ok) {
+        console.error('share-day: error guardando anotación', ins.status, ins.body);
+        return json(500, { error: friendlyDbError(ins) });
+      }
       return json(200, { ok: true });
     }
 
@@ -234,7 +240,29 @@ async function insertAnnotation(row, SUPABASE_URL, headers) {
     headers: { ...headers, Prefer: 'return=minimal' },
     body: JSON.stringify(row),
   });
-  return { ok: res.ok, status: res.status };
+  if (res.ok) return { ok: true, status: res.status };
+  const body = await res.text().catch(() => '');
+  return { ok: false, status: res.status, body };
+}
+
+// Traduce un error de Supabase/PostgREST en un mensaje que le sirva a quien
+// comenta (sin exponer detalles internos) — y que sea distinto según la
+// causa, en vez del mensaje genérico de siempre.
+function friendlyDbError({ status, body }) {
+  const text = String(body || '');
+  if (status === 404 || /schema cache|PGRST205/.test(text)) {
+    return 'El servidor todavía no está listo para guardar comentarios (falta configurar la base de datos). Avisale a Benja para que lo revise.';
+  }
+  if (status === 401 || status === 403 || /row-level security/i.test(text)) {
+    return 'No se pudo guardar por un problema de permisos en el servidor. Avisale a Benja.';
+  }
+  if (status === 413) {
+    return 'El comentario o la imagen es demasiado grande. Probá con menos texto o menos trazos.';
+  }
+  if (status >= 500) {
+    return 'La base de datos no respondió. Probá de nuevo en unos minutos.';
+  }
+  return 'No se pudo guardar. Probá de nuevo en unos minutos; si el problema sigue, avisale a Benja.';
 }
 
 async function signPaths(paths, SUPABASE_URL, headers) {

@@ -4318,17 +4318,31 @@ function dateToCycleRange(start, end) {
   };
 }
 
-/* Dado un día de referencia, devuelve el ciclo de 30 días (+feriados) que
-   lo contiene, encadenando ciclos sucesivos desde el ancla de la cuenta
-   actual. Fechas anteriores al ancla (cuenta previa ya cerrada) caen en
-   el primer ciclo, que arranca en el ancla — así ningún día previo al
-   ancla queda incluido en las keys del ciclo. */
+/* Ciclo "legado" de la cuenta anterior a FONDEO_CYCLE_ANCHOR: 15 de un mes
+   al 14 del siguiente. Solo se usa para fechas anteriores al ancla —
+   la cuenta actual ya no sigue esta regla, pero el último tramo de la
+   cuenta previa (hasta el día antes del ancla, inclusive) sí. */
+function getLegacyFondeoCycleRange(refY, refM, refD) {
+  let startY = refY, startM = refM;
+  if (refD < 15) {
+    startM -= 1;
+    if (startM < 0) { startM = 11; startY -= 1; }
+  }
+  let endY = startY, endM = startM + 1;
+  if (endM > 11) { endM = 0; endY += 1; }
+  return { startY, startM, startD: 15, endY, endM, endD: 14 };
+}
+
+/* Dado un día de referencia, devuelve el ciclo que lo contiene. Antes del
+   ancla (cuenta previa, ya cerrada) usa la regla legada 15-14; desde el
+   ancla en adelante (cuenta actual) usa el ciclo de 30 días (+feriados),
+   encadenando ciclos sucesivos. */
 function getFondeoCycleRange(refY, refM, refD) {
   const refDate = new Date(refY, refM, refD);
-  let start = FONDEO_CYCLE_ANCHOR;
   if (refDate < FONDEO_CYCLE_ANCHOR) {
-    return dateToCycleRange(start, fondeoCycleEnd(start));
+    return getLegacyFondeoCycleRange(refY, refM, refD);
   }
+  let start = FONDEO_CYCLE_ANCHOR;
   while (true) {
     const end = fondeoCycleEnd(start);
     if (refDate <= end) return dateToCycleRange(start, end);

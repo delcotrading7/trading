@@ -4222,17 +4222,118 @@ function getWeekKeys(key) {
   return keys;
 }
 
-/* ── Ciclo de cuenta de fondeo: 15 de un mes al 14 del siguiente ──
-   Dado un día de referencia, devuelve el ciclo que lo contiene. */
-function getFondeoCycleRange(refY, refM, refD) {
-  let startY = refY, startM = refM;
-  if (refD < 15) {
-    startM -= 1;
-    if (startM < 0) { startM = 11; startY -= 1; }
+/* ── Ciclo de cuenta de fondeo: 30 días corridos desde el inicio de la
+   cuenta actual (18 de septiembre de 2026), sumando un día extra por
+   cada feriado del mercado de EE.UU. (NYSE) dentro del rango, para que
+   siempre haya 30 días hábiles de mercado disponibles. Los ciclos
+   siguientes encadenan uno después del otro (19 Oct, etc.). ── */
+const FONDEO_CYCLE_ANCHOR = new Date(2026, 8, 18); // 18 Sep 2026
+
+function addDaysToDate(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+// Domingo de Pascua (algoritmo de Meeus/Jones/Butcher) → Good Friday = Pascua - 2.
+function easterDate(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19*a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2*e + 2*i - h - k) % 7;
+  const m = Math.floor((a + 11*h + 22*l) / 451);
+  const month = Math.floor((h + l - 7*m + 114) / 31);
+  const day = ((h + l - 7*m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+function nthWeekdayOfMonth(year, month, weekday, n) {
+  const first = new Date(year, month, 1);
+  const offset = (weekday - first.getDay() + 7) % 7;
+  return new Date(year, month, 1 + offset + (n - 1) * 7);
+}
+
+function lastWeekdayOfMonth(year, month, weekday) {
+  const last = new Date(year, month + 1, 0);
+  const offset = (last.getDay() - weekday + 7) % 7;
+  return new Date(year, month, last.getDate() - offset);
+}
+
+// Feriados de fecha fija: si cae sábado se observa el viernes anterior,
+// si cae domingo se observa el lunes siguiente.
+function observedFixedHoliday(year, month, day) {
+  const d = new Date(year, month, day);
+  if (d.getDay() === 6) return addDaysToDate(d, -1);
+  if (d.getDay() === 0) return addDaysToDate(d, 1);
+  return d;
+}
+
+function usMarketHolidays(year) {
+  return [
+    observedFixedHoliday(year, 0, 1),        // Año Nuevo
+    nthWeekdayOfMonth(year, 0, 1, 3),        // MLK Day
+    nthWeekdayOfMonth(year, 1, 1, 3),        // Presidents Day
+    addDaysToDate(easterDate(year), -2),     // Good Friday
+    lastWeekdayOfMonth(year, 4, 1),          // Memorial Day
+    observedFixedHoliday(year, 5, 19),       // Juneteenth
+    observedFixedHoliday(year, 6, 4),        // Independence Day
+    nthWeekdayOfMonth(year, 8, 1, 1),        // Labor Day
+    nthWeekdayOfMonth(year, 10, 4, 4),       // Thanksgiving
+    observedFixedHoliday(year, 11, 25),      // Navidad
+  ];
+}
+
+function isUsMarketHoliday(date) {
+  return usMarketHolidays(date.getFullYear()).some(h => h.getTime() === date.getTime());
+}
+
+// 30 días corridos desde `start`, extendidos un día por cada feriado
+// de mercado que caiga dentro del rango (punto fijo).
+function fondeoCycleEnd(start) {
+  let end = addDaysToDate(start, 29);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    let holidayCount = 0;
+    for (let cur = new Date(start); cur <= end; cur = addDaysToDate(cur, 1)) {
+      if (isUsMarketHoliday(cur)) holidayCount++;
+    }
+    const newEnd = addDaysToDate(start, 29 + holidayCount);
+    if (newEnd.getTime() !== end.getTime()) { end = newEnd; changed = true; }
   }
-  let endY = startY, endM = startM + 1;
-  if (endM > 11) { endM = 0; endY += 1; }
-  return { startY, startM, startD: 15, endY, endM, endD: 14 };
+  return end;
+}
+
+function dateToCycleRange(start, end) {
+  return {
+    startY: start.getFullYear(), startM: start.getMonth(), startD: start.getDate(),
+    endY: end.getFullYear(), endM: end.getMonth(), endD: end.getDate()
+  };
+}
+
+/* Dado un día de referencia, devuelve el ciclo de 30 días (+feriados) que
+   lo contiene, encadenando ciclos sucesivos desde el ancla de la cuenta
+   actual. Fechas anteriores al ancla (cuenta previa ya cerrada) caen en
+   el primer ciclo, que arranca en el ancla — así ningún día previo al
+   ancla queda incluido en las keys del ciclo. */
+function getFondeoCycleRange(refY, refM, refD) {
+  const refDate = new Date(refY, refM, refD);
+  let start = FONDEO_CYCLE_ANCHOR;
+  if (refDate < FONDEO_CYCLE_ANCHOR) {
+    return dateToCycleRange(start, fondeoCycleEnd(start));
+  }
+  while (true) {
+    const end = fondeoCycleEnd(start);
+    if (refDate <= end) return dateToCycleRange(start, end);
+    start = addDaysToDate(end, 1);
+  }
 }
 
 function getFondeoCycleKeys(refY, refM, refD) {

@@ -4318,29 +4318,30 @@ function dateToCycleRange(start, end) {
   };
 }
 
-/* Ciclo "legado" de la cuenta anterior a FONDEO_CYCLE_ANCHOR: 15 de un mes
-   al 14 del siguiente. Solo se usa para fechas anteriores al ancla —
-   la cuenta actual ya no sigue esta regla, pero el último tramo de la
-   cuenta previa (hasta el día antes del ancla, inclusive) sí. */
-function getLegacyFondeoCycleRange(refY, refM, refD) {
-  let startY = refY, startM = refM;
-  if (refD < 15) {
-    startM -= 1;
-    if (startM < 0) { startM = 11; startY -= 1; }
+/* Ciclos anteriores al ancla (cuenta previa, ya cerrada): bloques fijos de
+   30 días corridos encadenados hacia atrás desde el día anterior al ancla
+   (17 Sep 2026), sin ajuste por feriados — ese ajuste solo aplica a la
+   cuenta actual, desde el ancla en adelante. El ciclo vigente el día
+   anterior al ancla es 19 Ago – 17 Sep 2026. */
+function getPreAnchorFondeoCycleRange(refY, refM, refD) {
+  const refDate = new Date(refY, refM, refD);
+  let end = addDaysToDate(FONDEO_CYCLE_ANCHOR, -1);
+  let start = addDaysToDate(end, -29);
+  while (refDate < start) {
+    end = addDaysToDate(start, -1);
+    start = addDaysToDate(end, -29);
   }
-  let endY = startY, endM = startM + 1;
-  if (endM > 11) { endM = 0; endY += 1; }
-  return { startY, startM, startD: 15, endY, endM, endD: 14 };
+  return dateToCycleRange(start, end);
 }
 
 /* Dado un día de referencia, devuelve el ciclo que lo contiene. Antes del
-   ancla (cuenta previa, ya cerrada) usa la regla legada 15-14; desde el
-   ancla en adelante (cuenta actual) usa el ciclo de 30 días (+feriados),
-   encadenando ciclos sucesivos. */
+   ancla (cuenta previa, ya cerrada) usa bloques fijos de 30 días
+   encadenados hacia atrás; desde el ancla en adelante (cuenta actual) usa
+   el ciclo de 30 días (+feriados), encadenando ciclos sucesivos. */
 function getFondeoCycleRange(refY, refM, refD) {
   const refDate = new Date(refY, refM, refD);
   if (refDate < FONDEO_CYCLE_ANCHOR) {
-    return getLegacyFondeoCycleRange(refY, refM, refD);
+    return getPreAnchorFondeoCycleRange(refY, refM, refD);
   }
   let start = FONDEO_CYCLE_ANCHOR;
   while (true) {

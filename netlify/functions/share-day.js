@@ -117,6 +117,8 @@ async function handleGet(event, SUPABASE_URL, headers) {
       contextNote: day.context_note || '',
       mainResult: day.main_result || null,
       mainAmount: day.main_amount || 0,
+      ne: day.ne || false,
+      lt: day.lt || false,
       missedOps: day.missed_ops || [],
       contextPhotos: withUrl(contextPhotos),
       photos: withUrl(photos),

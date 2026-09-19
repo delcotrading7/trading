@@ -535,6 +535,7 @@ body{
   cursor:pointer;transition:all .2s;
 }
 .res-sel-btn:hover{border-color:var(--borderl);color:var(--t1)}
+.res-sel-btn:disabled:hover{border-color:var(--border)!important;color:var(--t3)!important;background:var(--bg3)!important}
 .res-sel-btn.tp:hover,.res-sel-btn.tp.active{border-color:var(--green);color:var(--green);background:var(--greenbg)}
 .res-sel-btn.be:hover,.res-sel-btn.be.active{border-color:var(--yellow);color:var(--yellow);background:var(--yellowbg)}
 .res-sel-btn.sl:hover,.res-sel-btn.sl.active{border-color:var(--red);color:var(--red);background:var(--redbg)}
@@ -1778,7 +1779,7 @@ let _practica               = {};
 let currentPracticaKey      = null;
 let pCtxTarget              = null;
 let pPhTarget               = null;
-let practicaModalMain       = { result: null };
+let practicaModalMain       = { result: null, ne: false, lt: false };
 let practicaModalMissed     = [];
 let practicaModalEstrategia = null;
 let selectedPracticaKey     = null;
@@ -1925,6 +1926,8 @@ function dayToCloudRow(key, d) {
     context_note:        d.contextNote || '',
     main_result:         d.mainResult || null,
     main_amount:         d.mainAmount || 0,
+    ne:                  !!d.ne,
+    lt:                  !!d.lt,
     missed_ops:          d.missedOps || [],
     estrategia_cumplida: d.estrategiaCumplida ?? null,
     sl_status:           d.slStatus ?? null,
@@ -1935,12 +1938,20 @@ function dayToCloudRow(key, d) {
   };
 }
 function cloudRowToDay(row) {
+  // Compat: días viejos guardaban NE/Lateral como main_result excluyente.
+  // Se migran a etiquetas independientes (ne/lt) la primera vez que se leen.
+  let mainResult = row.main_result || null;
+  let ne = !!row.ne, lt = !!row.lt;
+  if (mainResult === 'ne') { mainResult = null; ne = true; }
+  else if (mainResult === 'lt') { mainResult = null; lt = true; }
   return {
     contextNote:        row.context_note || '',
     contextPhotos:      (row.context_photos||[]).map(p => ({...p})),
     photos:              (row.photos||[]).map(p => ({...p})),
-    mainResult:         row.main_result || null,
-    mainAmount:         row.main_amount || 0,
+    mainResult:         mainResult,
+    mainAmount:         (mainResult === 'ne' || mainResult === 'lt') ? 0 : (row.main_amount || 0),
+    ne:                 ne,
+    lt:                 lt,
     missedOps:          row.missed_ops || [],
     reviewed:           row.reviewed || false,
     estrategiaCumplida: row.estrategia_cumplida ?? null,
@@ -2197,7 +2208,7 @@ function savePracticaData() {
     const toSave = {};
     Object.keys(_practica).forEach(date => {
       const d = _practica[date];
-      const hasData = d.mainResult || (d.missedOps && d.missedOps.length) ||
+      const hasData = d.mainResult || d.ne || d.lt || (d.missedOps && d.missedOps.length) ||
                       (d.contextNote && d.contextNote.trim()) ||
                       (d.contextPhotos && d.contextPhotos.length) ||
                       (d.photos && d.photos.length) || d.reviewed ||
@@ -2209,6 +2220,8 @@ function savePracticaData() {
           photos:             (d.photos||[]).map(p=>({name:p.name,size:p.size,imgId:p.imgId})),
           mainResult:         d.mainResult || null,
           mainAmount:         d.mainAmount || 0,
+          ne:                 !!d.ne,
+          lt:                 !!d.lt,
           missedOps:          (d.missedOps||[]).map(op=>({id:op.id,type:op.type})),
           reviewed:           d.reviewed || false,
           estrategiaCumplida: d.estrategiaCumplida ?? null,
@@ -2223,7 +2236,7 @@ function savePracticaData() {
 function goToLastPracticaMonth() {
   const keys = Object.keys(_practica).filter(k => {
     const d = _practica[k];
-    return d && (d.mainResult || (d.missedOps && d.missedOps.length) ||
+    return d && (d.mainResult || d.ne || d.lt || (d.missedOps && d.missedOps.length) ||
                  (d.contextNote && d.contextNote.trim()) ||
                  (d.contextPhotos && d.contextPhotos.length) ||
                  (d.photos && d.photos.length));
@@ -2244,18 +2257,24 @@ function loadPracticaDataLocal() {
       const ctx  = (d.contextPhotos||[]).map(p=>({...p,data:imgCache[p.imgId]||null}));
       const phot = (d.photos||[]).map(p=>({...p,data:imgCache[p.imgId]||null}));
       let mr = d.mainResult || null;
-      let ma = (mr === 'ne' || mr === 'lt') ? 0 : (d.mainAmount || 0);
+      let ne = !!d.ne, lt = !!d.lt;
       let mo = Array.isArray(d.missedOps) ? d.missedOps.filter(op => op.type !== 'ne') : [];
-      // Migrate NE from missedOps to mainResult
+      // Migrate NE from missedOps to mainResult (formato viejo)
       if (!mr && Array.isArray(d.missedOps) && d.missedOps.some(op => op.type === 'ne')) {
-        mr = 'ne'; mo = []; ma = 0;
+        mr = 'ne'; mo = [];
       }
+      // Migrate NE/Lateral de mainResult excluyente a etiqueta independiente
+      if (mr === 'ne') { mr = null; ne = true; }
+      else if (mr === 'lt') { mr = null; lt = true; }
+      let ma = d.mainAmount || 0;
       _practica[date] = {
         contextNote:        d.contextNote || '',
         contextPhotos:      ctx,
         photos:             phot,
         mainResult:         mr,
         mainAmount:         ma,
+        ne:                 ne,
+        lt:                 lt,
         missedOps:          mo,
         reviewed:           d.reviewed || false,
         estrategiaCumplida: d.estrategiaCumplida ?? null,
@@ -2288,7 +2307,7 @@ async function loadPracticaData() {
 }
 
 function getPracticaDay(k) {
-  if (!_practica[k]) _practica[k] = {contextNote:'',contextPhotos:[],photos:[],mainResult:null,mainAmount:0,missedOps:[],reviewed:false,estrategiaCumplida:null,slStatus:null};
+  if (!_practica[k]) _practica[k] = {contextNote:'',contextPhotos:[],photos:[],mainResult:null,mainAmount:0,ne:false,lt:false,missedOps:[],reviewed:false,estrategiaCumplida:null,slStatus:null};
   const d = _practica[k];
   if (!d.contextPhotos)              d.contextPhotos    = [];
   if (!d.photos)                     d.photos           = [];
@@ -2297,6 +2316,11 @@ function getPracticaDay(k) {
   if (d.estrategiaCumplida===undefined) d.estrategiaCumplida = null;
   if (d.slStatus===undefined)        d.slStatus         = null;
   if (d.mainAmount===undefined)      d.mainAmount       = 0;
+  if (d.ne===undefined)              d.ne               = false;
+  if (d.lt===undefined)              d.lt               = false;
+  // Compat: migrar días viejos donde NE/Lateral era mainResult excluyente
+  if (d.mainResult === 'ne') { d.mainResult = null; d.ne = true; d.mainAmount = 0; }
+  else if (d.mainResult === 'lt') { d.mainResult = null; d.lt = true; d.mainAmount = 0; }
   d.contextPhotos = d.contextPhotos.map(p=>({...p,data:p.data||imgCache[p.imgId]||null}));
   d.photos        = d.photos.map(p=>({...p,data:p.data||imgCache[p.imgId]||null}));
   return d;
@@ -2443,6 +2467,8 @@ function closeResetDataConfirm() {
 function _resetDayFields(d) {
   d.mainResult         = null;
   d.mainAmount         = 0;
+  d.ne                 = false;
+  d.lt                 = false;
   d.missedOps          = [];
   d.contextNote        = '';
   d.estrategiaCumplida = null;
@@ -2614,7 +2640,7 @@ function renderPracticaCal() {
     const missed   = data.missedOps || [];
     const calMT    = missed.filter(op => op.type === 'mt').length;
     const calNE    = missed.filter(op => op.type === 'ne').length;
-    const hasData  = dr || calMT || calNE ||
+    const hasData  = dr || data.ne || data.lt || calMT || calNE ||
                      !!(data.contextNote && data.contextNote.trim()) ||
                      !!(data.contextPhotos && data.contextPhotos.length) ||
                      !!(data.photos && data.photos.length);
@@ -2625,6 +2651,8 @@ function renderPracticaCal() {
     if (isWeekend)    cls += ' f-weekend';
     else if (dr === 'sp') cls += ' f-' + (getDayPLPractica(data) < 0 ? 'sl' : 'tp');
     else if (dr)      cls += ' f-' + dr;
+    else if (data.lt) cls += ' f-lt';
+    else if (data.ne) cls += ' f-ne';
     else if (hasData) cls += ' has-data';
     if (key === selectedPracticaKey) cls += ' f-selected';
     if (data.reviewed) cls += ' p-reviewed';
@@ -2647,16 +2675,6 @@ function renderPracticaCal() {
       lockEl.innerHTML = ICON_LOCK;
       lockEl.style.cssText = 'opacity:.55;margin-top:3px;line-height:1';
       el.appendChild(lockEl);
-    } else if (dr === 'ne') {
-      const neLbl = document.createElement('div');
-      neLbl.className = 'day-trades-mini'; neLbl.textContent = 'Sin entrada';
-      neLbl.style.cssText = 'margin-top:6px;color:var(--ne);font-weight:700';
-      el.appendChild(neLbl);
-    } else if (dr === 'lt') {
-      const ltLbl = document.createElement('div');
-      ltLbl.className = 'day-trades-mini'; ltLbl.textContent = 'Día lateral';
-      ltLbl.style.cssText = 'margin-top:6px;color:var(--lt);font-weight:700';
-      el.appendChild(ltLbl);
     } else if (dr === 'fe') {
       const feLbl = document.createElement('div');
       feLbl.className = 'day-trades-mini'; feLbl.textContent = 'Día feriado';
@@ -2678,6 +2696,18 @@ function renderPracticaCal() {
         mEl.className = 'day-trades-mini'; mEl.textContent = 'MT: ' + calMT;
         el.appendChild(mEl);
       }
+      if (data.ne || data.lt) {
+        const tagEl = document.createElement('div');
+        tagEl.className = 'day-trades-mini';
+        tagEl.textContent = '+ ' + [data.ne?'NE':null, data.lt?'Lateral':null].filter(Boolean).join(' · ');
+        el.appendChild(tagEl);
+      }
+    } else if (data.ne || data.lt) {
+      const tagLbl = document.createElement('div');
+      tagLbl.className = 'day-trades-mini';
+      tagLbl.textContent = data.ne && data.lt ? 'Sin entrada · Lateral' : (data.ne ? 'Sin entrada' : 'Día lateral');
+      tagLbl.style.cssText = 'margin-top:6px;color:' + (data.lt ? 'var(--lt)' : 'var(--ne)') + ';font-weight:700';
+      el.appendChild(tagLbl);
     } else if (hasData) {
       const mt2 = (data.missedOps||[]).filter(op => op.type === 'mt').length;
       const tEl = document.createElement('div');
@@ -2709,7 +2739,7 @@ function openPracticaModal(key) {
     if (resetBtn) resetBtn.style.display = 'none';
   } else {
     const d = getPracticaDay(key);
-    practicaModalMain       = { result: d.mainResult || null, amount: d.mainAmount || 0 };
+    practicaModalMain       = { result: d.mainResult || null, amount: d.mainAmount || 0, ne: !!d.ne, lt: !!d.lt };
     practicaModalMissed     = (d.missedOps || []).filter(op=>op.type!=='ne').map(op=>({...op}));
     practicaModalEstrategia = d.estrategiaCumplida ?? null;
     updatePracticaModalMeta(key);
@@ -2746,10 +2776,14 @@ function updatePracticaModalMeta(key) {
   const missed = d.missedOps || [];
   const mtC = missed.filter(op=>op.type==='mt').length;
   const neC = missed.filter(op=>op.type==='ne').length;
+  const tagParts = [];
+  if (d.ne) tagParts.push('Sin entrada');
+  if (d.lt) tagParts.push('Día lateral');
   if (!dr) {
     const parts = [];
     if (mtC) parts.push(mtC+' MT');
     if (neC) parts.push(neC+' NE');
+    parts.push(...tagParts);
     document.getElementById('practicaModalMeta').textContent = parts.join(' · ') || 'Sin datos';
     return;
   }
@@ -2758,6 +2792,7 @@ function updatePracticaModalMeta(key) {
   const extraParts = [];
   if (mtC) extraParts.push(mtC+' MT');
   if (neC) extraParts.push(neC+' NE');
+  extraParts.push(...tagParts);
   if (extraParts.length) meta += '  ·  ' + extraParts.join(' · ');
   document.getElementById('practicaModalMeta').innerHTML = meta;
 }
@@ -2850,14 +2885,13 @@ function renderPMainSection() {
   const sec = document.getElementById('p-main-content');
   if (!sec) return;
   const r    = practicaModalMain.result;
-  const isTP = r==='tp', isBE = r==='be', isSL = r==='sl', isSP = r==='sp', isNE = r==='ne', isLT = r==='lt', isFE = r==='fe';
+  const isTP = r==='tp', isBE = r==='be', isSL = r==='sl', isSP = r==='sp', isFE = r==='fe';
+  const isNE = !!practicaModalMain.ne, isLT = !!practicaModalMain.lt;
+  const tagsDisabled = isFE;
+  const tagMsg = resultTagMessage(isNE, isLT);
 
   let amtHTML = '';
-  if (isNE) {
-    amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--nebg);border:1px solid var(--neborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--ne)"><span class="res-dot" style="background:var(--ne)"></span>Sin entrada — día sin trade</div>';
-  } else if (isLT) {
-    amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--ltbg);border:1px solid var(--ltborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--lt)"><span class="res-dot" style="background:var(--lt)"></span>Día lateral — sin operar</div>';
-  } else if (isFE) {
+  if (isFE) {
     amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--febg);border:1px solid var(--feborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--fe)"><span class="res-dot" style="background:var(--fe)"></span>Día feriado — sin operar</div>';
   } else if (isBE) {
     amtHTML = '<div style="margin-top:8px;text-align:center;font-size:26px;font-weight:900;color:var(--yellow);letter-spacing:1px">= 0</div>';
@@ -2868,17 +2902,22 @@ function renderPMainSection() {
   } else if (isSP) {
     const val = practicaModalMain.amount ? practicaModalMain.amount : '';
     amtHTML = '<div style="margin-top:8px"><div style="font-size:11px;color:var(--t2);margin-bottom:5px">Monto (variable):</div><input class="f-amt-input" id="pMainAmt" type="number" value="'+val+'" placeholder="ej: 150" style="max-width:200px;display:block" oninput="onPMainAmtInput()"></div>';
+  } else if (tagMsg) {
+    const tagColor = isLT ? 'var(--lt)' : 'var(--ne)';
+    const tagBg    = isLT ? 'var(--ltbg)' : 'var(--nebg)';
+    const tagBorder= isLT ? 'var(--ltborder)' : 'var(--neborder)';
+    amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:'+tagBg+';border:1px solid '+tagBorder+';border-radius:8px;font-size:13px;font-weight:700;color:'+tagColor+'">'+tagMsg+'</div>';
   } else {
     amtHTML = '<div style="margin-top:8px;font-size:11px;color:var(--t3);text-align:center;padding:4px 0">Seleccioná un resultado para registrar el trade del día</div>';
   }
 
   let summaryHTML = '';
-  if (r && !isNE && !isLT && !isFE) {
+  if (r && !isFE) {
     const pl = practicaModalMain.amount !== undefined ? practicaModalMain.amount : 0;
     const plColor = pl>0?'var(--green)':pl<0?'var(--red)':'var(--yellow)';
     summaryHTML = '<div class="f-day-summary" style="margin-top:12px" id="pMainSummary">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
-        '<span style="font-size:13px;color:var(--t2)">'+RES_INFO[r].emoji+' '+RES_INFO[r].full+'</span>'+
+        '<span style="font-size:13px;color:var(--t2)">'+RES_INFO[r].emoji+' '+RES_INFO[r].full+resultTagSuffix(isNE,isLT)+'</span>'+
         '<span id="pMainPL" style="font-size:22px;font-weight:900;color:'+plColor+'">'+(pl>=0?'+':'')+pl.toLocaleString('es-AR')+' USD</span>'+
       '</div></div>';
   }
@@ -2891,13 +2930,12 @@ function renderPMainSection() {
       '<button class="res-sel-btn sp'+(isSP?' active':'')+'" onclick="setPMainResult(\'sp\')" title="Ganancia variable: ingresá el monto"><span class="res-dot" style="background:#06b6d4"></span>SP</button>'+
     '</div>'+
     '<div style="margin-top:8px">'+
-      '<button class="res-sel-btn ne" style="width:100%;padding:10px;'+(isNE?'border-color:var(--ne);color:var(--ne);background:var(--nebg)':'')+'" onclick="setPMainResult(\'ne\')"><span class="res-dot" style="background:var(--ne)"></span>NE — Sin entrada (día sin trade)</button>'+
-    '</div>'+
-    '<div style="margin-top:8px">'+
-      '<button class="res-sel-btn lt" style="width:100%;padding:10px;'+(isLT?'border-color:var(--lt);color:var(--lt);background:var(--ltbg)':'')+'" onclick="setPMainResult(\'lt\')"><span class="res-dot" style="background:var(--lt)"></span>Día Lateral</button>'+
-    '</div>'+
-    '<div style="margin-top:8px">'+
       '<button class="res-sel-btn fe" style="width:100%;padding:10px;'+(isFE?'border-color:var(--fe);color:var(--fe);background:var(--febg)':'')+'" onclick="setPMainResult(\'fe\')"><span class="res-dot" style="background:var(--fe)"></span>Día Feriado</button>'+
+    '</div>'+
+    '<div style="margin-top:12px;margin-bottom:6px;font-size:10px;color:var(--t3);letter-spacing:.4px;text-transform:uppercase;font-weight:700">Etiquetas adicionales (se pueden combinar)</div>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button class="res-sel-btn" '+(tagsDisabled?'disabled':'')+' style="flex:1;padding:10px 6px;font-size:12.5px;'+(tagsDisabled?'opacity:.4;cursor:not-allowed;':'')+(isNE?'border-color:var(--ne);color:var(--ne);background:var(--nebg)':'')+'" onclick="setPTag(\'ne\')">'+(isNE?'☑':'☐')+' NE — Sin entrada</button>'+
+      '<button class="res-sel-btn" '+(tagsDisabled?'disabled':'')+' style="flex:1;padding:10px 6px;font-size:12.5px;'+(tagsDisabled?'opacity:.4;cursor:not-allowed;':'')+(isLT?'border-color:var(--lt);color:var(--lt);background:var(--ltbg)':'')+'" onclick="setPTag(\'lt\')">'+(isLT?'☑':'☐')+' Día Lateral</button>'+
     '</div>'+
     amtHTML+summaryHTML;
 
@@ -2916,14 +2954,20 @@ function setPMainResult(result) {
     practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.sl; // -450
   } else if (result === 'sp') {
     practicaModalMain.amount = 0; // Valor inicial para SP, el usuario ingresará el monto
-  } else if (result === 'ne') {
-    practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.ne; // 0
-  } else if (result === 'lt') {
-    practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.lt; // 0
   } else if (result === 'fe') {
     practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.fe; // 0
+    // Día Feriado es excluyente con todo, incluidas las etiquetas
+    practicaModalMain.ne = false;
+    practicaModalMain.lt = false;
   }
 
+  renderPMainSection();
+}
+
+function setPTag(tag) {
+  syncPMainFromDOM();
+  if (practicaModalMain.result === 'fe') return; // Feriado bloquea las etiquetas
+  practicaModalMain[tag] = !practicaModalMain[tag];
   renderPMainSection();
 }
 
@@ -2996,6 +3040,8 @@ function savePracticaDay() {
   d.contextNote        = (document.getElementById('pContextNote')?.value || '').trim();
   d.mainResult         = practicaModalMain.result;
   d.mainAmount         = practicaModalMain.amount || 0;
+  d.ne                 = !!practicaModalMain.ne;
+  d.lt                 = !!practicaModalMain.lt;
   d.missedOps          = practicaModalMissed.map(op=>({id:op.id,type:op.type}));
   d.estrategiaCumplida = practicaModalEstrategia;
   saveDayPractica(key, d);
@@ -3029,7 +3075,7 @@ function onPMainAmtInput() {
   const plColor = pl>0?'var(--green)':pl<0?'var(--red)':'var(--yellow)';
   const ri = RES_INFO['sp'];
   sec.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">'+
-    '<span style="font-size:13px;color:var(--t2)">'+ri.emoji+' '+ri.full+'</span>'+
+    '<span style="font-size:13px;color:var(--t2)">'+ri.emoji+' '+ri.full+resultTagSuffix(!!practicaModalMain.ne,!!practicaModalMain.lt)+'</span>'+
     '<span id="pMainPL" style="font-size:22px;font-weight:900;color:'+plColor+'">'+(pl>=0?'+':'')+pl.toLocaleString('es-AR')+' USD</span>'+
   '</div>';
 }
@@ -3110,7 +3156,7 @@ function delPPhoto(e, key, idx) {
 function getDayPLPractica(d) {
   // Calcular ganancia/pérdida para Práctica (similar a getDayPL)
   if (d.mainResult !== undefined) {
-    if (d.mainResult === 'be' || d.mainResult === 'ne' || d.mainResult === 'lt' || d.mainResult === 'fe' || !d.mainResult) return 0;
+    if (d.mainResult === 'be' || d.mainResult === 'fe' || !d.mainResult) return 0;
     return d.mainAmount || 0;
   }
   return 0;
@@ -3125,9 +3171,9 @@ function getPDayResult(d) {
 function getDayStatsP(d) {
   const r  = d.mainResult;
   const tp = r==='tp'?1:0, be=r==='be'?1:0, sl=r==='sl'?1:0, sp=r==='sp'?1:0;
-  const ne = r==='ne'?1:0; // NE es mainResult, no missedOps
-  const lt = r==='lt'?1:0; // Día Lateral es mainResult, no missedOps
-  const fe = r==='fe'?1:0; // Día Feriado es mainResult, no missedOps
+  const ne = d.ne ? 1 : 0; // NE es etiqueta independiente, se combina con el resultado principal
+  const lt = d.lt ? 1 : 0; // Día Lateral es etiqueta independiente, se combina con el resultado principal
+  const fe = r==='fe'?1:0; // Día Feriado sigue siendo mainResult excluyente
   const mt = (d.missedOps||[]).filter(op=>op.type==='mt').length;
   const pl = getDayPLPractica(d);
   return { tp, be, sl, sp, ne, lt, fe, mt, total:tp+be+sl+sp, pl };
@@ -3143,7 +3189,7 @@ function calcPStats(keys) {
     totalPL += st.pl;
     if (st.pl > 0) grossProfit += st.pl;
     if (st.pl < 0) grossLoss += -st.pl;
-    if (d.mainResult && d.mainResult !== 'ne' && d.mainResult !== 'lt' && d.mainResult !== 'fe') tradingDays++;
+    if (d.mainResult && d.mainResult !== 'fe') tradingDays++;
     if (d.estrategiaCumplida === true)         estrategiaSi++;
     else if (d.estrategiaCumplida === false)   estrategiaNo++;
     else if (d.estrategiaCumplida === 'dudoso') estrategiaDudoso++;
@@ -3348,7 +3394,7 @@ const FS = { y: _n.getFullYear(), m: _n.getMonth() };
 let _fondeo = {};
 let currentFondeoKey  = null;
 let selectedFondeoKey = mkKey(_n.getFullYear(), _n.getMonth(), _n.getDate());
-let fondeoModalMain       = { result: null, amount: 0 }; // trade principal del modal
+let fondeoModalMain       = { result: null, amount: 0, ne: false, lt: false }; // trade principal del modal
 let fondeoModalMissed     = [];                           // operaciones no tomadas [{id,type:'mt'|'ne'}]
 let fondeoModalEstrategia = null;                         // true | false | null
 let fUploadTarget         = null;
@@ -3393,6 +3439,21 @@ const RES_INFO = {
   mt: { label:'MT', full:'Miss Trade',  emoji:'<span class="res-dot" style="background:#a855f7"></span>', color:'#a855f7' },
 };
 
+// NE y Día Lateral son etiquetas adicionales combinables con el resultado
+// principal (TP/BE/SL/SP) — estos helpers arman el texto según cuáles estén activas.
+function resultTagSuffix(ne, lt) {
+  const parts = [];
+  if (ne) parts.push('NE');
+  if (lt) parts.push('Lateral');
+  return parts.length ? ' + ' + parts.join(' + ') : '';
+}
+function resultTagMessage(ne, lt) {
+  if (ne && lt) return 'Sin entrada + Día lateral — sin operar';
+  if (ne) return 'Sin entrada — día sin trade';
+  if (lt) return 'Día lateral — sin operar';
+  return '';
+}
+
 // SP puede ser ganancia o pérdida según el monto cargado ese día — a diferencia
 // de las demás categorías (color fijo), su color visual depende del signo.
 function spColorFor(amount) { return (amount||0) < 0 ? '#f43f5e' : '#22c55e'; }
@@ -3421,7 +3482,7 @@ function weekendBlockHTML() {
 function getDayPL(d) {
   // New format: mainResult / mainAmount
   if (d.mainResult !== undefined) {
-    if (d.mainResult === 'be' || d.mainResult === 'ne' || d.mainResult === 'lt' || d.mainResult === 'fe' || !d.mainResult) return 0;
+    if (d.mainResult === 'be' || d.mainResult === 'fe' || !d.mainResult) return 0;
     return d.mainAmount || 0;
   }
   // Legacy trades array
@@ -3449,9 +3510,9 @@ function getDayStats(d) {
     const be = r === 'be' ? 1 : 0;
     const sl = r === 'sl' ? 1 : 0;
     const sp = r === 'sp' ? 1 : 0;
-    const ne = r === 'ne' ? 1 : 0;   // NE is now mainResult, not missedOps
-    const lt = r === 'lt' ? 1 : 0;   // Día Lateral is also mainResult, not missedOps
-    const fe = r === 'fe' ? 1 : 0;   // Día Feriado is also mainResult, not missedOps
+    const ne = d.ne ? 1 : 0;   // NE es etiqueta independiente, se combina con el resultado principal
+    const lt = d.lt ? 1 : 0;   // Día Lateral es etiqueta independiente, se combina con el resultado principal
+    const fe = r === 'fe' ? 1 : 0;   // Día Feriado sigue siendo mainResult excluyente
     const mt = (d.missedOps || []).filter(op => op.type === 'mt').length;
     return { tp, be, sl, sp, ne, lt, fe, mt, total: tp+be+sl+sp, pl: getDayPL(d) };
   }
@@ -3472,7 +3533,7 @@ function saveFondeoData() {
     const toSave = {};
     Object.keys(_fondeo).forEach(date => {
       const d = _fondeo[date];
-      const hasData = d.mainResult || (d.missedOps && d.missedOps.length) ||
+      const hasData = d.mainResult || d.ne || d.lt || (d.missedOps && d.missedOps.length) ||
                       (d.contextPhotos && d.contextPhotos.length) ||
                       (d.photos && d.photos.length) || d.contextNote || d.reviewed;
       if (hasData) {
@@ -3482,6 +3543,8 @@ function saveFondeoData() {
           photos:             (d.photos||[]).map(p=>({name:p.name,size:p.size,imgId:p.imgId})),
           mainResult:         d.mainResult || null,
           mainAmount:         d.mainAmount || 0,
+          ne:                 !!d.ne,
+          lt:                 !!d.lt,
           missedOps:          (d.missedOps||[]).map(op=>({id:op.id, type:op.type})),
           estrategiaCumplida: d.estrategiaCumplida ?? null,
           slStatus:           d.slStatus ?? null,
@@ -3524,17 +3587,23 @@ function loadFondeoDataLocal() {
       // ── New format (mainResult field present) ──
       if (d.mainResult !== undefined) {
         let mr = d.mainResult || null;
+        let ne = !!d.ne, lt = !!d.lt;
         let mo = Array.isArray(d.missedOps) ? d.missedOps.filter(op => op.type !== 'ne') : [];
-        // Migrate NE from missedOps to mainResult
+        // Migrate NE from missedOps to mainResult (formato viejo)
         if (!mr && Array.isArray(d.missedOps) && d.missedOps.some(op => op.type === 'ne')) {
           mr = 'ne'; mo = [];
         }
+        // Migrate NE/Lateral de mainResult excluyente a etiqueta independiente
+        if (mr === 'ne') { mr = null; ne = true; }
+        else if (mr === 'lt') { mr = null; lt = true; }
         _fondeo[date] = {
           contextNote:        d.contextNote || '',
           contextPhotos:      ctx,
           photos:             phot,
           mainResult:         mr,
-          mainAmount:         (mr === 'ne' || mr === 'lt') ? 0 : (d.mainAmount || 0),
+          mainAmount:         d.mainAmount || 0,
+          ne:                 ne,
+          lt:                 lt,
           missedOps:          mo,
           estrategiaCumplida: d.estrategiaCumplida ?? null,
           slStatus:           d.slStatus ?? null,
@@ -3544,19 +3613,20 @@ function loadFondeoDataLocal() {
       }
 
       // ── Migrate: old trades-array format ──
-      let mainResult = null, mainAmount = 0;
+      let mainResult = null, mainAmount = 0, ne = false;
       const missedOps = [];
       if (d.trades && Array.isArray(d.trades)) {
         const main = d.trades.find(t => ['tp','be','sl','sp'].includes(t.result));
         if (main) { mainResult = main.result; mainAmount = main.amount || 0; }
         const hasNETrade = d.trades.some(t => t.result === 'ne');
-        if (hasNETrade && !mainResult) { mainResult = 'ne'; }
+        if (hasNETrade && !mainResult) { ne = true; }
         else { d.trades.filter(t => t.result === 'mt').forEach(t => missedOps.push({ id: t.id, type: 'mt' })); }
       } else if (d.result) {
         mainResult = d.result;
         mainAmount = d.result === 'be' ? 0 : (d.amount || 0);
+        if (mainResult === 'ne') { mainResult = null; ne = true; }
       }
-      _fondeo[date] = { contextNote: d.contextNote||'', contextPhotos:ctx, photos:phot, mainResult, mainAmount, missedOps };
+      _fondeo[date] = { contextNote: d.contextNote||'', contextPhotos:ctx, photos:phot, mainResult, mainAmount, ne, lt:false, missedOps };
     });
   } catch { _fondeo = {}; }
   goToLastFondeoMonth();
@@ -3565,11 +3635,16 @@ function loadFondeoDataLocal() {
 
 function getDayFondeo(k) {
   if (!_fondeo[k]) {
-    _fondeo[k] = { contextNote:'', contextPhotos:[], photos:[], mainResult:null, mainAmount:0, missedOps:[], estrategiaCumplida:null, slStatus:null, reviewed:false };
+    _fondeo[k] = { contextNote:'', contextPhotos:[], photos:[], mainResult:null, mainAmount:0, ne:false, lt:false, missedOps:[], estrategiaCumplida:null, slStatus:null, reviewed:false };
   }
   const d = _fondeo[k];
   if (d.mainResult === undefined)         d.mainResult = null;
   if (d.mainAmount === undefined)         d.mainAmount = 0;
+  if (d.ne === undefined)                 d.ne = false;
+  if (d.lt === undefined)                 d.lt = false;
+  // Compat: migrar días viejos donde NE/Lateral era mainResult excluyente
+  if (d.mainResult === 'ne') { d.mainResult = null; d.ne = true; d.mainAmount = 0; }
+  else if (d.mainResult === 'lt') { d.mainResult = null; d.lt = true; d.mainAmount = 0; }
   if (!d.missedOps)                       d.missedOps  = [];
   if (d.estrategiaCumplida === undefined) d.estrategiaCumplida = null;
   if (d.slStatus === undefined)           d.slStatus = null;
@@ -3647,7 +3722,7 @@ function renderFondeoCal() {
     const key    = mkKey(FS.y, FS.m, d);
     const data   = _fondeo[key] || {};
     const hasMain = !!data.mainResult || !!(data.trades && data.trades.length);
-    const hasData = hasMain || (data.missedOps && data.missedOps.length) ||
+    const hasData = hasMain || data.ne || data.lt || (data.missedOps && data.missedOps.length) ||
                     data.contextNote ||
                     (data.contextPhotos&&data.contextPhotos.length) ||
                     (data.photos&&data.photos.length);
@@ -3662,6 +3737,8 @@ function renderFondeoCal() {
     if (isWeekend)          cls += ' f-weekend';
     else if (dr === 'sp')   cls += ' f-' + (pl < 0 ? 'sl' : 'tp');
     else if (dr)            cls += ' f-' + dr;
+    else if (data.lt)       cls += ' f-lt';
+    else if (data.ne)       cls += ' f-ne';
     else if (hasData)       cls += ' has-data';
     if (key === selectedFondeoKey) cls += ' f-selected';
     if (data.reviewed && !isWeekend) cls += ' p-reviewed';
@@ -3683,16 +3760,6 @@ function renderFondeoCal() {
       lockEl.innerHTML = ICON_LOCK;
       lockEl.style.cssText = 'opacity:.55;margin-top:3px;line-height:1';
       el.appendChild(lockEl);
-    } else if (dr === 'ne') {
-      const neLbl = document.createElement('div');
-      neLbl.className = 'day-trades-mini'; neLbl.textContent = 'Sin entrada';
-      neLbl.style.cssText = 'margin-top:6px;color:var(--ne);font-weight:700';
-      el.appendChild(neLbl);
-    } else if (dr === 'lt') {
-      const ltLbl = document.createElement('div');
-      ltLbl.className = 'day-trades-mini'; ltLbl.textContent = 'Día lateral';
-      ltLbl.style.cssText = 'margin-top:6px;color:var(--lt);font-weight:700';
-      el.appendChild(ltLbl);
     } else if (dr === 'fe') {
       const feLbl = document.createElement('div');
       feLbl.className = 'day-trades-mini'; feLbl.textContent = 'Día feriado';
@@ -3715,6 +3782,18 @@ function renderFondeoCal() {
         mEl.textContent = 'MT: ' + calMT;
         el.appendChild(mEl);
       }
+      if (data.ne || data.lt) {
+        const tagEl = document.createElement('div');
+        tagEl.className = 'day-trades-mini';
+        tagEl.textContent = '+ ' + [data.ne?'NE':null, data.lt?'Lateral':null].filter(Boolean).join(' · ');
+        el.appendChild(tagEl);
+      }
+    } else if (data.ne || data.lt) {
+      const tagLbl = document.createElement('div');
+      tagLbl.className = 'day-trades-mini';
+      tagLbl.textContent = data.ne && data.lt ? 'Sin entrada · Lateral' : (data.ne ? 'Sin entrada' : 'Día lateral');
+      tagLbl.style.cssText = 'margin-top:6px;color:' + (data.lt ? 'var(--lt)' : 'var(--ne)') + ';font-weight:700';
+      el.appendChild(tagLbl);
     } else if (hasData) {
       const mtC2 = (data.missedOps||[]).filter(op => op.type === 'mt').length;
       const tEl = document.createElement('div');
@@ -3744,7 +3823,7 @@ function openFondeoModal(key) {
     if (resetBtn) resetBtn.style.display = 'none';
   } else {
     const d = getDayFondeo(key);
-    fondeoModalMain       = { result: d.mainResult || null, amount: d.mainAmount || 0 };
+    fondeoModalMain       = { result: d.mainResult || null, amount: d.mainAmount || 0, ne: !!d.ne, lt: !!d.lt };
     fondeoModalMissed     = (d.missedOps || []).map(op => ({...op}));
     fondeoModalEstrategia = d.estrategiaCumplida ?? null;
     updateFondeoModalMeta(key);
@@ -3782,11 +3861,15 @@ function updateFondeoModalMeta(key) {
   const missed = d.missedOps || [];
   const mtC = missed.filter(op => op.type === 'mt').length;
   const neC = missed.filter(op => op.type === 'ne').length;
+  const tagParts = [];
+  if (d.ne) tagParts.push('Sin entrada');
+  if (d.lt) tagParts.push('Día lateral');
 
   if (!dr) {
     const parts = [];
     if (mtC) parts.push(mtC + ' MT');
     if (neC) parts.push(neC + ' NE');
+    parts.push(...tagParts);
     document.getElementById('fondeoModalMeta').textContent = parts.join(' · ') || 'Sin datos';
     return;
   }
@@ -3796,6 +3879,7 @@ function updateFondeoModalMeta(key) {
   const extraParts = [];
   if (mtC) extraParts.push(mtC + ' MT');
   if (neC) extraParts.push(neC + ' NE');
+  extraParts.push(...tagParts);
   if (extraParts.length) meta += '  ·  ' + extraParts.join(' · ');
   document.getElementById('fondeoModalMeta').innerHTML = meta;
 }
@@ -3917,14 +4001,13 @@ function renderFMainSection() {
   const sec = document.getElementById('f-main-content');
   if (!sec) return;
   const r    = fondeoModalMain.result;
-  const isTP = r==='tp', isBE = r==='be', isSL = r==='sl', isSP = r==='sp', isNE = r==='ne', isLT = r==='lt', isFE = r==='fe';
+  const isTP = r==='tp', isBE = r==='be', isSL = r==='sl', isSP = r==='sp', isFE = r==='fe';
+  const isNE = !!fondeoModalMain.ne, isLT = !!fondeoModalMain.lt;
+  const tagsDisabled = isFE;
+  const tagMsg = resultTagMessage(isNE, isLT);
 
   let amtHTML = '';
-  if (isNE) {
-    amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--nebg);border:1px solid var(--neborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--ne)"><span class="res-dot" style="background:var(--ne)"></span>Sin entrada — día sin trade</div>';
-  } else if (isLT) {
-    amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--ltbg);border:1px solid var(--ltborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--lt)"><span class="res-dot" style="background:var(--lt)"></span>Día lateral — sin operar</div>';
-  } else if (isFE) {
+  if (isFE) {
     amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:var(--febg);border:1px solid var(--feborder);border-radius:8px;font-size:13px;font-weight:700;color:var(--fe)"><span class="res-dot" style="background:var(--fe)"></span>Día feriado — sin operar</div>';
   } else if (isBE) {
     amtHTML = '<div style="margin-top:8px;text-align:center;font-size:26px;font-weight:900;color:var(--yellow);letter-spacing:1px">= 0</div>';
@@ -3935,17 +4018,22 @@ function renderFMainSection() {
   } else if (isSP) {
     const val = fondeoModalMain.amount ? fondeoModalMain.amount : '';
     amtHTML = '<div style="margin-top:8px"><div style="font-size:11px;color:var(--t2);margin-bottom:5px">Monto (variable):</div><input class="f-amt-input" id="fMainAmt" type="number" value="'+val+'" placeholder="ej: 150" style="max-width:200px;display:block" oninput="onFMainAmtInput()"></div>';
+  } else if (tagMsg) {
+    const tagColor = isLT ? 'var(--lt)' : 'var(--ne)';
+    const tagBg    = isLT ? 'var(--ltbg)' : 'var(--nebg)';
+    const tagBorder= isLT ? 'var(--ltborder)' : 'var(--neborder)';
+    amtHTML = '<div style="margin-top:10px;text-align:center;padding:10px;background:'+tagBg+';border:1px solid '+tagBorder+';border-radius:8px;font-size:13px;font-weight:700;color:'+tagColor+'">'+tagMsg+'</div>';
   } else {
     amtHTML = '<div style="margin-top:8px;font-size:11px;color:var(--t3);text-align:center;padding:4px 0">Seleccioná un resultado para registrar el trade del día</div>';
   }
 
   let summaryHTML = '';
-  if (r && !isNE && !isLT && !isFE) {
+  if (r && !isFE) {
     const pl = fondeoModalMain.amount !== undefined ? fondeoModalMain.amount : 0;
     const plColor = pl>0?'var(--green)':pl<0?'var(--red)':'var(--yellow)';
     summaryHTML = '<div class="f-day-summary" style="margin-top:12px" id="fMainSummary">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
-        '<span style="font-size:13px;color:var(--t2)">'+RES_INFO[r].emoji+' '+RES_INFO[r].full+'</span>'+
+        '<span style="font-size:13px;color:var(--t2)">'+RES_INFO[r].emoji+' '+RES_INFO[r].full+resultTagSuffix(isNE,isLT)+'</span>'+
         '<span id="fMainPL" style="font-size:22px;font-weight:900;color:'+plColor+'">'+(pl>=0?'+':'')+pl.toLocaleString('es-AR')+' USD</span>'+
       '</div></div>';
   }
@@ -3958,13 +4046,12 @@ function renderFMainSection() {
       '<button class="res-sel-btn sp'+(isSP?' active':'')+'" onclick="setFMainResult(\'sp\')" title="Ganancia variable: ingresá el monto"><span class="res-dot" style="background:#06b6d4"></span>SP</button>'+
     '</div>'+
     '<div style="margin-top:8px">'+
-      '<button class="res-sel-btn ne" style="width:100%;padding:10px;'+(isNE?'border-color:var(--ne);color:var(--ne);background:var(--nebg)':'')+'" onclick="setFMainResult(\'ne\')"><span class="res-dot" style="background:var(--ne)"></span>NE — Sin entrada (día sin trade)</button>'+
-    '</div>'+
-    '<div style="margin-top:8px">'+
-      '<button class="res-sel-btn lt" style="width:100%;padding:10px;'+(isLT?'border-color:var(--lt);color:var(--lt);background:var(--ltbg)':'')+'" onclick="setFMainResult(\'lt\')"><span class="res-dot" style="background:var(--lt)"></span>Día Lateral</button>'+
-    '</div>'+
-    '<div style="margin-top:8px">'+
       '<button class="res-sel-btn fe" style="width:100%;padding:10px;'+(isFE?'border-color:var(--fe);color:var(--fe);background:var(--febg)':'')+'" onclick="setFMainResult(\'fe\')"><span class="res-dot" style="background:var(--fe)"></span>Día Feriado</button>'+
+    '</div>'+
+    '<div style="margin-top:12px;margin-bottom:6px;font-size:10px;color:var(--t3);letter-spacing:.4px;text-transform:uppercase;font-weight:700">Etiquetas adicionales (se pueden combinar)</div>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button class="res-sel-btn" '+(tagsDisabled?'disabled':'')+' style="flex:1;padding:10px 6px;font-size:12.5px;'+(tagsDisabled?'opacity:.4;cursor:not-allowed;':'')+(isNE?'border-color:var(--ne);color:var(--ne);background:var(--nebg)':'')+'" onclick="setFTag(\'ne\')">'+(isNE?'☑':'☐')+' NE — Sin entrada</button>'+
+      '<button class="res-sel-btn" '+(tagsDisabled?'disabled':'')+' style="flex:1;padding:10px 6px;font-size:12.5px;'+(tagsDisabled?'opacity:.4;cursor:not-allowed;':'')+(isLT?'border-color:var(--lt);color:var(--lt);background:var(--ltbg)':'')+'" onclick="setFTag(\'lt\')">'+(isLT?'☑':'☐')+' Día Lateral</button>'+
     '</div>'+
     amtHTML+summaryHTML;
 
@@ -3983,14 +4070,20 @@ function setFMainResult(result) {
     fondeoModalMain.amount = FIXED_AMOUNTS.sl; // -450
   } else if (result === 'sp') {
     fondeoModalMain.amount = 0; // Valor inicial para SP, el usuario ingresará el monto
-  } else if (result === 'ne') {
-    fondeoModalMain.amount = FIXED_AMOUNTS.ne; // 0
-  } else if (result === 'lt') {
-    fondeoModalMain.amount = FIXED_AMOUNTS.lt; // 0
   } else if (result === 'fe') {
     fondeoModalMain.amount = FIXED_AMOUNTS.fe; // 0
+    // Día Feriado es excluyente con todo, incluidas las etiquetas
+    fondeoModalMain.ne = false;
+    fondeoModalMain.lt = false;
   }
 
+  renderFMainSection();
+}
+
+function setFTag(tag) {
+  syncFMainFromDOM();
+  if (fondeoModalMain.result === 'fe') return; // Feriado bloquea las etiquetas
+  fondeoModalMain[tag] = !fondeoModalMain[tag];
   renderFMainSection();
 }
 
@@ -4091,6 +4184,8 @@ function saveFondeoDay() {
   d.mainResult         = fondeoModalMain.result;
   // Guardar siempre el mainAmount (incluye valores automáticos: TP=900, SL=-450, BE=0, NE=0)
   d.mainAmount         = fondeoModalMain.amount || 0;
+  d.ne                 = !!fondeoModalMain.ne;
+  d.lt                 = !!fondeoModalMain.lt;
   d.missedOps          = fondeoModalMissed.map(op => ({ id: op.id, type: op.type }));
   d.estrategiaCumplida = fondeoModalEstrategia;
   delete d.trades; // remove legacy field if present
@@ -4375,7 +4470,7 @@ function calcStats(keys) {
     if (!d) return;
     const dr = getDayResult(d);
     const hasMissed = d.missedOps && d.missedOps.length;
-    if (!dr && !hasMissed) return;
+    if (!dr && !hasMissed && !d.ne && !d.lt) return;
     const st = getDayStats(d);
     tpCount += st.tp;
     beCount += st.be;
@@ -4386,7 +4481,7 @@ function calcStats(keys) {
     feCount += st.fe;
     mtCount += st.mt;
     tradesTotal += st.total;
-    if (!dr || dr === 'ne' || dr === 'lt' || dr === 'fe') return;
+    if (!dr || dr === 'fe') return;
     tradingDays++;
     totalPL += st.pl;
     if (st.pl > 0) grossProfit += st.pl;
@@ -4664,11 +4759,12 @@ function renderDayStats() {
   const st = getDayStats(d);
 
   if (!dr) {
-    if (st.mt || st.ne) {
+    if (st.mt || st.ne || st.lt) {
       // No real trade but has missed ops — show them
       html += '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Sin trade real</div>';
       if (st.mt) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:#a855f7"></span>Miss Trades</span><span class="stat-value mt">'+st.mt+'</span></div>';
       if (st.ne) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--ne)"></span>No Entry</span><span class="stat-value ne">'+st.ne+'</span></div>';
+      if (st.lt) html += '<div class="stat-row"><span class="stat-label"><span class="res-dot" style="background:var(--lt)"></span>Día Lateral</span><span class="stat-value lt">'+st.lt+'</span></div>';
     } else {
       html += '<div class="stat-empty">Sin datos — hacé click en el día para registrar</div>';
     }
@@ -4770,7 +4866,9 @@ function renderWeekStats() {
   weekKeys.forEach((k, i) => {
     const d  = _fondeo[k] || {};
     const dr = getDayResult(d);
-    html += '<div class="wdot '+(dr||'')+'" title="'+WEEK_LBL[i]+': '+(dr?RES_INFO[dr].label:'—')+'"></div>';
+    const dotCls   = dr || (d.lt ? 'lt' : (d.ne ? 'ne' : ''));
+    const dotLabel = dr ? RES_INFO[dr].label : (d.lt ? RES_INFO.lt.label : (d.ne ? RES_INFO.ne.label : '—'));
+    html += '<div class="wdot '+dotCls+'" title="'+WEEK_LBL[i]+': '+dotLabel+'"></div>';
   });
   html += '</div><div style="display:flex;gap:3px;margin-top:3px">';
   WEEK_LBL.forEach(l => {

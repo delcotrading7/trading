@@ -393,10 +393,14 @@ function renderDay(data){
     brandRow.appendChild(pill);
   }
 
-  const info = RES_INFO[data.mainResult] || null;
-  const resultHtml = info
-    ? '<span class="result-badge" style="background:' + info.bg + ';border-color:' + info.border + ';color:' + info.color + '">' + info.full + '</span>'
-    : '<span class="result-badge" style="color:var(--t3)">Sin resultado cargado</span>';
+  const badge = (i) => '<span class="result-badge" style="background:' + i.bg + ';border-color:' + i.border + ';color:' + i.color + '">' + i.full + '</span>';
+  const mainInfo = RES_INFO[data.mainResult] || null;
+  const tagInfos = [];
+  if (data.ne) tagInfos.push(RES_INFO.ne);
+  if (data.lt) tagInfos.push(RES_INFO.lt);
+  const resultHtml = mainInfo
+    ? badge(mainInfo) + tagInfos.map(badge).join('')
+    : (tagInfos.length ? tagInfos.map(badge).join('') : '<span class="result-badge" style="color:var(--t3)">Sin resultado cargado</span>');
 
   const missed = Array.isArray(data.missedOps) ? data.missedOps : [];
   const mtCount = missed.filter(o => o.type === 'mt').length;

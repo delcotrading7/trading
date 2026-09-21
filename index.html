@@ -518,6 +518,7 @@ body{
   font-family:var(--font-body);
 }
 #toast.show{transform:translateY(0);opacity:1}
+#toast.error{background:linear-gradient(135deg,var(--red) 0%,#a83232 100%);color:#fff;box-shadow:0 8px 24px rgba(239,68,68,.4)}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -813,6 +814,11 @@ body{
   background:linear-gradient(135deg,var(--green) 0%,#2d9a5c 100%);
   color:#0a0a0b;box-shadow:0 4px 16px rgba(34,197,94,.3);
 }
+.f-save-btn.save-error{
+  background:linear-gradient(135deg,var(--red) 0%,#a83232 100%);
+  color:#fff;box-shadow:0 4px 16px rgba(239,68,68,.35);
+}
+.f-save-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
 
 /* ── Fondeo Modal — Filas de trades ── */
 .f-trade-row{
@@ -1473,7 +1479,7 @@ body{
 
 <!-- ── LOGIN ── -->
 <div id="authOverlay" style="position:fixed;inset:0;z-index:900;background:rgba(5,5,6,.94);display:flex;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:linear-gradient(160deg,var(--bg2) 0%,var(--bg1) 100%);border:1px solid var(--goldborder);border-radius:16px;box-shadow:var(--shadow);width:min(360px,100%);padding:32px 28px;">
+  <div id="authCard" style="background:linear-gradient(160deg,var(--bg2) 0%,var(--bg1) 100%);border:1px solid var(--goldborder);border-radius:16px;box-shadow:var(--shadow);width:min(360px,100%);padding:32px 28px;">
     <div style="font-family:var(--font-serif);font-style:italic;font-size:24px;color:var(--t1);margin-bottom:4px;">Trading Journal</div>
     <div style="font-size:12px;color:var(--t3);margin-bottom:20px;">Iniciá sesión para acceder a tu diario</div>
     <input id="authEmail" type="email" placeholder="Email" autocomplete="username"
@@ -1484,6 +1490,10 @@ body{
     <button id="authSubmitBtn" onclick="handleLogin()"
       style="width:100%;padding:12px;background:linear-gradient(135deg,var(--gold) 0%,#9a9ca3 100%);color:#0a0a0b;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;">Entrar</button>
     <div id="authError" style="color:var(--red);font-size:12px;margin-top:10px;min-height:16px;"></div>
+  </div>
+  <div id="authLoadingCard" style="display:none;background:linear-gradient(160deg,var(--bg2) 0%,var(--bg1) 100%);border:1px solid var(--goldborder);border-radius:16px;box-shadow:var(--shadow);width:min(360px,100%);padding:32px 28px;text-align:center;">
+    <div style="font-family:var(--font-serif);font-style:italic;font-size:24px;color:var(--t1);margin-bottom:10px;">Trading Journal</div>
+    <div style="font-size:13px;color:var(--t3);">Cargando tu diario desde la nube…</div>
   </div>
 </div>
 
@@ -1861,8 +1871,16 @@ async function handleLogin() {
   btn.textContent = 'Entrar'; btn.disabled = false;
   if (error) { errEl.textContent = 'Email o contraseña incorrectos.'; return; }
   currentUser = data.user;
-  document.getElementById('authOverlay').style.display = 'none';
+  showAuthLoading();
   await startApp();
+  document.getElementById('authOverlay').style.display = 'none';
+}
+
+function showAuthLoading() {
+  const card = document.getElementById('authCard');
+  const loading = document.getElementById('authLoadingCard');
+  if (card) card.style.display = 'none';
+  if (loading) loading.style.display = 'block';
 }
 
 async function handleLogout() {
@@ -1958,25 +1976,45 @@ function cloudRowToDay(row) {
     slStatus:           row.sl_status ?? null,
   };
 }
+// Encadena los upserts por día para que, si se guarda el mismo día dos veces
+// seguidas (ej. subir foto + tocar "Guardar Día"), lleguen a Supabase en orden
+// y el último en salir no termine pisando datos más nuevos con datos viejos.
+const _practicaSaveChains = {};
+const _fondeoSaveChains   = {};
+
 async function upsertPracticaDayCloud(key, d) {
-  if (!currentUser) return;
-  const { error } = await sb.from('practica_days').upsert(dayToCloudRow(key, d), { onConflict: 'user_id,day' });
-  if (error) console.warn('Error sincronizando práctica con la nube:', error);
+  if (!currentUser) return { ok:false, reason:'no-session' };
+  const prevChain = _practicaSaveChains[key] || Promise.resolve();
+  const run = prevChain.then(async () => {
+    const { error } = await sb.from('practica_days').upsert(dayToCloudRow(key, d), { onConflict: 'user_id,day' });
+    if (error) { console.warn('Error sincronizando práctica con la nube:', error); return { ok:false, error }; }
+    return { ok:true };
+  });
+  _practicaSaveChains[key] = run.catch(() => ({ ok:false }));
+  return run;
 }
 async function deletePracticaDayCloud(key) {
-  if (!currentUser) return;
+  if (!currentUser) return { ok:false, reason:'no-session' };
   const { error } = await sb.from('practica_days').delete().eq('user_id', currentUser.id).eq('day', key);
-  if (error) console.warn('Error borrando práctica en la nube:', error);
+  if (error) { console.warn('Error borrando práctica en la nube:', error); return { ok:false, error }; }
+  return { ok:true };
 }
 async function upsertFondeoDayCloud(key, d) {
-  if (!currentUser) return;
-  const { error } = await sb.from('fondeo_days').upsert(dayToCloudRow(key, d), { onConflict: 'user_id,day' });
-  if (error) console.warn('Error sincronizando fondeo con la nube:', error);
+  if (!currentUser) return { ok:false, reason:'no-session' };
+  const prevChain = _fondeoSaveChains[key] || Promise.resolve();
+  const run = prevChain.then(async () => {
+    const { error } = await sb.from('fondeo_days').upsert(dayToCloudRow(key, d), { onConflict: 'user_id,day' });
+    if (error) { console.warn('Error sincronizando fondeo con la nube:', error); return { ok:false, error }; }
+    return { ok:true };
+  });
+  _fondeoSaveChains[key] = run.catch(() => ({ ok:false }));
+  return run;
 }
 async function deleteFondeoDayCloud(key) {
-  if (!currentUser) return;
+  if (!currentUser) return { ok:false, reason:'no-session' };
   const { error } = await sb.from('fondeo_days').delete().eq('user_id', currentUser.id).eq('day', key);
-  if (error) console.warn('Error borrando fondeo en la nube:', error);
+  if (error) { console.warn('Error borrando fondeo en la nube:', error); return { ok:false, error }; }
+  return { ok:true };
 }
 
 /* ── COMPARTIR DÍA (links públicos de solo lectura / edición) ── */
@@ -2160,7 +2198,8 @@ async function pushAllLocalToCloud(silent) {
       const d = getPracticaDay(k);
       await syncPhotosToStorage(d.contextPhotos);
       await syncPhotosToStorage(d.photos);
-      await upsertPracticaDayCloud(k, d);
+      const res = await upsertPracticaDayCloud(k, d);
+      if (!res.ok) fallidos++;
     } catch (e) { fallidos++; console.warn('Error subiendo práctica ' + k + ':', e); }
   }
   for (const k of keysF) {
@@ -2168,7 +2207,8 @@ async function pushAllLocalToCloud(silent) {
       const d = getDayFondeo(k);
       await syncPhotosToStorage(d.contextPhotos);
       await syncPhotosToStorage(d.photos);
-      await upsertFondeoDayCloud(k, d);
+      const res = await upsertFondeoDayCloud(k, d);
+      if (!res.ok) fallidos++;
     } catch (e) { fallidos++; console.warn('Error subiendo fondeo ' + k + ':', e); }
   }
   if (!silent) showToast(fallidos ? ('⚠ Subido con ' + fallidos + ' error(es), revisá la consola') : '✓ Sincronizado con la nube');
@@ -2340,13 +2380,20 @@ function togglePReviewed(key) {
   }
 }
 
-function saveDayPractica(k, data) {
+async function saveDayPractica(k, data) {
   _practica[k] = data;
   savePracticaData();
   renderPracticaCal();
   renderPStats();
-  showToast();
-  upsertPracticaDayCloud(k, data);
+  const res = await upsertPracticaDayCloud(k, data);
+  if (res.ok) {
+    showToast();
+  } else if (res.reason === 'no-session') {
+    showToast('⚠ Sin sesión activa: guardado solo en este dispositivo', true);
+  } else {
+    showToast('⚠ Error guardando en la nube — no se confirmó el guardado', true);
+  }
+  return res.ok;
 }
 
 /* ── HELPERS ─────────────────────────────────────────────────── */
@@ -2364,13 +2411,15 @@ function fmtPL(n) {
 
 /* ── TOAST ───────────────────────────────────────────────────── */
 let toastTimer;
-function showToast(msg) {
+function showToast(msg, isError) {
   const el = document.getElementById('toast');
   const orig = '✓ Guardado';
   el.textContent = msg || orig;
+  el.classList.toggle('error', !!isError);
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.classList.remove('show'); el.textContent = orig; }, 1600);
+  const dur = isError ? 5000 : 1600;
+  toastTimer = setTimeout(() => { el.classList.remove('show'); el.textContent = orig; el.classList.remove('error'); }, dur);
 }
 
 /* ── ELIMINAR / REINICIAR DÍA ─────────────────────────────── */
@@ -2407,7 +2456,7 @@ function confirmResetDay() {
     _deleteImgsForDay(_practica[key]);
     delete _practica[key];
     savePracticaData();
-    deletePracticaDayCloud(key);
+    deletePracticaDayCloud(key).then(res => { if (!res.ok) showToast('⚠ No se pudo borrar en la nube, reintentá', true); });
     closeResetConfirm();
     currentPracticaKey      = key;
     practicaModalMain       = { result: null };
@@ -2427,7 +2476,7 @@ function confirmResetDay() {
     _deleteImgsForDay(_fondeo[key]);
     delete _fondeo[key];
     saveFondeoData();
-    deleteFondeoDayCloud(key);
+    deleteFondeoDayCloud(key).then(res => { if (!res.ok) showToast('⚠ No se pudo borrar en la nube, reintentá', true); });
     closeResetConfirm();
     currentFondeoKey      = key;
     fondeoModalMain       = { result: null, amount: 0 };
@@ -3033,7 +3082,7 @@ function setPEstrategia(val) {
 }
 
 /* ── Guardar Día Práctica ────────────────────────────────────── */
-function savePracticaDay() {
+async function savePracticaDay() {
   const key = currentPracticaKey;
   if (!key) return;
   const d = getPracticaDay(key);
@@ -3044,15 +3093,22 @@ function savePracticaDay() {
   d.lt                 = !!practicaModalMain.lt;
   d.missedOps          = practicaModalMissed.map(op=>({id:op.id,type:op.type}));
   d.estrategiaCumplida = practicaModalEstrategia;
-  saveDayPractica(key, d);
-  updatePracticaModalMeta(key);
   const btn = document.getElementById('pSaveBtn');
-  if (btn) {
-    btn.textContent = '✓ Guardado'; btn.classList.add('saved');
-    setTimeout(() => {
-      const b = document.getElementById('pSaveBtn');
-      if (b) { b.textContent='Guardar Día'; b.classList.remove('saved'); }
-    }, 2000);
+  if (btn) { btn.textContent = 'Guardando...'; btn.disabled = true; btn.classList.remove('saved','save-error'); }
+  const ok = await saveDayPractica(key, d);
+  updatePracticaModalMeta(key);
+  const b = document.getElementById('pSaveBtn');
+  if (b) {
+    b.disabled = false;
+    if (ok) {
+      b.textContent = '✓ Guardado'; b.classList.add('saved'); b.classList.remove('save-error');
+      setTimeout(() => {
+        const b2 = document.getElementById('pSaveBtn');
+        if (b2) { b2.textContent='Guardar Día'; b2.classList.remove('saved'); }
+      }, 2000);
+    } else {
+      b.textContent = '⚠ Error — Reintentar'; b.classList.add('save-error'); b.classList.remove('saved');
+    }
   }
 }
 
@@ -3654,13 +3710,20 @@ function getDayFondeo(k) {
   return d;
 }
 
-function saveDayFondeo(k, data) {
+async function saveDayFondeo(k, data) {
   _fondeo[k] = data;
   saveFondeoData();
   renderFondeoCal();
   renderStats();
-  showToast();
-  upsertFondeoDayCloud(k, data);
+  const res = await upsertFondeoDayCloud(k, data);
+  if (res.ok) {
+    showToast();
+  } else if (res.reason === 'no-session') {
+    showToast('⚠ Sin sesión activa: guardado solo en este dispositivo', true);
+  } else {
+    showToast('⚠ Error guardando en la nube — no se confirmó el guardado', true);
+  }
+  return res.ok;
 }
 
 function toggleFReviewed(key) {
@@ -4175,7 +4238,7 @@ function setFEstrategia(val) {
 }
 
 /* ── Guardar Fondeo ──────────────────────────────────────────── */
-function saveFondeoDay() {
+async function saveFondeoDay() {
   const key = currentFondeoKey;
   if (!key) return;
   syncFMainFromDOM();
@@ -4189,12 +4252,19 @@ function saveFondeoDay() {
   d.missedOps          = fondeoModalMissed.map(op => ({ id: op.id, type: op.type }));
   d.estrategiaCumplida = fondeoModalEstrategia;
   delete d.trades; // remove legacy field if present
-  saveDayFondeo(key, d);
-  updateFondeoModalMeta(key);
   const btn = document.getElementById('fSaveBtn');
-  if (btn) {
-    btn.textContent = '✓ Guardado'; btn.classList.add('saved');
-    setTimeout(() => { const b=document.getElementById('fSaveBtn'); if(b){b.textContent='Guardar Día';b.classList.remove('saved');} }, 2000);
+  if (btn) { btn.textContent = 'Guardando...'; btn.disabled = true; btn.classList.remove('saved','save-error'); }
+  const ok = await saveDayFondeo(key, d);
+  updateFondeoModalMeta(key);
+  const b = document.getElementById('fSaveBtn');
+  if (b) {
+    b.disabled = false;
+    if (ok) {
+      b.textContent = '✓ Guardado'; b.classList.add('saved'); b.classList.remove('save-error');
+      setTimeout(() => { const b2=document.getElementById('fSaveBtn'); if(b2){b2.textContent='Guardar Día';b2.classList.remove('saved');} }, 2000);
+    } else {
+      b.textContent = '⚠ Error — Reintentar'; b.classList.add('save-error'); b.classList.remove('saved');
+    }
   }
 }
 
@@ -6153,8 +6223,9 @@ window.onload = async function() {
   const { data: { session } } = await sb.auth.getSession();
   if (session && session.user) {
     currentUser = session.user;
-    document.getElementById('authOverlay').style.display = 'none';
+    showAuthLoading();
     await startApp();
+    document.getElementById('authOverlay').style.display = 'none';
   } else {
     document.getElementById('authOverlay').style.display = 'flex';
   }

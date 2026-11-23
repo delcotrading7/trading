@@ -1281,6 +1281,10 @@ body{
 .f-auto-src{text-align:center;font-size:11.5px;color:var(--t3);margin-top:4px}
 .acct-maxdaily{font-size:12px;color:var(--t2);margin-top:10px}
 .acct-risk-card .stat-row{margin-bottom:5px}
+/* La columna de tarjetas tiene alto máximo con scroll: que las tarjetas no se
+   achiquen (si se achican, el texto de una queda tapado por la siguiente) */
+.fondeo-stats-side > .stat-card{flex-shrink:0}
+.acct-wd-line .acct-stage-sub b{color:var(--t1)}
 .acct-risk-card .stat-value b{font-weight:900}
 .acct-risk-warn{font-size:12px;font-weight:700;color:var(--yellow);background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.35);border-radius:8px;padding:6px 9px;margin:4px 0 6px}
 .acct-wd-line{margin-bottom:8px}
@@ -1293,6 +1297,8 @@ body{
 .acct-risk-field .cfg-input{width:100%;font-size:13px;padding:7px 9px;text-align:left}
 .acct-risk-field em,.acct-stage-grid em{font-style:normal;font-size:10.5px;font-weight:600;color:var(--t3);text-transform:none;letter-spacing:0}
 .acct-stage-grid2{grid-template-columns:1fr 1fr}
+.acct-stage-grid2 .acct-allowed-label{grid-column:1 / -1}
+.acct-stage-grid2 .acct-allowed-label .cfg-input{text-align:left}
 .acct-ladder-title{font-size:10.5px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 4px 24px}
 .acct-ladder-row{display:flex;align-items:center;gap:6px;margin:0 0 6px 24px;font-size:11.5px;color:var(--t3)}
 .acct-ladder-row .cfg-input{width:86px;font-size:13px;padding:6px 8px}
@@ -4660,7 +4666,7 @@ function renderFMainSection() {
   const auto = getFondeoAutoAmounts(currentFondeoKey); // TP/SL de la etapa vigente ese día (o la config general)
   const autoSrc = auto.stage
     ? '<div class="f-auto-src">'+(auto.ladder
-        ? 'Escalera de <b>'+escapeHtml(auto.stage.name)+'</b>: balance previo '+auto.balanceBefore.toLocaleString('es-AR')+' → SL '+Math.abs(auto.sl).toLocaleString('es-AR')+' · TP '+auto.tp.toLocaleString('es-AR')
+        ? (auto.slSource === 'rule8' ? 'Regla de 8 SL' : 'Escalera')+' de <b>'+escapeHtml(auto.stage.name)+'</b>: balance previo '+auto.balanceBefore.toLocaleString('es-AR')+' → SL '+Math.abs(auto.sl).toLocaleString('es-AR')+' · TP '+auto.tp.toLocaleString('es-AR')
         : 'Riesgo de la etapa <b>'+escapeHtml(auto.stage.name)+'</b>')+' · '+escapeHtml(accountDisplayName(auto.account))+'</div>'
     : '';
 
@@ -5137,7 +5143,31 @@ async function loadFondeoAccounts() {
     if (error) { console.warn('[Cuentas] No se pudieron leer las cuentas de fondeo:', error); return; }
     _fondeoAccounts = (data || []).map(rowToAccount);
     _cacheFondeoAccounts();
+    await seedBenjaLadderIfMissing();
   } catch (e) { console.warn('[Cuentas] Error leyendo cuentas de fondeo:', e); }
+}
+
+/* Carga única (pedido de Benja, 23 Nov 2026): la etapa activa de su cuenta PA
+   50k se creó antes de que existiera la escalera de SL. Si esa etapa nunca
+   tuvo escalera (campo ausente, no vacío a propósito), se le carga:
+   desde 50.000 → SL 250 · desde 52.400 → SL 300 · desde 53.600 → SL 450,
+   SL máximo 450 y SL permitidos 250/300/450/500/600. No toca el objetivo. */
+async function seedBenjaLadderIfMissing() {
+  const acc = getActiveAccount();
+  if (!acc || acc.category !== 'PA' || acc.size !== 50000) return;
+  const i = activeStageIndex(acc);
+  if (i < 0 || Array.isArray(acc.stages[i].ladder)) return;
+  const upd = _cloneAccount(acc);
+  const s = upd.stages[i];
+  delete s.sl; delete s.tp;
+  Object.assign(s, {
+    maxSl: 450,
+    ladder: [{ from: 50000, sl: 250 }, { from: 52400, sl: 300 }, { from: 53600, sl: 450 }],
+    allowedSl: [250, 300, 450, 500, 600],
+  });
+  const res = await saveFondeoAccount(upd);
+  if (res.ok) console.log('[Cuentas] Escalera de SL cargada en la etapa "' + s.name + '".');
+  else console.warn('[Cuentas] No se pudo cargar la escalera de SL:', res.msg);
 }
 
 /* Guarda en Supabase y, solo si salió bien, actualiza el estado local */
@@ -5237,6 +5267,22 @@ function ladderSlFor(s, balance) {
   return s.maxSl ? Math.min(step.sl, s.maxSl) : step.sl;
 }
 
+/* SL permitidos de una etapa (ordenados), sin pasar el SL máximo */
+const DEFAULT_ALLOWED_SL = [250, 300, 450, 500, 600];
+function stageAllowedSl(s) {
+  const list = (s && Array.isArray(s.allowedSl) && s.allowedSl.length ? s.allowedSl : DEFAULT_ALLOWED_SL).slice().sort((a, b) => a - b);
+  const capped = s && s.maxSl ? list.filter(x => x <= s.maxSl) : list;
+  return capped.length ? capped : (s && s.maxSl ? [s.maxSl] : list);
+}
+/* Regla de 8 SL: el SL permitido más grande con colchón / SL ≥ 8 (sin pasar
+   el SL máximo). Si ninguno llega a 8, el más chico (y se avisa). */
+function rule8SlFor(cushion, s) {
+  const allowed = stageAllowedSl(s);
+  if (!allowed.length) return null;
+  const ok = allowed.filter(x => cushion / x >= MIN_SL_BACKUP - 1e-9);
+  return ok.length ? { sl: ok[ok.length - 1], reaches8: true } : { sl: allowed[0], reaches8: false };
+}
+
 /* Estado de gestión de riesgo — función pura, sin DOM.
    p = { size, balance, peak, risk, stage:{target, maxSl, ladder} } */
 function computeRiskState(p) {
@@ -5247,8 +5293,11 @@ function computeRiskState(p) {
   const cushion = balance - threshold;
   const profit = balance - size;
   const ladderSl = ladderSlFor(stage, balance);
-  const sl = ladderSl != null ? ladderSl : null;
-  const tp = sl != null ? risk.rr * sl : null;
+  // Sin escalera: regla de 8 SL con los SL permitidos (y el tope de la etapa)
+  const rule8Pick = ladderSl == null ? rule8SlFor(cushion, stage) : null;
+  const sl = ladderSl != null ? ladderSl : (rule8Pick ? rule8Pick.sl : null);
+  const slSource = ladderSl != null ? 'ladder' : (rule8Pick ? 'rule8' : null);
+  const tp = sl != null ? Math.round(risk.rr * sl) : null;
   const slBackup = sl ? cushion / sl : null;
   const rule8 = cushion / MIN_SL_BACKUP;
   const suggestedSl = stage.maxSl ? Math.min(rule8, stage.maxSl) : rule8;
@@ -5264,9 +5313,10 @@ function computeRiskState(p) {
     const count = c / s;
     return { from: st.from, sl: s, cushion: c, count, ok: count >= MIN_SL_BACKUP - 1e-9 };
   });
+  const tpToFirm = tp ? Math.max(0, risk.firmMinProfit - profit) / tp : null;
   return {
     risk, size, balance, peak, profit, threshold, locked: risk.ddType === 'trailing_lock' && threshold === size,
-    cushion, sl, tp, slBackup, lowBackup: slBackup != null && slBackup < MIN_SL_BACKUP - 1e-9,
+    cushion, sl, slSource, tp, slBackup, lowBackup: slBackup != null && slBackup < MIN_SL_BACKUP - 1e-9, tpToFirm,
     suggestedSl, suggestedCapped, target: stage.target || null, targetProfit: stage.target ? stage.target - size : null,
     toTarget: stage.target ? stage.target - balance : null, tpLeft,
     firm: { enabled: firmEnabled, available: Math.max(0, firmAvail), minProfit: risk.firmMinProfit, min: risk.firmMin, max: risk.firmMax, minCushion: risk.firmMinCushion },
@@ -5306,10 +5356,11 @@ function stageForDate(acc, key) {
 function getFondeoAutoAmounts(key, list) {
   const account = accountForDate(key, list);
   const st = account ? stageForDate(account, key) : null;
-  if (st && stageLadder(st).length) {
-    const balBefore = accountBalanceAt(account, keyAddDays(key, -1));
-    const sl = ladderSlFor(st, balBefore);
-    return { tp: Math.round(accountRisk(account).rr * sl), sl: -sl, stage: st, account, ladder: true, balanceBefore: balBefore };
+  if (st) {
+    // Mismo cálculo que el panel de Gestión de riesgo, con el balance al cierre del día anterior
+    const ser = accountSeries(account, keyAddDays(key, -1));
+    const rs = computeRiskState({ size: account.size, balance: ser.balance, peak: ser.peak, risk: accountRisk(account), stage: st });
+    if (rs.sl) return { tp: rs.tp, sl: -rs.sl, stage: st, account, ladder: true, slSource: rs.slSource, balanceBefore: ser.balance };
   }
   const hasRisk = !!(st && (st.sl || st.tp));
   return {
@@ -5343,9 +5394,8 @@ function stageRiskText(s, acc) {
     return 'Escalera: ' + steps.map(st => 'desde ' + st.from.toLocaleString('es-AR') + ' SL ' + (s.maxSl ? Math.min(st.sl, s.maxSl) : st.sl).toLocaleString('es-AR')).join(' · ') +
       (s.maxSl ? ' · SL máx ' + s.maxSl.toLocaleString('es-AR') : '') + ' · TP = ' + fmtNum(rr) + '×SL';
   }
-  const sl = s.sl ? Math.abs(s.sl) : Math.abs(journalConfig.sl);
-  const tp = s.tp ? s.tp : journalConfig.tp;
-  return 'SL ' + sl.toLocaleString('es-AR') + (s.sl ? '' : ' (general)') + ' · TP ' + tp.toLocaleString('es-AR') + (s.tp ? '' : ' (general)');
+  return 'Regla de ' + MIN_SL_BACKUP + ' SL con SL permitidos ' + stageAllowedSl(s).map(x => x.toLocaleString('es-AR')).join('/') +
+    (s.maxSl ? ' · SL máx ' + s.maxSl.toLocaleString('es-AR') : '') + ' · TP = ' + fmtNum(accountRisk(acc).rr) + '×SL';
 }
 function fmtNum(n) { return Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 }); }
 
@@ -5588,10 +5638,11 @@ function _startAccountForm(acc) {
     id: acc.id, category: acc.category, sizeRaw: String(acc.size), nickname: acc.nickname || '',
     startDate: acc.startDate, maxRaw: acc.maxDailyProfit ? String(acc.maxDailyProfit) : '', riskRaw,
     stages: acc.stages.map((s, i) => ({ ...s, targetRaw: String(s.target), maxSlRaw: s.maxSl ? String(s.maxSl) : '',
+      allowedRaw: (Array.isArray(s.allowedSl) && s.allowedSl.length ? s.allowedSl : DEFAULT_ALLOWED_SL).join(', '),
       ladderRaw: _ladderToRaw(s, i === 0 ? acc.size : acc.stages[i - 1].target) })),
   } : {
     id: null, category: 'PA', sizeRaw: '', nickname: '', startDate: todayKeyStr(), maxRaw: '', riskRaw,
-    stages: [{ id: _newId(), name: '', targetRaw: '', maxSlRaw: '', ladderRaw: [{ fromRaw: '', slRaw: '' }], status: 'pending' }],
+    stages: [{ id: _newId(), name: '', targetRaw: '', maxSlRaw: '', allowedRaw: DEFAULT_ALLOWED_SL.join(', '), ladderRaw: [{ fromRaw: '', slRaw: '' }], status: 'pending' }],
   };
   _acctView = { mode: 'form', draft };
 }
@@ -5651,8 +5702,9 @@ function _acctFormHTML() {
       '<div class="acct-stage-grid acct-stage-grid2">' +
         '<label><span>Balance objetivo</span><input class="cfg-input acct-stage-target-in" data-i="' + i + '" type="text" inputmode="numeric" placeholder="55100" value="' + escapeHtml(s.targetRaw || '') + '"' + (locked ? ' disabled' : '') + ' oninput="onAcctFormInput()"><em class="acct-target-profit" data-i="' + i + '"></em></label>' +
         '<label><span style="color:var(--red)">SL máximo</span><input class="cfg-input acct-stage-maxsl-in" data-i="' + i + '" type="text" inputmode="numeric" placeholder="Sin tope" value="' + escapeHtml(s.maxSlRaw || '') + '" oninput="onAcctFormInput()"></label>' +
+        '<label class="acct-allowed-label"><span>SL permitidos</span><input class="cfg-input acct-input-text acct-stage-allowed-in" data-i="' + i + '" type="text" placeholder="250, 300, 450, 500, 600" value="' + escapeHtml(s.allowedRaw || '') + '" oninput="onAcctFormInput()"><em>Si la escalera queda vacía, el SL sale de la regla de ' + MIN_SL_BACKUP + ' SL con estos valores</em></label>' +
       '</div>' +
-      '<div class="acct-ladder-title">Escalera de SL</div>';
+      '<div class="acct-ladder-title">Escalera de SL <span class="acct-opt" style="text-transform:none;letter-spacing:0">(opcional)</span></div>';
     s.ladderRaw.forEach((st, j) => {
       h += '<div class="acct-ladder-row">' +
         '<span>desde balance</span><input class="cfg-input acct-ladder-from-in" data-i="' + i + '" data-j="' + j + '" type="text" inputmode="numeric" placeholder="50000" value="' + escapeHtml(st.fromRaw) + '" oninput="onAcctFormInput()">' +
@@ -5689,6 +5741,7 @@ function _syncAcctFormFromDOM() {
   each('.acct-stage-name-in', 'name', false);
   each('.acct-stage-target-in', 'targetRaw', false);
   each('.acct-stage-maxsl-in', 'maxSlRaw', true);
+  each('.acct-stage-allowed-in', 'allowedRaw', true);
   document.querySelectorAll('.acct-ladder-from-in').forEach(el => { const st = (d.stages[+el.dataset.i] || {}).ladderRaw; if (st && st[+el.dataset.j]) st[+el.dataset.j].fromRaw = el.value; });
   document.querySelectorAll('.acct-ladder-sl-in').forEach(el => { const st = (d.stages[+el.dataset.i] || {}).ladderRaw; if (st && st[+el.dataset.j]) st[+el.dataset.j].slRaw = el.value; });
 }
@@ -5735,7 +5788,7 @@ function setAcctCategory(c) {
 }
 function addAcctStage() {
   _syncAcctFormFromDOM();
-  _acctView.draft.stages.push({ id: _newId(), name: '', targetRaw: '', maxSlRaw: '', ladderRaw: [{ fromRaw: '', slRaw: '' }], status: 'pending' });
+  _acctView.draft.stages.push({ id: _newId(), name: '', targetRaw: '', maxSlRaw: '', allowedRaw: DEFAULT_ALLOWED_SL.join(', '), ladderRaw: [{ fromRaw: '', slRaw: '' }], status: 'pending' });
   renderAccountsModal();
   const ins = document.querySelectorAll('.acct-stage-name-in');
   if (ins.length) ins[ins.length - 1].focus();
@@ -5850,14 +5903,27 @@ function _validateAccountDraft(d) {
       ladder.push({ from: from.value, sl: sl.value });
     }
     ladder.sort((a, b) => a.from - b.from);
-    delete base.sl; delete base.tp; // reemplazados por la escalera (TP = RR × SL)
+    // SL permitidos (para la regla de 8 SL cuando la escalera está vacía)
+    const allowed = [];
+    const parts = String(s.allowedRaw || '').split(/[,;\s\/]+/).filter(Boolean);
+    for (const p of parts) {
+      const v = parseConfigAmount(p);
+      if (!v.ok) return { ok:false, msg:'En "SL permitidos" de la etapa ' + n + ' (' + base.name + '), "' + p + '" ' + v.msg + '.' };
+      if (!allowed.includes(v.value)) allowed.push(v.value);
+    }
+    allowed.sort((a, b) => a - b);
+    if (!ladder.length && !allowed.length) return { ok:false, msg:'La etapa ' + n + ' (' + base.name + ') necesita una escalera de SL o una lista de SL permitidos.' };
+    delete base.sl; delete base.tp; // reemplazados por la escalera / regla de 8 (TP = RR × SL)
     base.maxSl = maxSl.value || null;
     base.ladder = ladder;
+    base.allowedSl = allowed;
     // Ningún TP posible de la etapa puede superar la ganancia máxima por día
-    const tps = ladder.length ? ladder.map(x => Math.round(risk.rr * (base.maxSl ? Math.min(x.sl, base.maxSl) : x.sl))) : [journalConfig.tp];
+    const tps = ladder.length
+      ? ladder.map(x => Math.round(risk.rr * (base.maxSl ? Math.min(x.sl, base.maxSl) : x.sl)))
+      : stageAllowedSl(base).map(x => Math.round(risk.rr * x));
     const maxTp = Math.max(...tps);
     if (maxDaily.value && maxTp > maxDaily.value) {
-      return { ok:false, msg:'En la etapa ' + n + ' (' + base.name + ') el TP llega a +' + maxTp.toLocaleString('es-AR') + (ladder.length ? ' (RR ' + fmtNum(risk.rr) + ' × SL)' : ' (general)') +
+      return { ok:false, msg:'En la etapa ' + n + ' (' + base.name + ') el TP llega a +' + maxTp.toLocaleString('es-AR') + ' (RR ' + fmtNum(risk.rr) + ' × SL' + (ladder.length ? '' : ' permitido') + ')' +
         ' y supera la ganancia máxima por día (+' + maxDaily.value.toLocaleString('es-AR') + ').' };
     }
     stages.push(base);
@@ -6583,17 +6649,13 @@ function renderFondeoRisk() {
   html += row('Ganancia', _signedES(rs.profit), rs.profit > 0 ? 'pos' : rs.profit < 0 ? 'neg' : '');
   html += '<div class="acct-stage-sub" style="margin:-2px 0 6px">Límite de pérdida '+rs.threshold.toLocaleString('es-AR')+' ('+ddLbl+')</div>';
   html += row('Colchón', rs.cushion.toLocaleString('es-AR'));
-
-  html += '<hr class="stat-divider">';
   if (rs.sl != null) {
-    html += row('SL a usar <span class="acct-opt">(escalera)</span>', '<b>'+rs.sl.toLocaleString('es-AR')+'</b>', 'neg');
+    html += row('SL en uso <span class="acct-opt">('+(rs.slSource === 'ladder' ? 'escalera' : 'regla de '+MIN_SL_BACKUP+' SL')+')</span>', '<b>'+rs.sl.toLocaleString('es-AR')+'</b>', 'neg');
+    html += row('SL que quedan', '<b>'+fmtCount(rs.slBackup)+' SL</b>', rs.lowBackup ? 'neg' : '');
+    if (rs.lowBackup) html += '<div class="acct-risk-warn">⚠ Te quedan '+fmtCount(rs.slBackup)+' SL de '+rs.sl.toLocaleString('es-AR')+': no llegás a '+MIN_SL_BACKUP+'.</div>';
     html += row('TP <span class="acct-opt">(RR '+fmtNum(rs.risk.rr)+')</span>', '+'+rs.tp.toLocaleString('es-AR'), 'pos');
-    html += row('Respaldo', fmtCount(rs.slBackup)+' SL', rs.lowBackup ? 'neg' : '');
-    if (rs.lowBackup) html += '<div class="acct-risk-warn">⚠ Tenés '+fmtCount(rs.slBackup)+' SL de respaldo: no llegás a '+MIN_SL_BACKUP+'.</div>';
     html += row('SL sugerido <span class="acct-opt">(regla de '+MIN_SL_BACKUP+')</span>',
       Math.floor(rs.suggestedSl).toLocaleString('es-AR') + (rs.suggestedCapped ? ' <span class="acct-opt">(tope de etapa)</span>' : ''));
-  } else {
-    html += '<div class="acct-stage-sub">Cargá la escalera de SL de la etapa en "Editar cuenta".</div>';
   }
   if (rs.ladderWarnings.length) {
     html += '<div class="acct-risk-warn">⚠ Escalones con menos de '+MIN_SL_BACKUP+' SL de respaldo: '+
@@ -6604,7 +6666,7 @@ function renderFondeoRisk() {
     html += '<hr class="stat-divider">';
     html += row('Objetivo de la etapa', rs.target.toLocaleString('es-AR'));
     html += '<div class="acct-stage-sub" style="margin:-2px 0 6px">Ganancia '+rs.targetProfit.toLocaleString('es-AR')+(rs.toTarget > 0 ? ' · faltan '+rs.toTarget.toLocaleString('es-AR') : ' · alcanzado')+'</div>';
-    html += row('TP que faltan', rs.tpLeft != null ? fmtCount(rs.tpLeft, 2) : '—');
+    html += row('TP que faltan', rs.tpLeft != null ? fmtCount(rs.tpLeft, 2)+' <span class="acct-opt">TP de '+rs.tp.toLocaleString('es-AR')+'</span>' : '—');
   }
 
   html += '<hr class="stat-divider">';
@@ -6612,7 +6674,8 @@ function renderFondeoRisk() {
     (rs.firm.enabled
       ? '<div class="pos">Sí: entre '+rs.firm.min.toLocaleString('es-AR')+' y '+rs.firm.available.toLocaleString('es-AR')+'</div>'
       : '<div class="acct-stage-sub">No todavía: '+(rs.profit < rs.firm.minProfit
-          ? 'necesitás ganancia '+rs.firm.minProfit.toLocaleString('es-AR')+' (faltan '+(rs.firm.minProfit - rs.profit).toLocaleString('es-AR')+')'
+          ? 'necesitás ganancia '+rs.firm.minProfit.toLocaleString('es-AR')+' (faltan '+(rs.firm.minProfit - rs.profit).toLocaleString('es-AR')+
+            (rs.tpToFirm != null ? ' = <b>'+fmtCount(rs.tpToFirm, 2)+' TP de '+rs.tp.toLocaleString('es-AR')+'</b>' : '')+')'
           : 'tiene que quedar un colchón de '+rs.firm.minCushion.toLocaleString('es-AR')+' y el mínimo es '+rs.firm.min.toLocaleString('es-AR'))+'</div>')+
     '<div class="acct-stage-sub">Desde ganancia '+rs.firm.minProfit.toLocaleString('es-AR')+' · mín '+rs.firm.min.toLocaleString('es-AR')+' · máx '+rs.firm.max.toLocaleString('es-AR')+' · colchón mín '+rs.firm.minCushion.toLocaleString('es-AR')+'</div></div>';
   html += '<div class="acct-wd-line"><div class="acct-wd-title">Retiro según mi plan</div>'+

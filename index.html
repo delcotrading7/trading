@@ -1189,6 +1189,48 @@ body{
   transition:transform .22s ease;
 }
 .share-overlay.open .share-box{transform:scale(1) translateY(0)}
+
+/* ── Configuración del journal (TP / SL) ──────────────────── */
+.cfg-box{border-color:var(--goldborder)}
+.cfg-section-title{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.cfg-label{font-size:13px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:6px}
+.cfg-input-wrap{display:flex;align-items:center;gap:6px}
+.cfg-sign{font-size:18px;font-weight:900;width:14px;text-align:center}
+.cfg-input{
+  width:110px;background:var(--bg1);border:1px solid var(--border);color:var(--t1);
+  font-size:16px;font-weight:800;padding:8px 10px;border-radius:8px;text-align:right;
+  font-family:var(--font-body);
+}
+.cfg-input:focus{outline:none;border-color:var(--gold)}
+.cfg-input.invalid{border-color:var(--red)}
+.cfg-unit{font-size:11px;color:var(--t3);font-weight:700}
+.cfg-hint{font-size:11.5px;color:var(--t3);line-height:1.5;margin:-2px 0 12px}
+.cfg-rr{font-size:12.5px;color:var(--t2);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:12px}
+.cfg-rr strong{color:var(--t1)}
+.cfg-error{font-size:12px;color:var(--red);min-height:16px;margin-bottom:10px;line-height:1.45}
+.cfg-btns{display:flex;gap:10px;justify-content:flex-end}
+.cfg-btn{
+  background:var(--bg3);border:1px solid var(--border);color:var(--t2);
+  padding:10px 16px;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;
+  font-family:var(--font-body);transition:all .2s;
+}
+.cfg-btn:hover{border-color:var(--gold);color:var(--gold)}
+.cfg-btn.primary{background:var(--gold);border-color:var(--gold);color:#111}
+.cfg-btn.primary:hover{opacity:.9;color:#111}
+.cfg-btn:disabled{opacity:.5;cursor:default}
+.cfg-change{font-size:13px;color:var(--t1);background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:14px;line-height:1.6}
+.cfg-change .res-dot{margin-right:6px}
+.cfg-opt{
+  display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border:1.5px solid var(--border);
+  border-radius:10px;padding:11px 12px;margin-bottom:10px;cursor:pointer;transition:border-color .2s;
+}
+.cfg-opt:hover{border-color:var(--goldborder)}
+.cfg-opt.selected{border-color:var(--gold)}
+.cfg-opt input{margin-top:3px;accent-color:var(--gold)}
+.cfg-opt-title{font-size:13px;font-weight:800;color:var(--t1)}
+.cfg-opt-sub{font-size:11.5px;color:var(--t3);line-height:1.55;margin-top:3px}
+.cfg-opt-sub b{color:var(--t2)}
 .share-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .share-title{font-size:17px;font-weight:800;color:var(--t1)}
 .share-sub{font-size:12.5px;color:var(--t3);line-height:1.55;margin-bottom:18px}
@@ -1504,6 +1546,8 @@ body{
     <div class="topbar-right">
       <button class="topbar-menu-btn" id="topbarMenuBtn" onclick="toggleTopbarMenu(event)" title="Menú" aria-label="Menú">☰</button>
       <div class="topbar-menu" id="topbarMenu">
+        <button class="topbar-btn" onclick="openConfigModal()" title="Editar montos automáticos de TP y SL">⚙ Configurar Journal</button>
+        <div class="topbar-sep"></div>
         <button class="topbar-btn success" onclick="exportBackup()" title="Descargar copia de seguridad con todos los trades y fotos">Guardar Copia de Seguridad</button>
         <button class="topbar-btn" onclick="document.getElementById('backupFileInput').click()" title="Cargar copia de seguridad previamente exportada">Cargar Copia de Seguridad</button>
         <div class="topbar-sep"></div>
@@ -1737,6 +1781,69 @@ body{
     <div class="share-perm-hint" id="sharePermHint">La otra persona solo puede ver el día, no puede modificar nada.</div>
     <div class="share-links-list" id="shareLinksList"></div>
     <button class="share-gen-btn" id="shareGenBtn" onclick="generateShareLink()">+ Generar nuevo link</button>
+  </div>
+</div>
+
+<!-- CONFIGURACIÓN DEL JOURNAL (TP / SL) -->
+<div class="share-overlay" id="configOverlay" onclick="if(event.target===this)closeConfigModal()">
+  <div class="share-box cfg-box" role="dialog" aria-modal="true" aria-labelledby="cfgTitle">
+    <div class="share-head">
+      <div class="share-title" id="cfgTitle">⚙ Configuración del Journal</div>
+      <button class="modal-close-btn" onclick="closeConfigModal()" title="Cerrar">✕</button>
+    </div>
+
+    <!-- Paso 1: editar valores -->
+    <div id="cfgStep1">
+      <div class="share-sub">Montos automáticos que se cargan al marcar TP o SL en un día (Práctica y Fondeo).</div>
+      <div class="cfg-section-title">Montos automáticos</div>
+      <div class="cfg-row">
+        <label class="cfg-label" for="cfgTpInput"><span class="res-dot" style="background:#22c55e"></span>Take Profit (TP)</label>
+        <div class="cfg-input-wrap">
+          <span class="cfg-sign" style="color:var(--green)">+</span>
+          <input class="cfg-input" id="cfgTpInput" type="text" inputmode="decimal" autocomplete="off" oninput="onConfigInput()">
+          <span class="cfg-unit">USD</span>
+        </div>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label" for="cfgSlInput"><span class="res-dot" style="background:#f43f5e"></span>Stop Loss (SL)</label>
+        <div class="cfg-input-wrap">
+          <span class="cfg-sign" style="color:var(--red)">−</span>
+          <input class="cfg-input" id="cfgSlInput" type="text" inputmode="decimal" autocomplete="off" oninput="onConfigInput()">
+          <span class="cfg-unit">USD</span>
+        </div>
+      </div>
+      <div class="cfg-hint">Ingresá solo el número entero. El signo se aplica solo: TP siempre positivo, SL siempre negativo.</div>
+      <div class="cfg-rr" id="cfgRR"></div>
+      <div class="cfg-error" id="cfgError"></div>
+      <div class="cfg-btns">
+        <button class="cfg-btn" onclick="closeConfigModal()">Cancelar</button>
+        <button class="cfg-btn primary" id="cfgSaveBtn" onclick="submitConfigStep1()">Guardar cambios</button>
+      </div>
+    </div>
+
+    <!-- Paso 2: ¿aplicar solo a días nuevos o migrar históricos? -->
+    <div id="cfgStep2" style="display:none">
+      <div class="cfg-change" id="cfgChangeSummary"></div>
+      <label class="cfg-opt selected" id="cfgOptNew">
+        <input type="radio" name="cfgApply" value="new" checked onchange="onConfigApplyChange()">
+        <div>
+          <div class="cfg-opt-title">Solo para días nuevos</div>
+          <div class="cfg-opt-sub">Los días ya guardados quedan con sus montos históricos tal cual están.</div>
+        </div>
+      </label>
+      <label class="cfg-opt" id="cfgOptMigrate">
+        <input type="radio" name="cfgApply" value="migrate" onchange="onConfigApplyChange()">
+        <div>
+          <div class="cfg-opt-title">Migrar también los días ya cargados</div>
+          <div class="cfg-opt-sub" id="cfgMigrateSummary"></div>
+        </div>
+      </label>
+      <div class="cfg-error" id="cfgError2"></div>
+      <div class="cfg-btns">
+        <button class="cfg-btn" id="cfgBackBtn" onclick="showConfigStep(1)">Volver</button>
+        <button class="cfg-btn primary" id="cfgConfirmBtn" onclick="confirmConfigChange()">Confirmar</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2996,11 +3103,11 @@ function setPMainResult(result) {
 
   // Asignar valores automáticos según resultado (igual que Fondeo)
   if (result === 'tp') {
-    practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.tp; // +900
+    practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.tp; // TP configurado
   } else if (result === 'be') {
     practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.be; // 0
   } else if (result === 'sl') {
-    practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.sl; // -450
+    practicaModalMain.amount = FIXED_AMOUNTS_PRACTICA.sl; // SL configurado
   } else if (result === 'sp') {
     practicaModalMain.amount = 0; // Valor inicial para SP, el usuario ingresará el monto
   } else if (result === 'fe') {
@@ -3340,10 +3447,7 @@ function renderPMonthStats() {
     return;
   }
 
-  html += '<div class="stat-row"><span class="stat-label">Avg Win / Loss</span>'+
-    '<span class="stat-value"><span style="color:var(--green)">+900</span> <span style="color:var(--t3);font-weight:400">win</span>'+
-    '&nbsp;&nbsp;<span style="color:var(--red)">-450</span> <span style="color:var(--t3);font-weight:400">loss</span></span></div>';
-  html += '<div class="stat-row"><span class="stat-label">Avg RR</span><span class="stat-value">1 / 2.00</span></div>';
+  html += avgWinLossRowsHTML(_practica, keys);
 
   const winsPct = st.tradingDays>0 ? Math.round(st.tpC/st.tradingDays*100) : 0;
   const lossPct = st.tradingDays>0 ? Math.round(st.slC/st.tradingDays*100) : 0;
@@ -4038,27 +4142,414 @@ function renderFondeoModalBody(key) {
 }
 
 /* ── Sección trade principal ─────────────────────────────────── */
-/* Valores automáticos por resultado */
+/* Valores automáticos por resultado.
+   tp / sl NO se editan acá: los define la Configuración del Journal
+   (botón "⚙ Configurar Journal", tabla user_settings en Supabase).
+   Ver applyJournalConfig() más abajo. */
 const FIXED_AMOUNTS = {
-  tp: 900,    // TP = +900 USD (automático)
+  tp: null,   // TP = journalConfig.tp (automático)
   be: 0,      // BE = 0 USD (automático)
-  sl: -450,   // SL = -450 USD (automático)
+  sl: null,   // SL = journalConfig.sl (automático)
   sp: null,   // SP = manual (variable)
   ne: 0,      // NE = 0 USD (automático)
   lt: 0,      // Día Lateral = 0 USD (automático)
   fe: 0       // Día Feriado = 0 USD (automático)
 };
 
-/* Valores automáticos para PRÁCTICA (independiente de Fondeo) */
+/* Valores automáticos para PRÁCTICA (mismos TP/SL que Fondeo, desde la configuración) */
 const FIXED_AMOUNTS_PRACTICA = {
-  tp: 900,    // TP = +900 (automático, para análisis de práctica)
+  tp: null,   // TP = journalConfig.tp (automático)
   be: 0,      // BE = 0 (automático)
-  sl: -450,   // SL = -450 (automático)
+  sl: null,   // SL = journalConfig.sl (automático)
   sp: null,   // SP = manual (variable)
   ne: 0,      // NE = 0 (automático)
   lt: 0,      // Día Lateral = 0 (automático)
   fe: 0       // Día Feriado = 0 (automático)
 };
+
+/* ══════════════════════════════════════════════════════════════
+   CONFIGURACIÓN DEL JOURNAL (TP / SL editables desde la interfaz)
+   Fuente de verdad: tabla public.user_settings en Supabase
+   (supabase/sql/004_user_settings.sql). localStorage es solo caché
+   para arrancar rápido. tp siempre > 0, sl siempre < 0.
+══════════════════════════════════════════════════════════════ */
+const JOURNAL_CONFIG_DEFAULT   = { tp: 900, sl: -450 };
+const JOURNAL_CONFIG_CACHE_KEY = 'trading_journal_config';
+const MIGRACION_TPSL_BACKUP_KEY = 'trading_backup_pre_migracion_tp_sl';
+let journalConfig = { ...JOURNAL_CONFIG_DEFAULT };
+
+function _isValidJournalConfig(c) {
+  return c && Number.isFinite(Number(c.tp)) && Number.isFinite(Number(c.sl)) &&
+         Number(c.tp) !== 0 && Number(c.sl) !== 0;
+}
+
+function applyJournalConfig(cfg) {
+  journalConfig = { tp: Math.abs(Number(cfg.tp)), sl: -Math.abs(Number(cfg.sl)) };
+  FIXED_AMOUNTS.tp = FIXED_AMOUNTS_PRACTICA.tp = journalConfig.tp;
+  FIXED_AMOUNTS.sl = FIXED_AMOUNTS_PRACTICA.sl = journalConfig.sl;
+}
+
+// Arranque: caché local (o valores por defecto) hasta que llegue la nube
+(function initJournalConfigFromCache() {
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(JOURNAL_CONFIG_CACHE_KEY) || 'null'); } catch (e) {}
+  applyJournalConfig(_isValidJournalConfig(cached) ? cached : JOURNAL_CONFIG_DEFAULT);
+})();
+
+function _cacheJournalConfig() {
+  try { localStorage.setItem(JOURNAL_CONFIG_CACHE_KEY, JSON.stringify(journalConfig)); } catch (e) {}
+}
+
+function _configCloudErrorMsg(error) {
+  const code = error && error.code;
+  if (code === 'PGRST205' || code === '42P01') {
+    return 'Falta crear la tabla de configuración en Supabase. Corré el script supabase/sql/004_user_settings.sql en el SQL Editor y volvé a intentar.';
+  }
+  return 'No se pudo guardar en la nube (' + ((error && (error.message || code)) || 'error desconocido') + ').';
+}
+
+async function loadJournalConfig() {
+  if (!currentUser) return;
+  try {
+    const { data, error } = await sb.from('user_settings').select('tp,sl')
+      .eq('user_id', currentUser.id).maybeSingle();
+    if (error) { console.warn('[Config] No se pudo leer user_settings:', error); return; }
+    if (data && _isValidJournalConfig(data)) {
+      applyJournalConfig(data);
+      _cacheJournalConfig();
+    }
+  } catch (e) { console.warn('[Config] Error leyendo configuración:', e); }
+}
+
+async function saveJournalConfigCloud(cfg) {
+  if (!currentUser) return { ok:false, msg:'Iniciá sesión primero.' };
+  try {
+    const { error } = await sb.from('user_settings').upsert(
+      { user_id: currentUser.id, tp: cfg.tp, sl: cfg.sl, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
+    if (error) { console.warn('[Config] Error guardando user_settings:', error); return { ok:false, msg:_configCloudErrorMsg(error) }; }
+    return { ok:true };
+  } catch (e) {
+    return { ok:false, msg:'No se pudo guardar en la nube (' + (e.message || e) + ').' };
+  }
+}
+
+/* Convierte lo que escribe el usuario en un entero positivo (USD sin centavos,
+   igual que los montos guardados en cada día).
+   Acepta "450", "-450", "+900", "1000" o "1.000" (punto de miles). */
+function parseConfigAmount(raw) {
+  let s = String(raw == null ? '' : raw).trim().replace(/\s+/g, '').replace(/^[+\-−]/, '');
+  if (!s) return { ok:false, msg:'no puede estar vacío' };
+  if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  if (/^\d+[.,]\d+$/.test(s)) return { ok:false, msg:'tiene que ser un número entero (sin decimales)' };
+  if (!/^\d+$/.test(s)) return { ok:false, msg:'tiene que ser un número' };
+  const n = Number(s);
+  if (!Number.isSafeInteger(n)) return { ok:false, msg:'es demasiado grande' };
+  if (n === 0) return { ok:false, msg:'no puede ser 0' };
+  return { ok:true, value: n };
+}
+
+function fmtUSD(n, withSign) {
+  const s = Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+  if (!withSign) return s;
+  return (n > 0 ? '+' : n < 0 ? '-' : '') + s;
+}
+
+/* Busca los días guardados cuyo monto sigue siendo el automático anterior */
+function scanDaysForConfigMigration(oldCfg, newCfg) {
+  const cambios = [];
+  const tpChanged = oldCfg.tp !== newCfg.tp;
+  const slChanged = oldCfg.sl !== newCfg.sl;
+  [['practica', _practica], ['fondeo', _fondeo]].forEach(([tabla, store]) => {
+    Object.keys(store).forEach(dia => {
+      const d = store[dia];
+      if (!d) return;
+      const amt = Number(d.mainAmount);
+      if (tpChanged && d.mainResult === 'tp' && amt === oldCfg.tp) {
+        cambios.push({ tabla, dia, tipo:'tp', antes: d.mainAmount, despues: newCfg.tp });
+      } else if (slChanged && d.mainResult === 'sl' && (amt === oldCfg.sl || amt === -oldCfg.sl)) {
+        cambios.push({ tabla, dia, tipo:'sl', antes: d.mainAmount, despues: newCfg.sl });
+      }
+    });
+  });
+  return cambios;
+}
+
+function _countCambios(cambios, tipo, tabla) {
+  return cambios.filter(c => c.tipo === tipo && (!tabla || c.tabla === tabla)).length;
+}
+
+/* ── Modal ─────────────────────────────────────────────────── */
+let _cfgPending = null; // { oldCfg, newCfg, cambios }
+
+function openConfigModal() {
+  const menu = document.getElementById('topbarMenu');
+  if (menu) menu.classList.remove('open');
+  document.getElementById('cfgTpInput').value = String(journalConfig.tp);
+  document.getElementById('cfgSlInput').value = String(Math.abs(journalConfig.sl));
+  _cfgPending = null;
+  showConfigStep(1);
+  onConfigInput();
+  document.getElementById('configOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('cfgTpInput').focus(), 50);
+}
+
+function closeConfigModal() {
+  if (document.getElementById('cfgConfirmBtn').disabled) return; // guardando: no cerrar a mitad de camino
+  document.getElementById('configOverlay').classList.remove('open');
+  _cfgPending = null;
+}
+
+function showConfigStep(n) {
+  document.getElementById('cfgStep1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('cfgStep2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('cfgError').textContent = '';
+  document.getElementById('cfgError2').textContent = '';
+}
+
+function _readConfigInputs() {
+  const tpIn = document.getElementById('cfgTpInput');
+  const slIn = document.getElementById('cfgSlInput');
+  const tp = parseConfigAmount(tpIn.value);
+  const sl = parseConfigAmount(slIn.value);
+  return { tp, sl, tpIn, slIn };
+}
+
+function onConfigInput() {
+  const { tp, sl, tpIn, slIn } = _readConfigInputs();
+  tpIn.classList.toggle('invalid', !tp.ok && tpIn.value.trim() !== '');
+  slIn.classList.toggle('invalid', !sl.ok && slIn.value.trim() !== '');
+  document.getElementById('cfgError').textContent = '';
+  document.getElementById('cfgRR').innerHTML = (tp.ok && sl.ok)
+    ? 'Se va a guardar: TP <strong style="color:var(--green)">' + fmtUSD(tp.value, true) +
+      '</strong> · SL <strong style="color:var(--red)">' + fmtUSD(-sl.value, true) +
+      '</strong> · RR <strong>1 / ' + formatStatRatio(tp.value / sl.value) + '</strong>'
+    : 'Completá ambos valores para ver el RR.';
+}
+
+function submitConfigStep1() {
+  const { tp, sl, tpIn, slIn } = _readConfigInputs();
+  const errs = [];
+  if (!tp.ok) errs.push('TP ' + tp.msg + '.');
+  if (!sl.ok) errs.push('SL ' + sl.msg + '.');
+  tpIn.classList.toggle('invalid', !tp.ok);
+  slIn.classList.toggle('invalid', !sl.ok);
+  if (errs.length) { document.getElementById('cfgError').textContent = errs.join(' '); return; }
+
+  const oldCfg = { ...journalConfig };
+  const newCfg = { tp: tp.value, sl: -sl.value };
+  if (oldCfg.tp === newCfg.tp && oldCfg.sl === newCfg.sl) {
+    document.getElementById('configOverlay').classList.remove('open');
+    showToast('Sin cambios');
+    return;
+  }
+
+  const cambios = scanDaysForConfigMigration(oldCfg, newCfg);
+  _cfgPending = { oldCfg, newCfg, cambios };
+
+  const lines = [];
+  if (oldCfg.tp !== newCfg.tp) lines.push('<span class="res-dot" style="background:#22c55e"></span>TP: <b>' + fmtUSD(oldCfg.tp, true) + '</b> → <b style="color:var(--green)">' + fmtUSD(newCfg.tp, true) + '</b>');
+  if (oldCfg.sl !== newCfg.sl) lines.push('<span class="res-dot" style="background:#f43f5e"></span>SL: <b>' + fmtUSD(oldCfg.sl, true) + '</b> → <b style="color:var(--red)">' + fmtUSD(newCfg.sl, true) + '</b>');
+  document.getElementById('cfgChangeSummary').innerHTML = 'Vas a cambiar:<br>' + lines.join('<br>');
+
+  const migOpt = document.getElementById('cfgOptMigrate');
+  const migInput = migOpt.querySelector('input');
+  let sum;
+  if (!cambios.length) {
+    sum = 'No hay días guardados con ' +
+      [oldCfg.tp !== newCfg.tp ? 'TP = ' + fmtUSD(oldCfg.tp, true) : null,
+       oldCfg.sl !== newCfg.sl ? 'SL = ' + fmtUSD(oldCfg.sl, true) : null].filter(Boolean).join(' ni ') +
+      ', así que no hay nada para migrar.';
+    migInput.disabled = true;
+    migOpt.style.opacity = '.5';
+    migOpt.style.cursor = 'default';
+  } else {
+    const parts = [];
+    if (oldCfg.tp !== newCfg.tp) {
+      parts.push('TP ' + fmtUSD(oldCfg.tp, true) + ' → ' + fmtUSD(newCfg.tp, true) + ': <b>' + _countCambios(cambios,'tp') + ' día' + (_countCambios(cambios,'tp')!==1?'s':'') + '</b>' +
+        ' (Práctica ' + _countCambios(cambios,'tp','practica') + ' · Fondeo ' + _countCambios(cambios,'tp','fondeo') + ')');
+    }
+    if (oldCfg.sl !== newCfg.sl) {
+      parts.push('SL ' + fmtUSD(oldCfg.sl, true) + ' → ' + fmtUSD(newCfg.sl, true) + ': <b>' + _countCambios(cambios,'sl') + ' día' + (_countCambios(cambios,'sl')!==1?'s':'') + '</b>' +
+        ' (Práctica ' + _countCambios(cambios,'sl','practica') + ' · Fondeo ' + _countCambios(cambios,'sl','fondeo') + ')');
+    }
+    sum = parts.join('<br>') +
+      '<br>Total: <b>' + cambios.length + ' día' + (cambios.length!==1?'s':'') + '</b>. BE, SP, NE, Día Lateral y montos editados a mano no se tocan.' +
+      '<br>Antes de migrar se descarga un respaldo (.json) y se guarda una copia en este navegador.';
+    migInput.disabled = false;
+    migOpt.style.opacity = '';
+    migOpt.style.cursor = '';
+  }
+  document.getElementById('cfgMigrateSummary').innerHTML = sum;
+  document.querySelector('input[name="cfgApply"][value="new"]').checked = true;
+  onConfigApplyChange();
+  showConfigStep(2);
+}
+
+function onConfigApplyChange() {
+  const v = (document.querySelector('input[name="cfgApply"]:checked') || {}).value;
+  document.getElementById('cfgOptNew').classList.toggle('selected', v === 'new');
+  document.getElementById('cfgOptMigrate').classList.toggle('selected', v === 'migrate');
+}
+
+function _stripPhotosForBackup(store) {
+  const out = {};
+  Object.keys(store).forEach(k => {
+    const d = store[k];
+    if (!d) return;
+    out[k] = { ...d,
+      contextPhotos: (d.contextPhotos||[]).map(p => ({ name:p.name, size:p.size, imgId:p.imgId })),
+      photos:        (d.photos||[]).map(p => ({ name:p.name, size:p.size, imgId:p.imgId })) };
+  });
+  return out;
+}
+
+function _downloadJSON(obj, filename) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+/* Escribe en la nube los días cuyo mainAmount cambió. Devuelve cuántos fallaron. */
+async function _pushChangedDaysToCloud(cambios) {
+  let fallidos = 0;
+  for (const c of cambios) {
+    const res = c.tabla === 'practica'
+      ? await upsertPracticaDayCloud(c.dia, _practica[c.dia])
+      : await upsertFondeoDayCloud(c.dia, _fondeo[c.dia]);
+    if (!res || !res.ok) { fallidos++; console.warn('[Config] Falló guardar ' + c.tabla + ' ' + c.dia, res); }
+  }
+  return fallidos;
+}
+
+function _rerenderAfterConfigChange() {
+  renderPracticaCal();
+  renderFondeoCal();
+  renderStats();
+  renderPStats();
+}
+
+async function confirmConfigChange() {
+  if (!_cfgPending) return;
+  const { oldCfg, newCfg, cambios } = _cfgPending;
+  const migrar = (document.querySelector('input[name="cfgApply"]:checked') || {}).value === 'migrate' && cambios.length > 0;
+  const btn = document.getElementById('cfgConfirmBtn');
+  const back = document.getElementById('cfgBackBtn');
+  const errEl = document.getElementById('cfgError2');
+  errEl.textContent = '';
+  btn.disabled = back.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    // 1) Guardar la configuración en Supabase (si falla, no se cambia nada)
+    const saved = await saveJournalConfigCloud(newCfg);
+    if (!saved.ok) { errEl.textContent = saved.msg; return; }
+    applyJournalConfig(newCfg);
+    _cacheJournalConfig();
+
+    // 2) Respaldo ANTES de tocar cualquier día
+    if (migrar) {
+      const fecha = new Date().toISOString();
+      const backup = {
+        tipo: 'respaldo_pre_migracion_tp_sl',
+        fecha, configAnterior: oldCfg, configNueva: newCfg,
+        cambios: cambios.map(c => ({ ...c })),
+        practica: _stripPhotosForBackup(_practica),
+        fondeo:   _stripPhotosForBackup(_fondeo),
+      };
+      try { localStorage.setItem(MIGRACION_TPSL_BACKUP_KEY, JSON.stringify(backup)); }
+      catch (e) {
+        // Si no entra el respaldo completo, al menos guardar la lista de cambios (lo único necesario para revertir)
+        try { localStorage.setItem(MIGRACION_TPSL_BACKUP_KEY, JSON.stringify({ ...backup, practica:undefined, fondeo:undefined })); }
+        catch (e2) { console.warn('[Config] No se pudo guardar el respaldo en localStorage:', e2); }
+      }
+      _downloadJSON(backup, 'respaldo_migracion_TP-SL_' + fecha.slice(0,10) + '.json');
+    }
+
+    // 3) Migrar días históricos (opcional)
+    let fallidos = 0;
+    if (migrar) {
+      cambios.forEach(c => {
+        const store = c.tabla === 'practica' ? _practica : _fondeo;
+        if (store[c.dia]) store[c.dia].mainAmount = c.despues;
+      });
+      savePracticaData();
+      saveFondeoData();
+      fallidos = await _pushChangedDaysToCloud(cambios);
+    }
+
+    _rerenderAfterConfigChange();
+    btn.disabled = back.disabled = false;
+    closeConfigModal();
+
+    if (fallidos) {
+      showToast('⚠ Config guardada, pero ' + fallidos + ' día(s) no se subieron a la nube. Revisá la consola.', true);
+    } else if (migrar) {
+      showToast('✓ Configuración guardada · ' + cambios.length + ' día' + (cambios.length!==1?'s':'') + ' migrado' + (cambios.length!==1?'s':''));
+    } else {
+      showToast('✓ Configuración guardada (aplica a días nuevos)');
+    }
+  } catch (e) {
+    console.error('[Config] Error aplicando configuración:', e);
+    errEl.textContent = 'Error inesperado: ' + (e.message || e);
+  } finally {
+    btn.disabled = back.disabled = false;
+    btn.textContent = 'Confirmar';
+  }
+}
+
+/* Revierte la última migración de TP/SL (solo los montos de los días migrados).
+   La configuración queda con el valor nuevo: equivale a haber elegido
+   "solo días nuevos". Uso: restaurarBackupMigracionTPSL() en la consola. */
+async function restaurarBackupMigracionTPSL() {
+  let bk = null;
+  try { bk = JSON.parse(localStorage.getItem(MIGRACION_TPSL_BACKUP_KEY) || 'null'); } catch (e) {}
+  if (!bk || !Array.isArray(bk.cambios) || !bk.cambios.length) { alert('No hay respaldo de migración de TP/SL guardado en este navegador.'); return; }
+  if (!confirm('Esto va a devolver ' + bk.cambios.length + ' día(s) a sus montos anteriores a la migración del ' +
+               new Date(bk.fecha).toLocaleString('es-AR') + '.\n\nLa configuración de TP/SL no cambia. ¿Continuar?')) return;
+  const revertidos = [];
+  bk.cambios.forEach(c => {
+    const store = c.tabla === 'practica' ? _practica : _fondeo;
+    if (store[c.dia]) { store[c.dia].mainAmount = c.antes; revertidos.push(c); }
+  });
+  savePracticaData();
+  saveFondeoData();
+  const fallidos = await _pushChangedDaysToCloud(revertidos);
+  _rerenderAfterConfigChange();
+  alert(fallidos ? ('Revertido localmente, pero ' + fallidos + ' día(s) no se subieron a la nube. Revisá la consola.')
+                 : ('✓ ' + revertidos.length + ' día(s) revertidos.'));
+}
+
+/* Avg Win / Loss y Avg RR reales a partir de los días TP y SL del período */
+function calcAvgWinLoss(store, keys) {
+  let w = 0, wn = 0, l = 0, ln = 0;
+  keys.forEach(k => {
+    const d = store[k];
+    if (!d) return;
+    if (d.mainResult === 'tp')      { w += Number(d.mainAmount) || 0; wn++; }
+    else if (d.mainResult === 'sl') { l += Number(d.mainAmount) || 0; ln++; }
+  });
+  const avgWin  = wn ? w / wn : null;
+  const avgLoss = ln ? l / ln : null;
+  const rr = (avgWin != null && avgLoss) ? avgWin / Math.abs(avgLoss) : null;
+  return { avgWin, avgLoss, rr };
+}
+
+function avgWinLossRowsHTML(store, keys) {
+  const a = calcAvgWinLoss(store, keys);
+  const win  = a.avgWin  != null ? fmtUSD(Math.round(a.avgWin), true)  : '—';
+  const loss = a.avgLoss != null ? fmtUSD(Math.round(a.avgLoss), true) : '—';
+  return '<div class="stat-row"><span class="stat-label">Avg Win / Loss</span>'+
+    '<span class="stat-value"><span style="color:var(--green)">'+win+'</span> <span style="color:var(--t3);font-weight:400">win</span>'+
+    '&nbsp;&nbsp;<span style="color:var(--red)">'+loss+'</span> <span style="color:var(--t3);font-weight:400">loss</span></span></div>'+
+    '<div class="stat-row"><span class="stat-label">Avg RR</span><span class="stat-value">'+(a.rr != null ? '1 / '+formatStatRatio(a.rr) : '—')+'</span></div>';
+}
 
 function renderFMainSection() {
   const sec = document.getElementById('f-main-content');
@@ -4126,11 +4617,11 @@ function setFMainResult(result) {
 
   // Asignar valores automáticos según resultado
   if (result === 'tp') {
-    fondeoModalMain.amount = FIXED_AMOUNTS.tp; // +900
+    fondeoModalMain.amount = FIXED_AMOUNTS.tp; // TP configurado
   } else if (result === 'be') {
     fondeoModalMain.amount = FIXED_AMOUNTS.be; // 0
   } else if (result === 'sl') {
-    fondeoModalMain.amount = FIXED_AMOUNTS.sl; // -450
+    fondeoModalMain.amount = FIXED_AMOUNTS.sl; // SL configurado
   } else if (result === 'sp') {
     fondeoModalMain.amount = 0; // Valor inicial para SP, el usuario ingresará el monto
   } else if (result === 'fe') {
@@ -4245,7 +4736,7 @@ async function saveFondeoDay() {
   const d = getDayFondeo(key);
   d.contextNote        = (document.getElementById('fContextNote')?.value || '').trim();
   d.mainResult         = fondeoModalMain.result;
-  // Guardar siempre el mainAmount (incluye valores automáticos: TP=900, SL=-450, BE=0, NE=0)
+  // Guardar siempre el mainAmount (incluye valores automáticos: TP/SL configurados, BE=0, NE=0)
   d.mainAmount         = fondeoModalMain.amount || 0;
   d.ne                 = !!fondeoModalMain.ne;
   d.lt                 = !!fondeoModalMain.lt;
@@ -5007,10 +5498,7 @@ function renderCycleStats() {
     return;
   }
 
-  html += '<div class="stat-row"><span class="stat-label">Avg Win / Loss</span>'+
-    '<span class="stat-value"><span style="color:var(--green)">+900</span> <span style="color:var(--t3);font-weight:400">win</span>'+
-    '&nbsp;&nbsp;<span style="color:var(--red)">-450</span> <span style="color:var(--t3);font-weight:400">loss</span></span></div>';
-  html += '<div class="stat-row"><span class="stat-label">Avg RR</span><span class="stat-value">1 / 2.00</span></div>';
+  html += avgWinLossRowsHTML(_fondeo, keys);
 
   const winsPct = st.tradingDays>0 ? Math.round(st.tpDays/st.tradingDays*100) : 0;
   const lossPct = st.tradingDays>0 ? Math.round(st.slDays/st.tradingDays*100) : 0;
@@ -6092,117 +6580,13 @@ async function importBackup(event) {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   MIGRACIÓN ÚNICA: TP +600→+900 · SL -300→-450
-   Se ejecuta una sola vez (flag en localStorage). Hace backup crudo
-   de trading_practica / trading_fondeo antes de tocar nada.
-══════════════════════════════════════════════════════════════ */
-const MIGRACION_900_450_FLAG = 'trading_migracion_900_450_asked';
-
-function _escanearMigracion900450() {
-  const afectados = { practica: { tp: [], sl: [] }, fondeo: { tp: [], sl: [] } };
-  Object.keys(_practica).forEach(k => {
-    const d = _practica[k];
-    if (!d) return;
-    if (d.mainResult === 'tp' && d.mainAmount === 600) afectados.practica.tp.push(k);
-    else if (d.mainResult === 'sl' && (d.mainAmount === -300 || d.mainAmount === 300)) afectados.practica.sl.push(k);
-  });
-  Object.keys(_fondeo).forEach(k => {
-    const d = _fondeo[k];
-    if (!d) return;
-    if (d.mainResult === 'tp' && d.mainAmount === 600) afectados.fondeo.tp.push(k);
-    else if (d.mainResult === 'sl' && (d.mainAmount === -300 || d.mainAmount === 300)) afectados.fondeo.sl.push(k);
-  });
-  return afectados;
-}
-
-function _aplicarMigracion900450(afectados) {
-  afectados.practica.tp.forEach(k => { _practica[k].mainAmount = 900; });
-  afectados.practica.sl.forEach(k => { _practica[k].mainAmount = -450; });
-  afectados.fondeo.tp.forEach(k => { _fondeo[k].mainAmount = 900; });
-  afectados.fondeo.sl.forEach(k => { _fondeo[k].mainAmount = -450; });
-
-  savePracticaData();
-  saveFondeoData();
-
-  renderPracticaCal();
-  renderFondeoCal();
-  renderStats();
-  renderPStats();
-
-  if (currentUser) pushAllLocalToCloud(true);
-}
-
-function runMigracion900450(force) {
-  if (!force && localStorage.getItem(MIGRACION_900_450_FLAG)) return;
-
-  const afectados = _escanearMigracion900450();
-  const tpTotal = afectados.practica.tp.length + afectados.fondeo.tp.length;
-  const slTotal = afectados.practica.sl.length + afectados.fondeo.sl.length;
-
-  if (tpTotal === 0 && slTotal === 0) {
-    localStorage.setItem(MIGRACION_900_450_FLAG, '1');
-    console.log('[Migración 900/450] No hay días con TP=600 o SL=-300/300 para actualizar.');
-    return;
-  }
-
-  const mensaje =
-    'Se encontraron días registrados con los montos automáticos viejos:\n\n' +
-    '<span class="res-dot" style="background:#22c55e"></span>TP (+600 → +900): ' + tpTotal + ' día' + (tpTotal!==1?'s':'') +
-      ' (Práctica: ' + afectados.practica.tp.length + ' · Fondeo: ' + afectados.fondeo.tp.length + ')\n' +
-    '<span class="res-dot" style="background:#f43f5e"></span>SL (-300 → -450): ' + slTotal + ' día' + (slTotal!==1?'s':'') +
-      ' (Práctica: ' + afectados.practica.sl.length + ' · Fondeo: ' + afectados.fondeo.sl.length + ')\n\n' +
-    'Los días con BE, SP, NE, Día Lateral, o montos ya editados manualmente NO se van a tocar.\n\n' +
-    'Antes de aplicar se va a guardar un respaldo completo de los datos actuales ' +
-    '(podés revertirlo llamando a restaurarBackupMigracion900450() desde la consola).\n\n' +
-    '¿Aplicar la actualización ahora?';
-
-  const confirmado = confirm(mensaje);
-  localStorage.setItem(MIGRACION_900_450_FLAG, '1');
-  if (!confirmado) {
-    console.log('[Migración 900/450] Cancelada por el usuario. Podés volver a ejecutarla con runMigracion900450(true).');
-    return;
-  }
-
-  // Backup crudo antes de escribir nada
-  localStorage.setItem('trading_practica_backup_pre_migracion_900_450', localStorage.getItem(PRACTICA_KEY) || '{}');
-  localStorage.setItem('trading_fondeo_backup_pre_migracion_900_450',   localStorage.getItem(FONDEO_KEY)   || '{}');
-  localStorage.setItem('trading_migracion_900_450_backup_date', new Date().toISOString());
-
-  _aplicarMigracion900450(afectados);
-
-  alert(
-    '✓ Migración aplicada.\n\n' +
-    '<span class="res-dot" style="background:#22c55e"></span>TP actualizados a +900: ' + tpTotal + '\n' +
-    '<span class="res-dot" style="background:#f43f5e"></span>SL actualizados a -450: ' + slTotal + '\n\n' +
-    'Respaldo guardado en localStorage. Si algo no se ve bien, podés revertir ' +
-    'ejecutando restaurarBackupMigracion900450() en la consola del navegador.'
-  );
-}
-
-function restaurarBackupMigracion900450() {
-  const bp = localStorage.getItem('trading_practica_backup_pre_migracion_900_450');
-  const bf = localStorage.getItem('trading_fondeo_backup_pre_migracion_900_450');
-  if (!bp && !bf) { alert('No hay backup de la migración 900/450 guardado.'); return; }
-  if (!confirm('Esto va a reemplazar los datos actuales de Práctica y Fondeo por el respaldo previo a la migración 900/450. ¿Continuar?')) return;
-  if (bp) localStorage.setItem(PRACTICA_KEY, bp);
-  if (bf) localStorage.setItem(FONDEO_KEY, bf);
-  localStorage.removeItem(MIGRACION_900_450_FLAG);
-  loadPracticaDataLocal();
-  loadFondeoDataLocal();
-  renderStats();
-  renderPStats();
-  if (currentUser) pushAllLocalToCloud(true);
-  alert('✓ Backup restaurado.');
-}
-
 /* ── INIT ────────────────────────────────────────────────────── */
 async function startApp() {
+  await loadJournalConfig();
   await loadPracticaData();
   await loadFondeoData();
   renderStats();
   renderPStats();
-  runMigracion900450();
   initEditorUI();
   migrarDatosLocalesANube();
 }

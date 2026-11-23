@@ -1285,6 +1285,13 @@ body{
    achiquen (si se achican, el texto de una queda tapado por la siguiente) */
 .fondeo-stats-side > .stat-card{flex-shrink:0}
 .acct-wd-line .acct-stage-sub b{color:var(--t1)}
+/* Datos clave del panel de riesgo: SL en uso, SL que quedan, Objetivo, TP que faltan */
+.risk-key{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:2px 0 8px;
+  padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--t1);border-radius:8px}
+.risk-key-lbl{font-size:14px;font-weight:800;color:var(--t1)}
+.risk-key-val{font-size:26px;font-weight:900;color:var(--t1);line-height:1;letter-spacing:-.3px;white-space:nowrap}
+.risk-key-val small{font-size:12px;font-weight:700;color:var(--t2);letter-spacing:0}
+.acct-wd-total{font-size:20px;font-weight:900;color:var(--t1);margin:2px 0}
 .acct-risk-card .stat-value b{font-weight:900}
 .acct-risk-warn{font-size:12px;font-weight:700;color:var(--yellow);background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.35);border-radius:8px;padding:6px 9px;margin:4px 0 6px}
 .acct-wd-line{margin-bottom:8px}
@@ -6631,8 +6638,11 @@ function renderFondeoPnl() {
   if (card) card.innerHTML = html;
 }
 
-/* Panel "Gestión de riesgo": colchón, SL de la escalera, respaldo en SL,
-   objetivo en TP y retiros (firma / mi plan) */
+/* Panel "Gestión de riesgo". Orden: Balance de cuenta, Ganancia, Límite de
+   pérdida, SL en uso, SL sugerido, SL que quedan, TP, Objetivo de la etapa,
+   TP que faltan; abajo, la cantidad retirada hasta el momento.
+   El colchón se sigue calculando (lo usan "SL que quedan" y el SL sugerido)
+   pero no se muestra. */
 function renderFondeoRisk() {
   const card = document.getElementById('statRiskCard');
   if (!card) return;
@@ -6642,20 +6652,24 @@ function renderFondeoRisk() {
   card.style.display = '';
   const rs = accountRiskState(acc);
   const row = (label, value, cls) => '<div class="stat-row"><span class="stat-label">'+label+'</span><span class="stat-value '+(cls||'')+'">'+value+'</span></div>';
+  // Filas destacadas (SL en uso, SL que quedan, Objetivo, TP que faltan): mismo estilo entre las cuatro
+  const key = (label, value, extra) => '<div class="risk-key"><span class="risk-key-lbl">'+label+'</span><span class="risk-key-val">'+value+(extra ? ' <small>'+extra+'</small>' : '')+'</span></div>';
   const ddLbl = rs.risk.ddType === 'static' ? 'estático' : (rs.locked ? 'trabado en el balance inicial' : 'trailing desde pico ' + rs.peak.toLocaleString('es-AR'));
 
   let html = '<div class="stat-card-title">Gestión de riesgo</div>';
   html += row('Balance de cuenta', rs.balance.toLocaleString('es-AR'));
   html += row('Ganancia', _signedES(rs.profit), rs.profit > 0 ? 'pos' : rs.profit < 0 ? 'neg' : '');
-  html += '<div class="acct-stage-sub" style="margin:-2px 0 6px">Límite de pérdida '+rs.threshold.toLocaleString('es-AR')+' ('+ddLbl+')</div>';
-  html += row('Colchón', rs.cushion.toLocaleString('es-AR'));
+  html += row('Límite de pérdida', rs.threshold.toLocaleString('es-AR'));
+  html += '<div class="acct-stage-sub" style="margin:-4px 0 4px">'+ddLbl+'</div>';
+
+  html += '<hr class="stat-divider">';
   if (rs.sl != null) {
-    html += row('SL en uso <span class="acct-opt">('+(rs.slSource === 'ladder' ? 'escalera' : 'regla de '+MIN_SL_BACKUP+' SL')+')</span>', '<b>'+rs.sl.toLocaleString('es-AR')+'</b>', 'neg');
-    html += row('SL que quedan', '<b>'+fmtCount(rs.slBackup)+' SL</b>', rs.lowBackup ? 'neg' : '');
-    if (rs.lowBackup) html += '<div class="acct-risk-warn">⚠ Te quedan '+fmtCount(rs.slBackup)+' SL de '+rs.sl.toLocaleString('es-AR')+': no llegás a '+MIN_SL_BACKUP+'.</div>';
-    html += row('TP <span class="acct-opt">(RR '+fmtNum(rs.risk.rr)+')</span>', '+'+rs.tp.toLocaleString('es-AR'), 'pos');
+    html += key('SL en uso <span class="acct-opt">('+(rs.slSource === 'ladder' ? 'escalera' : 'regla de '+MIN_SL_BACKUP+' SL')+')</span>', rs.sl.toLocaleString('es-AR'));
     html += row('SL sugerido <span class="acct-opt">(regla de '+MIN_SL_BACKUP+')</span>',
       Math.floor(rs.suggestedSl).toLocaleString('es-AR') + (rs.suggestedCapped ? ' <span class="acct-opt">(tope de etapa)</span>' : ''));
+    html += key('SL que quedan', fmtCount(rs.slBackup), 'SL');
+    if (rs.lowBackup) html += '<div class="acct-risk-warn">⚠ Te quedan '+fmtCount(rs.slBackup)+' SL de '+rs.sl.toLocaleString('es-AR')+': no llegás a '+MIN_SL_BACKUP+'.</div>';
+    html += row('TP <span class="acct-opt">(RR '+fmtNum(rs.risk.rr)+')</span>', '+'+rs.tp.toLocaleString('es-AR'), 'pos');
   }
   if (rs.ladderWarnings.length) {
     html += '<div class="acct-risk-warn">⚠ Escalones con menos de '+MIN_SL_BACKUP+' SL de respaldo: '+
@@ -6664,26 +6678,19 @@ function renderFondeoRisk() {
 
   if (rs.target) {
     html += '<hr class="stat-divider">';
-    html += row('Objetivo de la etapa', rs.target.toLocaleString('es-AR'));
-    html += '<div class="acct-stage-sub" style="margin:-2px 0 6px">Ganancia '+rs.targetProfit.toLocaleString('es-AR')+(rs.toTarget > 0 ? ' · faltan '+rs.toTarget.toLocaleString('es-AR') : ' · alcanzado')+'</div>';
-    html += row('TP que faltan', rs.tpLeft != null ? fmtCount(rs.tpLeft, 2)+' <span class="acct-opt">TP de '+rs.tp.toLocaleString('es-AR')+'</span>' : '—');
+    html += key('Objetivo de la etapa', rs.target.toLocaleString('es-AR'));
+    html += '<div class="acct-stage-sub" style="margin:-4px 0 6px">Ganancia '+rs.targetProfit.toLocaleString('es-AR')+(rs.toTarget > 0 ? ' · faltan '+rs.toTarget.toLocaleString('es-AR') : ' · alcanzado')+'</div>';
+    html += key('TP que faltan', rs.tpLeft != null ? fmtCount(rs.tpLeft, 2) : '—', rs.tpLeft != null ? 'TP de '+rs.tp.toLocaleString('es-AR') : '');
   }
 
+  // Cantidad retirada hasta el momento = suma de los retiros registrados en la cuenta activa
+  const retirado = (acc.withdrawals || []).reduce((s, w) => s + (Number(w.amount) || 0), 0);
+  const nRet = (acc.withdrawals || []).length;
   html += '<hr class="stat-divider">';
-  html += '<div class="acct-wd-line"><div class="acct-wd-title">Retiro habilitado por la firma</div>'+
-    (rs.firm.enabled
-      ? '<div class="pos">Sí: entre '+rs.firm.min.toLocaleString('es-AR')+' y '+rs.firm.available.toLocaleString('es-AR')+'</div>'
-      : '<div class="acct-stage-sub">No todavía: '+(rs.profit < rs.firm.minProfit
-          ? 'necesitás ganancia '+rs.firm.minProfit.toLocaleString('es-AR')+' (faltan '+(rs.firm.minProfit - rs.profit).toLocaleString('es-AR')+
-            (rs.tpToFirm != null ? ' = <b>'+fmtCount(rs.tpToFirm, 2)+' TP de '+rs.tp.toLocaleString('es-AR')+'</b>' : '')+')'
-          : 'tiene que quedar un colchón de '+rs.firm.minCushion.toLocaleString('es-AR')+' y el mínimo es '+rs.firm.min.toLocaleString('es-AR'))+'</div>')+
-    '<div class="acct-stage-sub">Desde ganancia '+rs.firm.minProfit.toLocaleString('es-AR')+' · mín '+rs.firm.min.toLocaleString('es-AR')+' · máx '+rs.firm.max.toLocaleString('es-AR')+' · colchón mín '+rs.firm.minCushion.toLocaleString('es-AR')+'</div></div>';
-  html += '<div class="acct-wd-line"><div class="acct-wd-title">Retiro según mi plan</div>'+
-    '<div class="'+(rs.planWithdraw > 0 ? 'pos' : '')+'">'+rs.planWithdraw.toLocaleString('es-AR')+'</div>'+
-    '<div class="acct-stage-sub">mín('+rs.firm.max.toLocaleString('es-AR')+', balance − colchón '+rs.planCushion.toLocaleString('es-AR')+' − base '+rs.size.toLocaleString('es-AR')+')</div></div>';
-  if (rs.planWithdraw > 0 || rs.firm.enabled) {
-    html += '<button class="acct-link-btn" onclick="openAccountsModal(\'withdraw\')">Registrar retiro</button>';
-  }
+  html += '<div class="acct-wd-line"><div class="acct-wd-title">Cantidad retirada hasta el momento</div>'+
+    '<div class="acct-wd-total">'+retirado.toLocaleString('es-AR')+'</div>'+
+    '<div class="acct-stage-sub">'+(nRet ? nRet+' retiro'+(nRet === 1 ? '' : 's')+' registrado'+(nRet === 1 ? '' : 's') : 'Todavía no registraste retiros')+'</div></div>';
+  html += '<button class="acct-link-btn" onclick="openAccountsModal(\'withdraw\')">Registrar retiro</button>';
   card.innerHTML = html;
 }
 

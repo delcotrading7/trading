@@ -605,7 +605,7 @@ body{
 .stat-value.mt{color:var(--mt)}
 .stat-divider{border:none;border-top:1px solid var(--border);margin:12px 0}
 .stat-empty{font-size:13px;color:var(--t3);text-align:center;padding:7px 0}
-.stat-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.stat-card-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .stat-card-head .stat-card-title{margin-bottom:0}
 .stat-toggle{display:flex;background:var(--bg3);border-radius:20px;padding:2px;gap:2px}
 .stat-toggle button{
@@ -614,6 +614,8 @@ body{
   cursor:pointer;font-family:var(--font-body);transition:background .15s,color .15s;
 }
 .stat-toggle button.active{background:var(--bgh);color:var(--t1)}
+.stat-toggle button:first-child:nth-last-child(3),
+.stat-toggle button:first-child:nth-last-child(3) ~ button{font-size:12px;padding:4px 8px}
 .stat-sub-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .stat-secondary{opacity:.82}
 .stat-pl-big{
@@ -1221,6 +1223,58 @@ body{
 .cfg-btn:disabled{opacity:.5;cursor:default}
 .cfg-change{font-size:13px;color:var(--t1);background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:14px;line-height:1.6}
 .cfg-change .res-dot{margin-right:6px}
+
+/* ── Cuentas de Fondeo ────────────────────────────────────── */
+.acct-box{width:min(560px,calc(100vw - 40px))}
+.acct-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px}
+.acct-card.active{border-color:var(--goldborder)}
+.acct-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.acct-name{font-size:18px;font-weight:900;color:var(--t1)}
+.acct-meta{font-size:11.5px;color:var(--t3);margin-top:2px}
+.acct-badge{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--green);background:var(--greenbg);border:1px solid var(--greenborder);border-radius:20px;padding:3px 9px;white-space:nowrap}
+.acct-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.acct-kpi-lbl{font-size:10.5px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.acct-kpi-val{font-size:16px;font-weight:800;color:var(--t1);margin-top:2px}
+.acct-stage{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--border)}
+.acct-stage-ico{width:16px;text-align:center;font-weight:900;color:var(--t3);line-height:1.4}
+.acct-stage.done .acct-stage-ico{color:var(--green)}
+.acct-stage.current .acct-stage-ico{color:var(--gold)}
+.acct-stage-main{flex:1;min-width:0}
+.acct-stage-name{font-size:13px;font-weight:800;color:var(--t1)}
+.acct-stage.pending .acct-stage-name{color:var(--t2)}
+.acct-stage-target{font-size:11px;font-weight:600;color:var(--t3);margin-left:4px}
+.acct-stage-tag{font-size:10px;font-weight:800;color:var(--gold);margin-left:4px;text-transform:uppercase;letter-spacing:.6px}
+.acct-stage-sub{font-size:11.5px;color:var(--t3);line-height:1.5;margin-top:3px}
+.acct-progress{height:6px;background:var(--bg1);border-radius:6px;overflow:hidden;margin-top:6px}
+.acct-progress-bar{height:100%;background:var(--green);border-radius:6px;transition:width .3s}
+.acct-small-btn{padding:7px 11px;font-size:11.5px;white-space:nowrap}
+.acct-link-btn{background:none;border:none;color:var(--gold);font-size:12px;font-weight:800;cursor:pointer;padding:4px 0;font-family:var(--font-body);white-space:nowrap}
+.acct-link-btn:hover{text-decoration:underline}
+.acct-link-btn:disabled{opacity:.5;cursor:default}
+.acct-hist{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.acct-hist-top{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.acct-hist-name{font-weight:800;color:var(--t1)}
+.acct-gen-btn{background:var(--gold);color:#111;box-shadow:none}
+.acct-opt{font-size:11px;font-weight:600;color:var(--t3)}
+.acct-input-wide{width:150px}
+.acct-input-text{text-align:left;font-size:13px;font-weight:600}
+.acct-stage-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.acct-stage-row.locked{opacity:.65}
+.acct-stage-num{width:18px;font-size:12px;font-weight:800;color:var(--t3);text-align:center}
+.acct-stage-name-in{flex:1;min-width:0;width:auto}
+.acct-stage-target-in{width:100px}
+.acct-stage-del{background:none;border:none;color:var(--t3);font-size:14px;cursor:pointer;width:22px}
+.acct-stage-del:hover{color:var(--red)}
+.acct-stage-lock{width:22px;text-align:center;color:var(--green);font-weight:900}
+.cfg-btn.acct-danger{background:var(--red);border-color:var(--red);color:#fff}
+.acct-panel-empty{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--t3);border-top:1px solid var(--border);padding-top:8px}
+.acct-panel-stage{border-top:1px solid var(--border);padding-top:8px}
+.acct-panel-target{font-size:14px;color:var(--t3);font-weight:600}
+@media (max-width:520px){
+  .acct-kpis{grid-template-columns:1fr 1fr}
+  .acct-input-wide{width:130px}
+  .cfg-row{flex-wrap:wrap}
+}
 .cfg-opt{
   display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border:1.5px solid var(--border);
   border-radius:10px;padding:11px 12px;margin-bottom:10px;cursor:pointer;transition:border-color .2s;
@@ -1546,6 +1600,7 @@ body{
     <div class="topbar-right">
       <button class="topbar-menu-btn" id="topbarMenuBtn" onclick="toggleTopbarMenu(event)" title="Menú" aria-label="Menú">☰</button>
       <div class="topbar-menu" id="topbarMenu">
+        <button class="topbar-btn" onclick="openAccountsModal()" title="Cuenta activa, etapas e historial de cuentas de fondeo">🏦 Cuentas de Fondeo</button>
         <button class="topbar-btn" onclick="openConfigModal()" title="Editar montos automáticos de TP y SL">⚙ Configurar Journal</button>
         <div class="topbar-sep"></div>
         <button class="topbar-btn success" onclick="exportBackup()" title="Descargar copia de seguridad con todos los trades y fotos">Guardar Copia de Seguridad</button>
@@ -1622,11 +1677,11 @@ body{
           <div class="fondeo-stats-side">
             <div class="stat-card pnls-card" id="statPnlCard">
               <div class="stat-card-title">Pnls</div>
-              <div class="stat-empty">Sin datos en este ciclo</div>
+              <div class="stat-empty">Sin datos</div>
             </div>
-            <div class="stat-card stats-card" id="statCycleCard">
+            <div class="stat-card stats-card" id="statFondeoCard">
               <div class="stat-card-title">Statistics</div>
-              <div class="stat-empty">Sin datos en este ciclo</div>
+              <div class="stat-empty">Sin datos</div>
             </div>
           </div>
 
@@ -1641,7 +1696,7 @@ body{
                     <button onclick="switchTab('practica');closeSectionMenus()">Práctica</button>
                   </div>
                 </div>
-                <div class="cal-subtitle" id="fCalSubtitle">Sin datos en este ciclo</div>
+                <div class="cal-subtitle" id="fCalSubtitle"></div>
               </div>
               <div class="cal-controls">
               <button class="nbtn" onclick="changeMonthF(-1)">‹</button>
@@ -1844,6 +1899,17 @@ body{
         <button class="cfg-btn primary" id="cfgConfirmBtn" onclick="confirmConfigChange()">Confirmar</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- CUENTAS DE FONDEO (cuenta activa, etapas, historial) -->
+<div class="share-overlay" id="accountsOverlay" onclick="if(event.target===this)closeAccountsModal()">
+  <div class="share-box cfg-box acct-box" role="dialog" aria-modal="true" aria-labelledby="acctTitle">
+    <div class="share-head">
+      <div class="share-title" id="acctTitle">Cuentas de Fondeo</div>
+      <button class="modal-close-btn" onclick="closeAccountsModal()" title="Cerrar">✕</button>
+    </div>
+    <div id="acctBody" style="margin-top:12px"></div>
   </div>
 </div>
 
@@ -4878,145 +4944,551 @@ function getWeekKeys(key) {
   return keys;
 }
 
-/* ── Ciclo de cuenta de fondeo: 30 días corridos desde el inicio de la
-   cuenta actual (18 de septiembre de 2026), sumando un día extra por
-   cada feriado del mercado de EE.UU. (NYSE) dentro del rango, para que
-   siempre haya 30 días hábiles de mercado disponibles. Los ciclos
-   siguientes encadenan uno después del otro (19 Oct, etc.). ── */
-const FONDEO_CYCLE_ANCHOR = new Date(2026, 8, 18); // 18 Sep 2026
+/* ══════════════════════════════════════════════════════════════
+   CUENTAS Y ETAPAS DE FONDEO
+   - Una sola cuenta activa a la vez; las cerradas quedan en historial.
+   - Cada cuenta: categoría (PA / Directa), tamaño en USD, apodo
+     opcional, fecha de inicio y (al cerrarse) fecha de cierre. Los días
+     de Fondeo que caen en ese rango de fechas pertenecen a la cuenta.
+   - Cada cuenta tiene una lista ordenada de etapas (nombre + objetivo
+     USD). La etapa activa es la primera no cumplida; su contador (P&L y
+     días operados) arranca el día siguiente a que se cumplió la anterior
+     (o el inicio de la cuenta). Al marcarla cumplida se guarda un
+     snapshot del balance.
+   - Persistencia: tabla public.fondeo_accounts en Supabase
+     (supabase/sql/005_fondeo_accounts.sql). localStorage solo es caché.
+══════════════════════════════════════════════════════════════ */
+const FONDEO_ACCOUNTS_CACHE_KEY = 'trading_fondeo_accounts';
+let _fondeoAccounts = [];
 
-function addDaysToDate(date, n) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + n);
-  return d;
+function todayKeyStr() {
+  const t = new Date();
+  return mkKey(t.getFullYear(), t.getMonth(), t.getDate());
+}
+function keyAddDays(key, n) {
+  const p = parseKey(key);
+  const d = new Date(p.y, p.m, p.d + n);
+  return mkKey(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function fmtKeyShort(key) {
+  if (!key) return '—';
+  const p = parseKey(key);
+  return p.d + ' ' + MONTHS[p.m].slice(0, 3) + ' ' + p.y;
+}
+function _isDateKey(s) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s || '')) return false;
+  const p = parseKey(s);
+  const d = new Date(p.y, p.m, p.d);
+  return d.getFullYear() === p.y && d.getMonth() === p.m && d.getDate() === p.d;
+}
+function _signedES(n) { return (n > 0 ? '+' : '') + n.toLocaleString('es-AR'); }
+function _plColor(n) { return n > 0 ? 'var(--green)' : n < 0 ? 'var(--red)' : 'var(--t1)'; }
+function _newId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+  });
 }
 
-// Domingo de Pascua (algoritmo de Meeus/Jones/Butcher) → Good Friday = Pascua - 2.
-function easterDate(year) {
-  const a = year % 19;
-  const b = Math.floor(year / 100);
-  const c = year % 100;
-  const d = Math.floor(b / 4);
-  const e = b % 4;
-  const f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
-  const h = (19*a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4);
-  const k = c % 4;
-  const l = (32 + 2*e + 2*i - h - k) % 7;
-  const m = Math.floor((a + 11*h + 22*l) / 451);
-  const month = Math.floor((h + l - 7*m + 114) / 31);
-  const day = ((h + l - 7*m + 114) % 31) + 1;
-  return new Date(year, month - 1, day);
+/* ── Nombre: categoría + tamaño ("PA 50k"), con apodo opcional adelante ── */
+function fmtAccountSize(n) {
+  const trim = v => String(Math.round(v * 100) / 100);
+  if (n >= 1e6) return trim(n / 1e6) + 'M';
+  if (n >= 1000) return trim(n / 1000) + 'k';
+  return String(n);
 }
+function accountBaseName(a) { return a.category + ' ' + fmtAccountSize(a.size); }
+function accountDisplayName(a) { return (a.nickname ? a.nickname + ' · ' : '') + accountBaseName(a); }
 
-function nthWeekdayOfMonth(year, month, weekday, n) {
-  const first = new Date(year, month, 1);
-  const offset = (weekday - first.getDay() + 7) % 7;
-  return new Date(year, month, 1 + offset + (n - 1) * 7);
-}
-
-function lastWeekdayOfMonth(year, month, weekday) {
-  const last = new Date(year, month + 1, 0);
-  const offset = (last.getDay() - weekday + 7) % 7;
-  return new Date(year, month, last.getDate() - offset);
-}
-
-// Feriados de fecha fija: si cae sábado se observa el viernes anterior,
-// si cae domingo se observa el lunes siguiente.
-function observedFixedHoliday(year, month, day) {
-  const d = new Date(year, month, day);
-  if (d.getDay() === 6) return addDaysToDate(d, -1);
-  if (d.getDay() === 0) return addDaysToDate(d, 1);
-  return d;
-}
-
-function usMarketHolidays(year) {
-  return [
-    observedFixedHoliday(year, 0, 1),        // Año Nuevo
-    nthWeekdayOfMonth(year, 0, 1, 3),        // MLK Day
-    nthWeekdayOfMonth(year, 1, 1, 3),        // Presidents Day
-    addDaysToDate(easterDate(year), -2),     // Good Friday
-    lastWeekdayOfMonth(year, 4, 1),          // Memorial Day
-    observedFixedHoliday(year, 5, 19),       // Juneteenth
-    observedFixedHoliday(year, 6, 4),        // Independence Day
-    nthWeekdayOfMonth(year, 8, 1, 1),        // Labor Day
-    nthWeekdayOfMonth(year, 10, 4, 4),       // Thanksgiving
-    observedFixedHoliday(year, 11, 25),      // Navidad
-  ];
-}
-
-function isUsMarketHoliday(date) {
-  return usMarketHolidays(date.getFullYear()).some(h => h.getTime() === date.getTime());
-}
-
-// 30 días corridos desde `start`, extendidos un día por cada feriado
-// de mercado que caiga dentro del rango (punto fijo).
-function fondeoCycleEnd(start) {
-  let end = addDaysToDate(start, 29);
-  let changed = true;
-  while (changed) {
-    changed = false;
-    let holidayCount = 0;
-    for (let cur = new Date(start); cur <= end; cur = addDaysToDate(cur, 1)) {
-      if (isUsMarketHoliday(cur)) holidayCount++;
-    }
-    const newEnd = addDaysToDate(start, 29 + holidayCount);
-    if (newEnd.getTime() !== end.getTime()) { end = newEnd; changed = true; }
+/* Tamaño libre: "50000", "50.000", "50k", "52.5k", "1M" → entero en USD */
+function parseAccountSize(raw) {
+  let s = String(raw == null ? '' : raw).trim().replace(/\s+/g, '').replace(/^\$/, '').replace(/usd$/i, '');
+  if (!s) return { ok:false, msg:'El tamaño de la cuenta no puede estar vacío.' };
+  let n;
+  const m = s.match(/^(\d+(?:[.,]\d+)?)([kKmM])$/);
+  if (m) {
+    n = parseFloat(m[1].replace(',', '.')) * (/k/i.test(m[2]) ? 1e3 : 1e6);
+  } else {
+    if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+    if (!/^\d+$/.test(s)) return { ok:false, msg:'El tamaño tiene que ser un número entero (ej. 50000 o 50k).' };
+    n = Number(s);
   }
-  return end;
+  n = Math.round(n);
+  if (!Number.isSafeInteger(n) || n <= 0) return { ok:false, msg:'El tamaño tiene que ser mayor a 0.' };
+  return { ok:true, value:n };
 }
 
-function dateToCycleRange(start, end) {
+/* ── Persistencia ─────────────────────────────────────────── */
+function accountToRow(a) {
   return {
-    startY: start.getFullYear(), startM: start.getMonth(), startD: start.getDate(),
-    endY: end.getFullYear(), endM: end.getMonth(), endD: end.getDate()
+    id: a.id, user_id: currentUser.id, category: a.category, size: a.size,
+    nickname: a.nickname || null, start_date: a.startDate, end_date: a.endDate || null,
+    status: a.status, close_reason: a.closeReason || null, stages: a.stages,
+    updated_at: new Date().toISOString(),
   };
 }
+function rowToAccount(r) {
+  return {
+    id: r.id, category: r.category, size: Number(r.size), nickname: r.nickname || '',
+    startDate: String(r.start_date).slice(0, 10),
+    endDate: r.end_date ? String(r.end_date).slice(0, 10) : null,
+    status: r.status, closeReason: r.close_reason || '',
+    stages: Array.isArray(r.stages) ? r.stages : [],
+  };
+}
+function _cacheFondeoAccounts() {
+  try { localStorage.setItem(FONDEO_ACCOUNTS_CACHE_KEY, JSON.stringify(_fondeoAccounts)); } catch (e) {}
+}
+function _cloneAccount(a) { return JSON.parse(JSON.stringify(a)); }
 
-/* Ciclos anteriores al ancla (cuenta previa, ya cerrada): bloques fijos de
-   30 días corridos encadenados hacia atrás desde el día anterior al ancla
-   (17 Sep 2026), sin ajuste por feriados — ese ajuste solo aplica a la
-   cuenta actual, desde el ancla en adelante. El ciclo vigente el día
-   anterior al ancla es 19 Ago – 17 Sep 2026. */
-function getPreAnchorFondeoCycleRange(refY, refM, refD) {
-  const refDate = new Date(refY, refM, refD);
-  let end = addDaysToDate(FONDEO_CYCLE_ANCHOR, -1);
-  let start = addDaysToDate(end, -29);
-  while (refDate < start) {
-    end = addDaysToDate(start, -1);
-    start = addDaysToDate(end, -29);
+function _accountsCloudErrorMsg(error) {
+  const code = error && error.code;
+  if (code === 'PGRST205' || code === '42P01') {
+    return 'Falta crear la tabla de cuentas en Supabase. Corré el script supabase/sql/005_fondeo_accounts.sql en el SQL Editor y volvé a intentar.';
   }
-  return dateToCycleRange(start, end);
+  if (code === '23505') return 'Ya hay una cuenta activa guardada en la nube. Cerrala antes de crear otra.';
+  return 'No se pudo guardar en la nube (' + ((error && (error.message || code)) || 'error desconocido') + ').';
 }
 
-/* Dado un día de referencia, devuelve el ciclo que lo contiene. Antes del
-   ancla (cuenta previa, ya cerrada) usa bloques fijos de 30 días
-   encadenados hacia atrás; desde el ancla en adelante (cuenta actual) usa
-   el ciclo de 30 días (+feriados), encadenando ciclos sucesivos. */
-function getFondeoCycleRange(refY, refM, refD) {
-  const refDate = new Date(refY, refM, refD);
-  if (refDate < FONDEO_CYCLE_ANCHOR) {
-    return getPreAnchorFondeoCycleRange(refY, refM, refD);
+async function loadFondeoAccounts() {
+  try { _fondeoAccounts = JSON.parse(localStorage.getItem(FONDEO_ACCOUNTS_CACHE_KEY) || '[]') || []; }
+  catch (e) { _fondeoAccounts = []; }
+  if (!currentUser) return;
+  try {
+    const { data, error } = await sb.from('fondeo_accounts').select('*').eq('user_id', currentUser.id);
+    if (error) { console.warn('[Cuentas] No se pudieron leer las cuentas de fondeo:', error); return; }
+    _fondeoAccounts = (data || []).map(rowToAccount);
+    _cacheFondeoAccounts();
+  } catch (e) { console.warn('[Cuentas] Error leyendo cuentas de fondeo:', e); }
+}
+
+/* Guarda en Supabase y, solo si salió bien, actualiza el estado local */
+async function saveFondeoAccount(a) {
+  if (!currentUser) return { ok:false, msg:'Iniciá sesión primero.' };
+  try {
+    const { error } = await sb.from('fondeo_accounts').upsert(accountToRow(a), { onConflict: 'id' });
+    if (error) { console.warn('[Cuentas] Error guardando cuenta:', error); return { ok:false, msg:_accountsCloudErrorMsg(error) }; }
+  } catch (e) {
+    return { ok:false, msg:'No se pudo guardar en la nube (' + (e.message || e) + ').' };
   }
-  let start = FONDEO_CYCLE_ANCHOR;
-  while (true) {
-    const end = fondeoCycleEnd(start);
-    if (refDate <= end) return dateToCycleRange(start, end);
-    start = addDaysToDate(end, 1);
+  const i = _fondeoAccounts.findIndex(x => x.id === a.id);
+  if (i >= 0) _fondeoAccounts[i] = a; else _fondeoAccounts.push(a);
+  _cacheFondeoAccounts();
+  return { ok:true };
+}
+
+/* ── Cálculos ─────────────────────────────────────────────── */
+function getActiveAccount() { return _fondeoAccounts.find(a => a.status === 'active') || null; }
+function getClosedAccounts() {
+  return _fondeoAccounts.filter(a => a.status === 'closed').sort((a, b) => (b.startDate > a.startDate ? 1 : -1));
+}
+function activeStageIndex(a) { return a.stages.findIndex(s => s.status !== 'completed'); }
+
+/* Rango de fechas de cada etapa. Solo las cumplidas y la activa tienen rango. */
+function stageRanges(a) {
+  let start = a.startDate, reachedActive = false;
+  return a.stages.map(s => {
+    if (reachedActive) return null;
+    if (s.status === 'completed') {
+      const r = { start, end: s.completedOn };
+      start = keyAddDays(s.completedOn, 1);
+      return r;
+    }
+    reachedActive = true;
+    return { start, end: a.endDate || null };
+  });
+}
+function fondeoKeysInRange(start, end) {
+  return Object.keys(_fondeo).filter(k => k >= start && (!end || k <= end)).sort();
+}
+function accountKeys(a) { return fondeoKeysInRange(a.startDate, a.endDate); }
+function rangeSummary(start, end) {
+  const st = calcStats(fondeoKeysInRange(start, end));
+  return { pnl: st.totalPL, days: st.tradingDays };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL "CUENTAS DE FONDEO"
+   Vistas: main (cuenta activa + historial) · form (crear / editar)
+           complete (marcar etapa cumplida) · close (cerrar cuenta)
+══════════════════════════════════════════════════════════════ */
+let _acctView = { mode: 'main' };
+let _acctBusy = false;
+
+function openAccountsModal(mode) {
+  const menu = document.getElementById('topbarMenu');
+  if (menu) menu.classList.remove('open');
+  _acctView = { mode: 'main' };
+  if (mode === 'new' && !getActiveAccount()) _startAccountForm(null);
+  else if (mode === 'complete' && getActiveAccount() && activeStageIndex(getActiveAccount()) >= 0) _acctView = { mode: 'complete' };
+  renderAccountsModal();
+  document.getElementById('accountsOverlay').classList.add('open');
+}
+function closeAccountsModal() {
+  if (_acctBusy) return;
+  document.getElementById('accountsOverlay').classList.remove('open');
+}
+function setAccountsView(mode) {
+  if (_acctBusy) return;
+  if (mode === 'new') _startAccountForm(null);
+  else if (mode === 'edit') _startAccountForm(getActiveAccount());
+  else _acctView = { mode };
+  renderAccountsModal();
+}
+
+function _acctError(msg) {
+  const el = document.getElementById('acctError');
+  if (el) el.textContent = msg || '';
+}
+async function _acctRun(btn, fn) {
+  if (_acctBusy) return;
+  _acctBusy = true;
+  const label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+  try { await fn(); }
+  catch (e) { console.error('[Cuentas]', e); _acctError('Error inesperado: ' + (e.message || e)); }
+  finally {
+    _acctBusy = false;
+    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = label; }
+  }
+}
+function _afterAccountsChange() {
+  renderStats();
+  renderAccountsModal();
+}
+
+function renderAccountsModal() {
+  const body = document.getElementById('acctBody');
+  const title = document.getElementById('acctTitle');
+  if (!body) return;
+  const v = _acctView.mode;
+  if (v === 'form') {
+    title.textContent = _acctView.draft.id ? 'Editar cuenta' : 'Nueva cuenta';
+    body.innerHTML = _acctFormHTML();
+    _updateAcctPreview();
+  } else if (v === 'complete') {
+    title.textContent = 'Marcar etapa cumplida';
+    body.innerHTML = _acctCompleteHTML();
+  } else if (v === 'close') {
+    title.textContent = 'Cerrar cuenta';
+    body.innerHTML = _acctCloseHTML();
+  } else {
+    title.textContent = 'Cuentas de Fondeo';
+    body.innerHTML = _acctMainHTML();
   }
 }
 
-function getFondeoCycleKeys(refY, refM, refD) {
-  const range = getFondeoCycleRange(refY, refM, refD);
-  const keys = [];
-  const cur = new Date(range.startY, range.startM, range.startD);
-  const end = new Date(range.endY, range.endM, range.endD);
-  while (cur <= end) {
-    keys.push(mkKey(cur.getFullYear(), cur.getMonth(), cur.getDate()));
-    cur.setDate(cur.getDate() + 1);
+/* ── Vista principal ── */
+function _acctMainHTML() {
+  const acc = getActiveAccount();
+  let h = '';
+  if (acc) {
+    const accSum = rangeSummary(acc.startDate, acc.endDate);
+    const ranges = stageRanges(acc);
+    const ai = activeStageIndex(acc);
+    const lastDone = ai === -1 ? acc.stages.length - 1 : ai - 1;
+    h += '<div class="acct-card active">' +
+      '<div class="acct-card-top"><div>' +
+        '<div class="acct-name">' + escapeHtml(accountDisplayName(acc)) + '</div>' +
+        '<div class="acct-meta">' + escapeHtml(acc.category) + ' · ' + acc.size.toLocaleString('es-AR') + ' USD · desde ' + fmtKeyShort(acc.startDate) + '</div>' +
+      '</div><span class="acct-badge">Activa</span></div>' +
+      '<div class="acct-kpis">' +
+        '<div><div class="acct-kpi-lbl">Balance</div><div class="acct-kpi-val">' + (acc.size + accSum.pnl).toLocaleString('es-AR') + '</div></div>' +
+        '<div><div class="acct-kpi-lbl">P&L cuenta</div><div class="acct-kpi-val" style="color:' + _plColor(accSum.pnl) + '">' + _signedES(accSum.pnl) + '</div></div>' +
+        '<div><div class="acct-kpi-lbl">Operaciones</div><div class="acct-kpi-val">' + accSum.days + '</div></div>' +
+      '</div>' +
+      '<div class="cfg-section-title" style="margin-top:14px">Etapas</div>';
+    acc.stages.forEach((s, i) => {
+      const r = ranges[i];
+      if (s.status === 'completed') {
+        const sn = s.snapshot || {};
+        h += '<div class="acct-stage done"><span class="acct-stage-ico">✓</span><div class="acct-stage-main">' +
+          '<div class="acct-stage-name">' + escapeHtml(s.name) + ' <span class="acct-stage-target">objetivo ' + _signedES(s.target) + '</span></div>' +
+          '<div class="acct-stage-sub">Cumplida el ' + fmtKeyShort(s.completedOn) + ' · P&L ' + _signedES(sn.stagePnl || 0) + ' · ' + (sn.days || 0) + ' día' + (sn.days === 1 ? '' : 's') +
+          ' · Balance ' + (sn.balance != null ? sn.balance.toLocaleString('es-AR') : '—') + '</div></div>' +
+          (i === lastDone ? '<button class="acct-link-btn" onclick="undoStageCompletion(this)">Deshacer</button>' : '') +
+          '</div>';
+      } else if (i === ai) {
+        const sum = rangeSummary(r.start, r.end);
+        const pct = Math.max(0, Math.min(100, sum.pnl / s.target * 100));
+        h += '<div class="acct-stage current"><span class="acct-stage-ico">●</span><div class="acct-stage-main">' +
+          '<div class="acct-stage-name">' + escapeHtml(s.name) + ' <span class="acct-stage-tag">en curso</span></div>' +
+          '<div class="acct-progress"><div class="acct-progress-bar" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+          '<div class="acct-stage-sub"><b style="color:' + _plColor(sum.pnl) + '">' + _signedES(sum.pnl) + '</b> / ' + _signedES(s.target) + ' · ' + sum.days + ' día' + (sum.days === 1 ? '' : 's') + ' operado' + (sum.days === 1 ? '' : 's') + ' · desde ' + fmtKeyShort(r.start) + '</div></div>' +
+          '<button class="cfg-btn primary acct-small-btn" onclick="setAccountsView(\'complete\')">✓ Cumplida</button></div>';
+      } else {
+        h += '<div class="acct-stage pending"><span class="acct-stage-ico">○</span><div class="acct-stage-main">' +
+          '<div class="acct-stage-name">' + escapeHtml(s.name) + ' <span class="acct-stage-target">objetivo ' + _signedES(s.target) + '</span></div>' +
+          '<div class="acct-stage-sub">Pendiente</div></div></div>';
+      }
+    });
+    if (ai === -1) h += '<div class="acct-stage-sub" style="margin:6px 0 0">Todas las etapas cumplidas. Podés agregar otra desde "Editar".</div>';
+    h += '<div class="acct-error cfg-error" id="acctError"></div>' +
+      '<div class="cfg-btns"><button class="cfg-btn" onclick="setAccountsView(\'close\')">Cerrar cuenta</button>' +
+      '<button class="cfg-btn primary" onclick="setAccountsView(\'edit\')">Editar cuenta</button></div>' +
+      '</div>';
+  } else {
+    h += '<div class="acct-card empty"><div class="acct-stage-sub" style="margin-bottom:12px">No hay ninguna cuenta activa. Los días de Fondeo se siguen viendo en "Total".</div>' +
+      '<button class="share-gen-btn acct-gen-btn" onclick="setAccountsView(\'new\')">+ Nueva cuenta</button></div>';
   }
-  return { keys, range };
+
+  const closed = getClosedAccounts();
+  h += '<div class="cfg-section-title" style="margin-top:20px">Cuentas cerradas (' + closed.length + ')</div>';
+  if (!closed.length) {
+    h += '<div class="share-empty">Todavía no cerraste ninguna cuenta.</div>';
+  } else {
+    closed.forEach(a => {
+      const sum = rangeSummary(a.startDate, a.endDate);
+      const done = a.stages.filter(s => s.status === 'completed');
+      h += '<div class="acct-hist">' +
+        '<div class="acct-hist-top"><span class="acct-hist-name">' + escapeHtml(accountDisplayName(a)) + '</span>' +
+        '<span style="color:' + _plColor(sum.pnl) + ';font-weight:800">' + _signedES(sum.pnl) + '</span></div>' +
+        '<div class="acct-stage-sub">' + fmtKeyShort(a.startDate) + ' – ' + fmtKeyShort(a.endDate) + ' · ' + sum.days + ' operaciones · etapas ' + done.length + '/' + a.stages.length +
+        (done.length ? ' (' + done.map(s => escapeHtml(s.name)).join(', ') + ')' : '') + '</div>' +
+        (a.closeReason ? '<div class="acct-stage-sub">Motivo: ' + escapeHtml(a.closeReason) + '</div>' : '') +
+        '</div>';
+    });
+  }
+  return h;
+}
+
+/* ── Formulario crear / editar ── */
+function _startAccountForm(acc) {
+  const draft = acc ? {
+    id: acc.id, category: acc.category, sizeRaw: String(acc.size), nickname: acc.nickname || '',
+    startDate: acc.startDate,
+    stages: acc.stages.map(s => ({ ...s, targetRaw: String(s.target) })),
+  } : {
+    id: null, category: 'PA', sizeRaw: '', nickname: '', startDate: todayKeyStr(),
+    stages: [{ id: _newId(), name: 'Evaluación', targetRaw: '', status: 'pending' }],
+  };
+  _acctView = { mode: 'form', draft };
+}
+
+function _acctFormHTML() {
+  const d = _acctView.draft;
+  let h = '<div class="cfg-section-title">Tipo de cuenta</div>' +
+    '<div class="share-perm-toggle">' +
+      ['PA', 'Directa'].map(c => '<button type="button" class="share-perm-btn acct-cat-btn' + (d.category === c ? ' active' : '') + '" data-cat="' + c + '" onclick="setAcctCategory(\'' + c + '\')">' + c + '</button>').join('') +
+    '</div>' +
+    '<div class="cfg-row" style="margin-top:12px"><label class="cfg-label" for="acctSize">Tamaño de la cuenta</label>' +
+      '<div class="cfg-input-wrap"><input class="cfg-input acct-input-wide" id="acctSize" type="text" inputmode="numeric" autocomplete="off" placeholder="50000" value="' + escapeHtml(d.sizeRaw) + '" oninput="onAcctFormInput()"><span class="cfg-unit">USD</span></div></div>' +
+    '<div class="cfg-row"><label class="cfg-label" for="acctNick">Apodo <span class="acct-opt">(opcional)</span></label>' +
+      '<div class="cfg-input-wrap"><input class="cfg-input acct-input-wide acct-input-text" id="acctNick" type="text" maxlength="40" autocomplete="off" placeholder="Ej: Apex #2" value="' + escapeHtml(d.nickname) + '" oninput="onAcctFormInput()"><span class="cfg-unit" style="visibility:hidden">USD</span></div></div>' +
+    '<div class="cfg-row"><label class="cfg-label" for="acctStart">Fecha de inicio</label>' +
+      '<div class="cfg-input-wrap"><input class="cfg-input acct-input-wide acct-input-text" id="acctStart" type="date" value="' + escapeHtml(d.startDate) + '" oninput="onAcctFormInput()"><span class="cfg-unit" style="visibility:hidden">USD</span></div></div>' +
+    '<div class="cfg-rr" id="acctPreview"></div>' +
+    '<div class="cfg-section-title" style="margin-top:16px">Etapas y objetivos</div>' +
+    '<div class="cfg-hint">En orden. La primera etapa no cumplida es la activa; su contador arranca cuando se cumple la anterior.</div>';
+  d.stages.forEach((s, i) => {
+    const locked = s.status === 'completed';
+    h += '<div class="acct-stage-row' + (locked ? ' locked' : '') + '">' +
+      '<span class="acct-stage-num">' + (i + 1) + '</span>' +
+      '<input class="cfg-input acct-input-text acct-stage-name-in" data-i="' + i + '" type="text" maxlength="40" placeholder="Nombre (ej. Colchón)" value="' + escapeHtml(s.name || '') + '"' + (locked ? ' disabled' : '') + ' oninput="onAcctFormInput()">' +
+      '<span class="cfg-sign" style="color:var(--green)">+</span>' +
+      '<input class="cfg-input acct-stage-target-in" data-i="' + i + '" type="text" inputmode="numeric" placeholder="Objetivo" value="' + escapeHtml(s.targetRaw || '') + '"' + (locked ? ' disabled' : '') + ' oninput="onAcctFormInput()">' +
+      (locked ? '<span class="acct-stage-lock" title="Etapa cumplida: no se puede editar">✓</span>'
+              : '<button type="button" class="acct-stage-del" title="Quitar etapa" onclick="removeAcctStage(' + i + ')">✕</button>') +
+      '</div>';
+  });
+  h += '<button type="button" class="acct-link-btn" style="margin:2px 0 12px" onclick="addAcctStage()">+ Agregar etapa</button>' +
+    '<div class="cfg-error" id="acctError"></div>' +
+    '<div class="cfg-btns"><button class="cfg-btn" onclick="setAccountsView(\'main\')">Cancelar</button>' +
+    '<button class="cfg-btn primary" onclick="submitAccountForm(this)">' + (d.id ? 'Guardar cambios' : 'Crear cuenta') + '</button></div>';
+  return h;
+}
+
+function _syncAcctFormFromDOM() {
+  const d = _acctView.draft;
+  if (!d) return;
+  const g = id => document.getElementById(id);
+  if (g('acctSize'))  d.sizeRaw   = g('acctSize').value;
+  if (g('acctNick'))  d.nickname  = g('acctNick').value;
+  if (g('acctStart')) d.startDate = g('acctStart').value;
+  document.querySelectorAll('.acct-stage-name-in').forEach(el => { const s = d.stages[+el.dataset.i]; if (s && s.status !== 'completed') s.name = el.value; });
+  document.querySelectorAll('.acct-stage-target-in').forEach(el => { const s = d.stages[+el.dataset.i]; if (s && s.status !== 'completed') s.targetRaw = el.value; });
+}
+function _updateAcctPreview() {
+  const d = _acctView.draft, el = document.getElementById('acctPreview');
+  if (!d || !el) return;
+  const size = parseAccountSize(d.sizeRaw);
+  if (!size.ok) { el.innerHTML = 'Ingresá el tamaño para ver el nombre de la cuenta (ej. 50000 o 50k).'; return; }
+  const name = accountDisplayName({ category: d.category, size: size.value, nickname: d.nickname.trim() });
+  el.innerHTML = 'Se va a mostrar como: <strong>' + escapeHtml(name) + '</strong> · ' + size.value.toLocaleString('es-AR') + ' USD';
+}
+function onAcctFormInput() { _syncAcctFormFromDOM(); _updateAcctPreview(); _acctError(''); }
+function setAcctCategory(c) {
+  _syncAcctFormFromDOM();
+  _acctView.draft.category = c;
+  document.querySelectorAll('.acct-cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === c));
+  _updateAcctPreview();
+}
+function addAcctStage() {
+  _syncAcctFormFromDOM();
+  _acctView.draft.stages.push({ id: _newId(), name: '', targetRaw: '', status: 'pending' });
+  renderAccountsModal();
+  const ins = document.querySelectorAll('.acct-stage-name-in');
+  if (ins.length) ins[ins.length - 1].focus();
+}
+function removeAcctStage(i) {
+  _syncAcctFormFromDOM();
+  const s = _acctView.draft.stages[i];
+  if (!s || s.status === 'completed') return;
+  _acctView.draft.stages.splice(i, 1);
+  renderAccountsModal();
+}
+
+/* Valida el borrador y devuelve { ok, account } o { ok:false, msg } */
+function _validateAccountDraft(d) {
+  if (d.category !== 'PA' && d.category !== 'Directa') return { ok:false, msg:'Elegí la categoría: PA o Directa.' };
+  const size = parseAccountSize(d.sizeRaw);
+  if (!size.ok) return { ok:false, msg:size.msg };
+  if (!_isDateKey(d.startDate)) return { ok:false, msg:'Elegí una fecha de inicio válida.' };
+  const existing = d.id ? _fondeoAccounts.find(a => a.id === d.id) : null;
+  if (!existing && getActiveAccount()) return { ok:false, msg:'Ya hay una cuenta activa. Cerrala antes de crear otra.' };
+  const lastEnd = _fondeoAccounts.filter(a => a.id !== d.id && a.status === 'closed' && a.endDate)
+    .map(a => a.endDate).sort().pop();
+  if (lastEnd && d.startDate <= lastEnd) {
+    return { ok:false, msg:'La fecha de inicio tiene que ser posterior al cierre de la cuenta anterior (' + fmtKeyShort(lastEnd) + ').' };
+  }
+  if (!d.stages.length) return { ok:false, msg:'Agregá al menos una etapa con su objetivo.' };
+  const stages = [];
+  for (let i = 0; i < d.stages.length; i++) {
+    const s = d.stages[i];
+    if (s.status === 'completed') { const { targetRaw, ...keep } = s; stages.push(keep); continue; }
+    const name = (s.name || '').trim();
+    if (!name) return { ok:false, msg:'La etapa ' + (i + 1) + ' necesita un nombre.' };
+    const t = parseConfigAmount(s.targetRaw);
+    if (!t.ok) return { ok:false, msg:'El objetivo de la etapa ' + (i + 1) + ' (' + name + ') ' + t.msg + '.' };
+    stages.push({ id: s.id || _newId(), name, target: t.value, status: 'pending' });
+  }
+  // Una etapa cumplida no puede quedar después de una pendiente
+  const firstPending = stages.findIndex(s => s.status !== 'completed');
+  if (firstPending >= 0 && stages.slice(firstPending).some(s => s.status === 'completed')) {
+    return { ok:false, msg:'Las etapas cumplidas tienen que quedar antes que las pendientes.' };
+  }
+  const firstDone = stages.find(s => s.status === 'completed');
+  if (firstDone && d.startDate > firstDone.completedOn) {
+    return { ok:false, msg:'La fecha de inicio no puede ser posterior al ' + fmtKeyShort(firstDone.completedOn) + ' (cuando se cumplió "' + firstDone.name + '").' };
+  }
+  const account = existing ? _cloneAccount(existing) : { id: _newId(), status: 'active', endDate: null, closeReason: '' };
+  Object.assign(account, { category: d.category, size: size.value, nickname: (d.nickname || '').trim(), startDate: d.startDate, stages });
+  return { ok:true, account };
+}
+
+function submitAccountForm(btn) {
+  _syncAcctFormFromDOM();
+  const isEdit = !!_acctView.draft.id;
+  const res = _validateAccountDraft(_acctView.draft);
+  if (!res.ok) { _acctError(res.msg); return; }
+  return _acctRun(btn, async () => {
+    const saved = await saveFondeoAccount(res.account);
+    if (!saved.ok) { _acctError(saved.msg); return; }
+    _acctView = { mode: 'main' };
+    _afterAccountsChange();
+    showToast(isEdit ? '✓ Cuenta actualizada' : '✓ Cuenta creada');
+  });
+}
+
+/* ── Marcar etapa cumplida (snapshot de balance) ── */
+function _acctCompleteHTML() {
+  const acc = getActiveAccount();
+  const i = acc ? activeStageIndex(acc) : -1;
+  if (i < 0) { _acctView = { mode: 'main' }; return _acctMainHTML(); }
+  const s = acc.stages[i], r = stageRanges(acc)[i];
+  const today = todayKeyStr();
+  const sum = rangeSummary(r.start, today);
+  const next = acc.stages[i + 1];
+  return '<div class="cfg-change"><b>' + escapeHtml(s.name) + '</b> · ' + escapeHtml(accountDisplayName(acc)) + '<br>' +
+      'P&L de la etapa: <b style="color:' + _plColor(sum.pnl) + '">' + _signedES(sum.pnl) + '</b> / objetivo ' + _signedES(s.target) +
+      ' · ' + sum.days + ' día' + (sum.days === 1 ? '' : 's') + ' operado' + (sum.days === 1 ? '' : 's') + '</div>' +
+    (sum.pnl < s.target ? '<div class="cfg-hint" style="color:var(--yellow)">Todavía no llegaste al objetivo. Podés marcarla igual si tu broker ya la dio por cumplida.</div>' : '') +
+    '<div class="cfg-row"><label class="cfg-label" for="acctDoneDate">Cumplida el (último día incluido)</label>' +
+      '<input class="cfg-input acct-input-wide acct-input-text" id="acctDoneDate" type="date" min="' + r.start + '" max="' + today + '" value="' + today + '"></div>' +
+    '<div class="cfg-hint">Se guarda una foto del balance a esa fecha. ' +
+      (next ? 'El contador de "' + escapeHtml(next.name) + '" arranca en 0 el día siguiente.' : 'Es la última etapa de la cuenta.') + '</div>' +
+    '<div class="cfg-error" id="acctError"></div>' +
+    '<div class="cfg-btns"><button class="cfg-btn" onclick="setAccountsView(\'main\')">Volver</button>' +
+    '<button class="cfg-btn primary" onclick="confirmStageCompletion(this)">Confirmar</button></div>';
+}
+
+function confirmStageCompletion(btn) {
+  const acc = getActiveAccount();
+  const i = acc ? activeStageIndex(acc) : -1;
+  if (i < 0) return;
+  const r = stageRanges(acc)[i];
+  const date = (document.getElementById('acctDoneDate') || {}).value;
+  if (!_isDateKey(date)) { _acctError('Elegí una fecha válida.'); return; }
+  if (date < r.start) { _acctError('La fecha no puede ser anterior al inicio de la etapa (' + fmtKeyShort(r.start) + ').'); return; }
+  if (date > todayKeyStr()) { _acctError('La fecha no puede ser futura.'); return; }
+  const stage = rangeSummary(r.start, date);
+  const account = rangeSummary(acc.startDate, date);
+  const upd = _cloneAccount(acc);
+  upd.stages[i] = { ...upd.stages[i], status: 'completed', completedOn: date,
+    snapshot: { balance: acc.size + account.pnl, accountPnl: account.pnl, stagePnl: stage.pnl, days: stage.days, takenAt: new Date().toISOString() } };
+  return _acctRun(btn, async () => {
+    const saved = await saveFondeoAccount(upd);
+    if (!saved.ok) { _acctError(saved.msg); return; }
+    _acctView = { mode: 'main' };
+    _afterAccountsChange();
+    showToast('✓ Etapa "' + upd.stages[i].name + '" cumplida');
+  });
+}
+
+function undoStageCompletion(btn) {
+  const acc = getActiveAccount();
+  if (!acc) return;
+  const ai = activeStageIndex(acc);
+  const i = ai === -1 ? acc.stages.length - 1 : ai - 1;
+  if (i < 0 || acc.stages[i].status !== 'completed') return;
+  if (!confirm('¿Deshacer "' + acc.stages[i].name + '" como cumplida?\n\nVuelve a ser la etapa en curso y se borra su snapshot de balance.')) return;
+  const upd = _cloneAccount(acc);
+  const { completedOn, snapshot, ...rest } = upd.stages[i];
+  upd.stages[i] = { ...rest, status: 'pending' };
+  return _acctRun(btn, async () => {
+    const saved = await saveFondeoAccount(upd);
+    if (!saved.ok) { _acctError(saved.msg); return; }
+    _afterAccountsChange();
+  });
+}
+
+/* ── Cerrar cuenta ── */
+function _acctCloseHTML() {
+  const acc = getActiveAccount();
+  if (!acc) { _acctView = { mode: 'main' }; return _acctMainHTML(); }
+  const lastDone = acc.stages.filter(s => s.status === 'completed').map(s => s.completedOn).sort().pop();
+  const min = lastDone && lastDone > acc.startDate ? lastDone : acc.startDate;
+  const today = todayKeyStr();
+  return '<div class="cfg-change">Vas a cerrar <b>' + escapeHtml(accountDisplayName(acc)) + '</b> (desde ' + fmtKeyShort(acc.startDate) + ').<br>' +
+      'Pasa al historial con sus etapas y snapshots. Después podés crear la cuenta nueva.</div>' +
+    '<div class="cfg-row"><label class="cfg-label" for="acctEndDate">Fecha de cierre (último día)</label>' +
+      '<input class="cfg-input acct-input-wide acct-input-text" id="acctEndDate" type="date" min="' + min + '" value="' + (today >= min ? today : min) + '"></div>' +
+    '<div class="cfg-row"><label class="cfg-label" for="acctReason">Motivo <span class="acct-opt">(opcional)</span></label>' +
+      '<input class="cfg-input acct-input-wide acct-input-text" id="acctReason" type="text" maxlength="80" placeholder="Ej: perdida, retiro"></div>' +
+    '<div class="cfg-error" id="acctError"></div>' +
+    '<div class="cfg-btns"><button class="cfg-btn" onclick="setAccountsView(\'main\')">Volver</button>' +
+    '<button class="cfg-btn primary acct-danger" onclick="confirmCloseAccount(this)">Cerrar cuenta</button></div>';
+}
+
+function confirmCloseAccount(btn) {
+  const acc = getActiveAccount();
+  if (!acc) return;
+  const date = (document.getElementById('acctEndDate') || {}).value;
+  const reason = ((document.getElementById('acctReason') || {}).value || '').trim();
+  if (!_isDateKey(date)) { _acctError('Elegí una fecha de cierre válida.'); return; }
+  if (date < acc.startDate) { _acctError('El cierre no puede ser anterior al inicio de la cuenta.'); return; }
+  const lastDone = acc.stages.filter(s => s.status === 'completed').map(s => s.completedOn).sort().pop();
+  if (lastDone && date < lastDone) { _acctError('El cierre no puede ser anterior al ' + fmtKeyShort(lastDone) + ' (última etapa cumplida).'); return; }
+  const upd = _cloneAccount(acc);
+  Object.assign(upd, { status: 'closed', endDate: date, closeReason: reason });
+  return _acctRun(btn, async () => {
+    const saved = await saveFondeoAccount(upd);
+    if (!saved.ok) { _acctError(saved.msg); return; }
+    _acctView = { mode: 'main' };
+    FS.statMode = null;
+    _afterAccountsChange();
+    showToast('✓ Cuenta cerrada');
+  });
 }
 
 function calcStats(keys) {
@@ -5301,8 +5773,8 @@ function fEstrategiaStatsHTML(st) {
 function renderStats() {
   renderDayStats();
   renderWeekStats();
-  renderCyclePnl();
-  renderCycleStats();
+  renderFondeoPnl();
+  renderFondeoStats();
   renderSlAlerts();
 }
 
@@ -5441,59 +5913,110 @@ function renderWeekStats() {
   drawPieChart('weekPieChart', counts);
 }
 
-function renderCyclePnl() {
+/* Panel "Pnls" de Fondeo: P&L de hoy + cuenta activa (balance) + etapa activa (contador) */
+function renderFondeoPnl() {
   const card = document.getElementById('statPnlCard');
   const sub  = document.getElementById('fCalSubtitle');
-  const today = new Date();
-  const todayKey = mkKey(today.getFullYear(), today.getMonth(), today.getDate());
-  const { keys: cycleKeys, range } = getFondeoCycleKeys(today.getFullYear(), today.getMonth(), today.getDate());
-  const st = calcStats(cycleKeys);
-  const rangeStr = range.startD + ' ' + MONTHS[range.startM].slice(0,3) + ' – ' + range.endD + ' ' + MONTHS[range.endM].slice(0,3);
-  const todayPL = _fondeo[todayKey] ? getDayPL(_fondeo[todayKey]) : 0;
+  const tk = todayKeyStr();
+  const todayPL = _fondeo[tk] ? getDayPL(_fondeo[tk]) : 0;
+  const acc = getActiveAccount();
 
-  if (sub) {
-    const cls = st.totalPL>0?'pos':st.totalPL<0?'neg':'';
-    sub.innerHTML = 'Ciclo ' + rangeStr + ' · <span class="amt '+cls+'">'+(st.totalPL>0?'+':'')+st.totalPL.toLocaleString('es-AR')+'</span>';
-  }
-  if (!card) return;
-  const todayColorVar   = todayPL>0?'var(--green)':todayPL<0?'var(--red)':'var(--t1)';
-  const overallColorVar = st.totalPL>0?'var(--green)':st.totalPL<0?'var(--red)':'var(--t1)';
-  card.innerHTML =
+  let html =
     '<div class="stat-card-title">Pnls</div>'+
     '<div class="pnl-block">'+
       '<div class="pnl-lbl">Today\'s PnL</div>'+
-      '<div class="pnl-big" style="color:'+todayColorVar+'">'+(todayPL>0?'+':'')+todayPL.toLocaleString('es-AR')+'</div>'+
-    '</div>'+
-    '<div class="pnl-block">'+
-      '<div class="pnl-lbl">Overall PnL</div>'+
-      '<div class="pnl-big" style="color:'+overallColorVar+'">'+(st.totalPL>0?'+':'')+st.totalPL.toLocaleString('es-AR')+'</div>'+
-      '<div class="pnl-pill">Ciclo ' + rangeStr + ' · '+st.tradingDays+' operaciones</div>'+
+      '<div class="pnl-big" style="color:'+_plColor(todayPL)+'">'+_signedES(todayPL)+'</div>'+
     '</div>';
+
+  if (!acc) {
+    const st = calcStats(Object.keys(_fondeo));
+    html +=
+      '<div class="pnl-block">'+
+        '<div class="pnl-lbl">Overall PnL</div>'+
+        '<div class="pnl-big" style="color:'+_plColor(st.totalPL)+'">'+_signedES(st.totalPL)+'</div>'+
+        '<div class="pnl-pill">Total · '+st.tradingDays+' operaciones</div>'+
+      '</div>'+
+      '<div class="acct-panel-empty">Sin cuenta activa'+
+        '<button class="acct-link-btn" onclick="openAccountsModal(\'new\')">+ Crear cuenta</button></div>';
+    if (sub) sub.innerHTML = 'Sin cuenta activa · Total <span class="amt '+(st.totalPL>0?'pos':st.totalPL<0?'neg':'')+'">'+_signedES(st.totalPL)+'</span>';
+    if (card) card.innerHTML = html;
+    return;
+  }
+
+  const accSt = calcStats(accountKeys(acc));
+  const ai = activeStageIndex(acc);
+  html +=
+    '<div class="pnl-block">'+
+      '<div class="pnl-lbl">Balance · '+escapeHtml(accountDisplayName(acc))+'</div>'+
+      '<div class="pnl-big">'+(acc.size + accSt.totalPL).toLocaleString('es-AR')+'</div>'+
+      '<div class="pnl-pill '+(accSt.totalPL>0?'pos':accSt.totalPL<0?'neg':'')+'">Cuenta '+_signedES(accSt.totalPL)+' · '+accSt.tradingDays+' operaciones</div>'+
+    '</div>';
+
+  let subStage = '';
+  let subAmt = accSt.totalPL;
+  if (ai >= 0) {
+    const s = acc.stages[ai];
+    const r = stageRanges(acc)[ai];
+    const sum = rangeSummary(r.start, r.end);
+    const pct = Math.max(0, Math.min(100, sum.pnl / s.target * 100));
+    html +=
+      '<div class="pnl-block acct-panel-stage">'+
+        '<div class="pnl-lbl">Etapa: '+escapeHtml(s.name)+' <span class="acct-opt">('+(ai+1)+'/'+acc.stages.length+')</span></div>'+
+        '<div class="pnl-big"><span style="color:'+_plColor(sum.pnl)+'">'+_signedES(sum.pnl)+'</span> <span class="acct-panel-target">/ '+s.target.toLocaleString('es-AR')+'</span></div>'+
+        '<div class="acct-progress"><div class="acct-progress-bar" style="width:'+pct.toFixed(1)+'%"></div></div>'+
+        '<div class="acct-stage-sub">'+sum.days+' día'+(sum.days===1?'':'s')+' operado'+(sum.days===1?'':'s')+' · desde '+fmtKeyShort(r.start)+'</div>'+
+        '<button class="acct-link-btn" style="align-self:flex-start" onclick="openAccountsModal(\'complete\')">✓ Marcar etapa cumplida</button>'+
+      '</div>';
+    subStage = ' · ' + escapeHtml(s.name);
+    subAmt = sum.pnl;
+  } else {
+    html += '<div class="acct-stage-sub">Todas las etapas cumplidas ✓</div>';
+  }
+  html += '<button class="acct-link-btn" style="align-self:flex-start" onclick="openAccountsModal()">Gestionar cuenta</button>';
+
+  if (sub) sub.innerHTML = escapeHtml(accountDisplayName(acc)) + subStage + ' · <span class="amt '+(subAmt>0?'pos':subAmt<0?'neg':'')+'">'+_signedES(subAmt)+'</span>';
+  if (card) card.innerHTML = html;
 }
 
 function setFStatMode(mode) {
   FS.statMode = mode;
-  renderCycleStats();
+  renderFondeoStats();
 }
 
-function renderCycleStats() {
-  const card = document.getElementById('statCycleCard');
+/* Períodos disponibles para Statistics de Fondeo: Etapa / Cuenta / Total */
+function getFondeoStatPeriods() {
+  const acc = getActiveAccount();
+  const periods = [];
+  if (acc) {
+    const ai = activeStageIndex(acc);
+    if (ai >= 0) {
+      const r = stageRanges(acc)[ai];
+      periods.push({ mode:'stage', label:'Etapa', empty:' en esta etapa', keys: fondeoKeysInRange(r.start, r.end) });
+    }
+    periods.push({ mode:'account', label:'Cuenta', empty:' en esta cuenta', keys: accountKeys(acc) });
+  }
+  periods.push({ mode:'overall', label:'Total', empty:' registrados', keys: Object.keys(_fondeo) });
+  return periods;
+}
+
+function renderFondeoStats() {
+  const card = document.getElementById('statFondeoCard');
   if (!card) return;
-  const today = new Date();
-  const mode = FS.statMode || 'cycle';
-  const keys = mode==='overall' ? Object.keys(_fondeo) : getFondeoCycleKeys(today.getFullYear(), today.getMonth(), today.getDate()).keys;
+  const periods = getFondeoStatPeriods();
+  const period = periods.find(p => p.mode === FS.statMode) || periods[0];
+  const mode = period.mode;
+  const keys = period.keys;
   const st = calcStats(keys);
 
   let html = '<div class="stat-card-head">'+
       '<div class="stat-card-title">Statistics</div>'+
       '<div class="stat-toggle">'+
-        '<button class="'+(mode==='cycle'?'active':'')+'" onclick="setFStatMode(\'cycle\')">Ciclo</button>'+
-        '<button class="'+(mode==='overall'?'active':'')+'" onclick="setFStatMode(\'overall\')">Total</button>'+
+        periods.map(p => '<button class="'+(p.mode===mode?'active':'')+'" onclick="setFStatMode(\''+p.mode+'\')">'+p.label+'</button>').join('')+
       '</div>'+
     '</div>';
 
   if (!st.tradingDays && !st.mtCount && !st.neCount && !st.ltCount && !st.feCount) {
-    html += '<div class="stat-empty">Sin datos'+(mode==='overall'?' registrados':' en este ciclo')+'</div>';
+    html += '<div class="stat-empty">Sin datos'+period.empty+'</div>';
     card.innerHTML = html;
     return;
   }
@@ -6583,6 +7106,7 @@ async function importBackup(event) {
 /* ── INIT ────────────────────────────────────────────────────── */
 async function startApp() {
   await loadJournalConfig();
+  await loadFondeoAccounts();
   await loadPracticaData();
   await loadFondeoData();
   renderStats();

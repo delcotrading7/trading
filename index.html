@@ -1270,6 +1270,15 @@ body{
 .acct-panel-empty{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--t3);border-top:1px solid var(--border);padding-top:8px}
 .acct-panel-stage{border-top:1px solid var(--border);padding-top:8px}
 .acct-panel-target{font-size:14px;color:var(--t3);font-weight:600}
+.acct-stage-risk{font-size:11.5px;font-weight:700;color:var(--t2);margin-top:3px}
+.acct-goal-hit{font-size:12px;font-weight:800;color:var(--green);background:var(--greenbg);border:1px solid var(--greenborder);border-radius:8px;padding:6px 9px;margin-top:4px}
+.acct-stage-edit{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:8px}
+.acct-stage-edit.locked{opacity:.8}
+.acct-stage-edit .acct-stage-row{margin-bottom:6px}
+.acct-stage-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;padding-left:24px}
+.acct-stage-grid label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px}
+.acct-stage-grid .cfg-input{width:100%;font-size:14px;padding:7px 9px}
+.f-auto-src{text-align:center;font-size:11.5px;color:var(--t3);margin-top:4px}
 @media (max-width:520px){
   .acct-kpis{grid-template-columns:1fr 1fr}
   .acct-input-wide{width:130px}
@@ -4625,6 +4634,10 @@ function renderFMainSection() {
   const isNE = !!fondeoModalMain.ne, isLT = !!fondeoModalMain.lt;
   const tagsDisabled = isFE;
   const tagMsg = resultTagMessage(isNE, isLT);
+  const auto = getFondeoAutoAmounts(currentFondeoKey); // TP/SL de la etapa vigente ese día (o la config general)
+  const autoSrc = auto.stage
+    ? '<div class="f-auto-src">Riesgo de la etapa <b>'+escapeHtml(auto.stage.name)+'</b> · '+escapeHtml(accountDisplayName(auto.account))+'</div>'
+    : '';
 
   let amtHTML = '';
   if (isFE) {
@@ -4632,9 +4645,9 @@ function renderFMainSection() {
   } else if (isBE) {
     amtHTML = '<div style="margin-top:8px;text-align:center;font-size:26px;font-weight:900;color:var(--yellow);letter-spacing:1px">= 0</div>';
   } else if (isTP) {
-    amtHTML = '<div style="margin-top:8px;text-align:center;font-size:26px;font-weight:900;color:var(--green);letter-spacing:1px">+ '+FIXED_AMOUNTS.tp+'</div>';
+    amtHTML = '<div style="margin-top:8px;text-align:center;font-size:26px;font-weight:900;color:var(--green);letter-spacing:1px">+ '+auto.tp+'</div>'+autoSrc;
   } else if (isSL) {
-    amtHTML = '<div style="margin-top:8px;text-align:center;font-size:26px;font-weight:900;color:var(--red);letter-spacing:1px">'+FIXED_AMOUNTS.sl+'</div>';
+    amtHTML = '<div style="margin-top:8px;text-align:center;font-size:26px;font-weight:900;color:var(--red);letter-spacing:1px">'+auto.sl+'</div>'+autoSrc;
   } else if (isSP) {
     const val = fondeoModalMain.amount ? fondeoModalMain.amount : '';
     amtHTML = '<div style="margin-top:8px"><div style="font-size:11px;color:var(--t2);margin-bottom:5px">Monto (variable):</div><input class="f-amt-input" id="fMainAmt" type="number" value="'+val+'" placeholder="ej: 150" style="max-width:200px;display:block" oninput="onFMainAmtInput()"></div>';
@@ -4660,9 +4673,9 @@ function renderFMainSection() {
 
   sec.innerHTML =
     '<div class="res-selector">'+
-      '<button class="res-sel-btn tp'+(isTP?' active':'')+'" onclick="setFMainResult(\'tp\')" title="Ganancia automática: +'+FIXED_AMOUNTS.tp+' USD"><span class="res-dot" style="background:#22c55e"></span>TP</button>'+
+      '<button class="res-sel-btn tp'+(isTP?' active':'')+'" onclick="setFMainResult(\'tp\')" title="Ganancia automática: +'+auto.tp+' USD"><span class="res-dot" style="background:#22c55e"></span>TP</button>'+
       '<button class="res-sel-btn be'+(isBE?' active':'')+'" onclick="setFMainResult(\'be\')" title="Punto de equilibrio: 0 USD"><span class="res-dot" style="background:var(--yellow)"></span>BE</button>'+
-      '<button class="res-sel-btn sl'+(isSL?' active':'')+'" onclick="setFMainResult(\'sl\')" title="Pérdida automática: '+FIXED_AMOUNTS.sl+' USD"><span class="res-dot" style="background:#f43f5e"></span>SL</button>'+
+      '<button class="res-sel-btn sl'+(isSL?' active':'')+'" onclick="setFMainResult(\'sl\')" title="Pérdida automática: '+auto.sl+' USD"><span class="res-dot" style="background:#f43f5e"></span>SL</button>'+
       '<button class="res-sel-btn sp'+(isSP?' active':'')+'" onclick="setFMainResult(\'sp\')" title="Ganancia variable: ingresá el monto"><span class="res-dot" style="background:#06b6d4"></span>SP</button>'+
     '</div>'+
     '<div style="margin-top:8px">'+
@@ -4683,11 +4696,11 @@ function setFMainResult(result) {
 
   // Asignar valores automáticos según resultado
   if (result === 'tp') {
-    fondeoModalMain.amount = FIXED_AMOUNTS.tp; // TP configurado
+    fondeoModalMain.amount = getFondeoAutoAmounts(currentFondeoKey).tp; // TP de la etapa (o config)
   } else if (result === 'be') {
     fondeoModalMain.amount = FIXED_AMOUNTS.be; // 0
   } else if (result === 'sl') {
-    fondeoModalMain.amount = FIXED_AMOUNTS.sl; // SL configurado
+    fondeoModalMain.amount = getFondeoAutoAmounts(currentFondeoKey).sl; // SL de la etapa (o config)
   } else if (result === 'sp') {
     fondeoModalMain.amount = 0; // Valor inicial para SP, el usuario ingresará el monto
   } else if (result === 'fe') {
@@ -5106,14 +5119,74 @@ function rangeSummary(start, end) {
   const st = calcStats(fondeoKeysInRange(start, end));
   return { pnl: st.totalPL, days: st.tradingDays };
 }
+/* Balance de la cuenta al cierre de un día (tamaño + P&L desde el inicio) */
+function accountBalanceAt(a, endKey) {
+  if (endKey < a.startDate) return a.size;
+  return a.size + rangeSummary(a.startDate, endKey).pnl;
+}
+
+/* ── Riesgo (TP/SL) por etapa ─────────────────────────────── */
+function accountForDate(key, list) {
+  if (!key) return null;
+  return (list || _fondeoAccounts).find(a => key >= a.startDate && (!a.endDate || key <= a.endDate)) || null;
+}
+function stageForDate(acc, key) {
+  if (!acc || !acc.stages.length) return null;
+  const ranges = stageRanges(acc);
+  for (let i = 0; i < acc.stages.length; i++) {
+    const r = ranges[i];
+    if (r && key >= r.start && (!r.end || key <= r.end)) return acc.stages[i];
+  }
+  return acc.stages[acc.stages.length - 1]; // después de la última etapa cumplida se sigue con su riesgo
+}
+/* Montos automáticos de TP/SL para un día de Fondeo: los de la etapa vigente
+   ese día; si la etapa no los define (o no hay cuenta), la config general. */
+function getFondeoAutoAmounts(key, list) {
+  const account = accountForDate(key, list);
+  const st = account ? stageForDate(account, key) : null;
+  const hasRisk = !!(st && (st.sl || st.tp));
+  return {
+    tp: st && st.tp ? st.tp : journalConfig.tp,
+    sl: st && st.sl ? st.sl : journalConfig.sl,
+    stage: hasRisk ? st : null,
+    account,
+  };
+}
+function stageRiskText(s) {
+  const sl = s.sl ? Math.abs(s.sl) : Math.abs(journalConfig.sl);
+  const tp = s.tp ? s.tp : journalConfig.tp;
+  return 'SL ' + sl.toLocaleString('es-AR') + (s.sl ? '' : ' (general)') + ' · TP ' + tp.toLocaleString('es-AR') + (s.tp ? '' : ' (general)');
+}
+
+/* Días TP/SL ya cargados cuyo monto era el automático según la versión
+   anterior de las cuentas y que con la nueva versión cambia. */
+function scanAccountRiskChanges(oldList, newList) {
+  const cambios = [];
+  Object.keys(_fondeo).sort().forEach(dia => {
+    const d = _fondeo[dia];
+    if (!d || (d.mainResult !== 'tp' && d.mainResult !== 'sl')) return;
+    const nw = getFondeoAutoAmounts(dia, newList);
+    if (!nw.account) return;
+    const old = getFondeoAutoAmounts(dia, oldList);
+    const tipo = d.mainResult;
+    if (old[tipo] === nw[tipo]) return;
+    const amt = Number(d.mainAmount);
+    if (amt === old[tipo] || (tipo === 'sl' && amt === -old[tipo])) {
+      cambios.push({ tabla:'fondeo', dia, tipo, antes: d.mainAmount, despues: nw[tipo] });
+    }
+  });
+  return cambios;
+}
 
 /* ══════════════════════════════════════════════════════════════
    MODAL "CUENTAS DE FONDEO"
    Vistas: main (cuenta activa + historial) · form (crear / editar)
            complete (marcar etapa cumplida) · close (cerrar cuenta)
+           migrate (actualizar días ya cargados al riesgo de su etapa)
 ══════════════════════════════════════════════════════════════ */
 let _acctView = { mode: 'main' };
 let _acctBusy = false;
+const MIGRACION_RIESGO_BACKUP_KEY = 'trading_backup_pre_riesgo_etapas';
 
 function openAccountsModal(mode) {
   const menu = document.getElementById('topbarMenu');
@@ -5157,6 +5230,19 @@ function _afterAccountsChange() {
   renderAccountsModal();
 }
 
+/* Guarda la cuenta y, si cambia el TP/SL automático de días ya cargados,
+   pasa a la vista "migrate" para preguntar si actualizarlos. */
+async function _saveAccountAndCheckRisk(upd, toastMsg) {
+  const oldList = _fondeoAccounts.map(_cloneAccount);
+  const saved = await saveFondeoAccount(upd);
+  if (!saved.ok) { _acctError(saved.msg); return false; }
+  const cambios = scanAccountRiskChanges(oldList, _fondeoAccounts);
+  _acctView = cambios.length ? { mode: 'migrate', cambios } : { mode: 'main' };
+  _afterAccountsChange();
+  showToast(toastMsg);
+  return true;
+}
+
 function renderAccountsModal() {
   const body = document.getElementById('acctBody');
   const title = document.getElementById('acctTitle');
@@ -5172,6 +5258,9 @@ function renderAccountsModal() {
   } else if (v === 'close') {
     title.textContent = 'Cerrar cuenta';
     body.innerHTML = _acctCloseHTML();
+  } else if (v === 'migrate') {
+    title.textContent = 'Días ya cargados';
+    body.innerHTML = _acctMigrateHTML();
   } else {
     title.textContent = 'Cuentas de Fondeo';
     body.innerHTML = _acctMainHTML();
@@ -5184,6 +5273,7 @@ function _acctMainHTML() {
   let h = '';
   if (acc) {
     const accSum = rangeSummary(acc.startDate, acc.endDate);
+    const balance = acc.size + accSum.pnl;
     const ranges = stageRanges(acc);
     const ai = activeStageIndex(acc);
     const lastDone = ai === -1 ? acc.stages.length - 1 : ai - 1;
@@ -5193,7 +5283,7 @@ function _acctMainHTML() {
         '<div class="acct-meta">' + escapeHtml(acc.category) + ' · ' + acc.size.toLocaleString('es-AR') + ' USD · desde ' + fmtKeyShort(acc.startDate) + '</div>' +
       '</div><span class="acct-badge">Activa</span></div>' +
       '<div class="acct-kpis">' +
-        '<div><div class="acct-kpi-lbl">Balance</div><div class="acct-kpi-val">' + (acc.size + accSum.pnl).toLocaleString('es-AR') + '</div></div>' +
+        '<div><div class="acct-kpi-lbl">Balance</div><div class="acct-kpi-val">' + balance.toLocaleString('es-AR') + '</div></div>' +
         '<div><div class="acct-kpi-lbl">P&L cuenta</div><div class="acct-kpi-val" style="color:' + _plColor(accSum.pnl) + '">' + _signedES(accSum.pnl) + '</div></div>' +
         '<div><div class="acct-kpi-lbl">Operaciones</div><div class="acct-kpi-val">' + accSum.days + '</div></div>' +
       '</div>' +
@@ -5203,26 +5293,32 @@ function _acctMainHTML() {
       if (s.status === 'completed') {
         const sn = s.snapshot || {};
         h += '<div class="acct-stage done"><span class="acct-stage-ico">✓</span><div class="acct-stage-main">' +
-          '<div class="acct-stage-name">' + escapeHtml(s.name) + ' <span class="acct-stage-target">objetivo ' + _signedES(s.target) + '</span></div>' +
-          '<div class="acct-stage-sub">Cumplida el ' + fmtKeyShort(s.completedOn) + ' · P&L ' + _signedES(sn.stagePnl || 0) + ' · ' + (sn.days || 0) + ' día' + (sn.days === 1 ? '' : 's') +
-          ' · Balance ' + (sn.balance != null ? sn.balance.toLocaleString('es-AR') : '—') + '</div></div>' +
+          '<div class="acct-stage-name">' + escapeHtml(s.name) + ' <span class="acct-stage-target">balance ' + s.target.toLocaleString('es-AR') + '</span></div>' +
+          '<div class="acct-stage-sub">Cumplida el ' + fmtKeyShort(s.completedOn) + ' · Balance ' + (sn.balance != null ? sn.balance.toLocaleString('es-AR') : '—') +
+          ' · P&L etapa ' + _signedES(sn.stagePnl || 0) + ' · ' + (sn.days || 0) + ' día' + (sn.days === 1 ? '' : 's') + '</div>' +
+          '<div class="acct-stage-risk">' + stageRiskText(s) + '</div></div>' +
           (i === lastDone ? '<button class="acct-link-btn" onclick="undoStageCompletion(this)">Deshacer</button>' : '') +
           '</div>';
       } else if (i === ai) {
         const sum = rangeSummary(r.start, r.end);
-        const pct = Math.max(0, Math.min(100, sum.pnl / s.target * 100));
+        const startBal = accountBalanceAt(acc, keyAddDays(r.start, -1));
+        const pct = s.target > startBal ? Math.max(0, Math.min(100, (balance - startBal) / (s.target - startBal) * 100)) : 100;
+        const falta = s.target - balance;
         h += '<div class="acct-stage current"><span class="acct-stage-ico">●</span><div class="acct-stage-main">' +
           '<div class="acct-stage-name">' + escapeHtml(s.name) + ' <span class="acct-stage-tag">en curso</span></div>' +
           '<div class="acct-progress"><div class="acct-progress-bar" style="width:' + pct.toFixed(1) + '%"></div></div>' +
-          '<div class="acct-stage-sub"><b style="color:' + _plColor(sum.pnl) + '">' + _signedES(sum.pnl) + '</b> / ' + _signedES(s.target) + ' · ' + sum.days + ' día' + (sum.days === 1 ? '' : 's') + ' operado' + (sum.days === 1 ? '' : 's') + ' · desde ' + fmtKeyShort(r.start) + '</div></div>' +
+          '<div class="acct-stage-sub">Balance <b>' + balance.toLocaleString('es-AR') + '</b> / ' + s.target.toLocaleString('es-AR') +
+          (falta > 0 ? ' · faltan ' + falta.toLocaleString('es-AR') : ' · <b style="color:var(--green)">objetivo alcanzado</b>') +
+          ' · etapa <b style="color:' + _plColor(sum.pnl) + '">' + _signedES(sum.pnl) + '</b> en ' + sum.days + ' día' + (sum.days === 1 ? '' : 's') + ' · desde ' + fmtKeyShort(r.start) + '</div>' +
+          '<div class="acct-stage-risk">' + stageRiskText(s) + '</div></div>' +
           '<button class="cfg-btn primary acct-small-btn" onclick="setAccountsView(\'complete\')">✓ Cumplida</button></div>';
       } else {
         h += '<div class="acct-stage pending"><span class="acct-stage-ico">○</span><div class="acct-stage-main">' +
-          '<div class="acct-stage-name">' + escapeHtml(s.name) + ' <span class="acct-stage-target">objetivo ' + _signedES(s.target) + '</span></div>' +
-          '<div class="acct-stage-sub">Pendiente</div></div></div>';
+          '<div class="acct-stage-name">' + escapeHtml(s.name) + ' <span class="acct-stage-target">balance ' + s.target.toLocaleString('es-AR') + '</span></div>' +
+          '<div class="acct-stage-risk">' + stageRiskText(s) + '</div></div></div>';
       }
     });
-    if (ai === -1) h += '<div class="acct-stage-sub" style="margin:6px 0 0">Todas las etapas cumplidas. Podés agregar otra desde "Editar".</div>';
+    if (ai === -1) h += '<div class="acct-stage-sub" style="margin:6px 0 0">Todas las etapas cumplidas: se sigue con el riesgo de la última. Podés agregar otra desde "Editar".</div>';
     h += '<div class="acct-error cfg-error" id="acctError"></div>' +
       '<div class="cfg-btns"><button class="cfg-btn" onclick="setAccountsView(\'close\')">Cerrar cuenta</button>' +
       '<button class="cfg-btn primary" onclick="setAccountsView(\'edit\')">Editar cuenta</button></div>' +
@@ -5243,8 +5339,8 @@ function _acctMainHTML() {
       h += '<div class="acct-hist">' +
         '<div class="acct-hist-top"><span class="acct-hist-name">' + escapeHtml(accountDisplayName(a)) + '</span>' +
         '<span style="color:' + _plColor(sum.pnl) + ';font-weight:800">' + _signedES(sum.pnl) + '</span></div>' +
-        '<div class="acct-stage-sub">' + fmtKeyShort(a.startDate) + ' – ' + fmtKeyShort(a.endDate) + ' · ' + sum.days + ' operaciones · etapas ' + done.length + '/' + a.stages.length +
-        (done.length ? ' (' + done.map(s => escapeHtml(s.name)).join(', ') + ')' : '') + '</div>' +
+        '<div class="acct-stage-sub">' + fmtKeyShort(a.startDate) + ' – ' + fmtKeyShort(a.endDate) + ' · ' + sum.days + ' operaciones · balance final ' + (a.size + sum.pnl).toLocaleString('es-AR') +
+        ' · etapas ' + done.length + '/' + a.stages.length + (done.length ? ' (' + done.map(s => escapeHtml(s.name)).join(', ') + ')' : '') + '</div>' +
         (a.closeReason ? '<div class="acct-stage-sub">Motivo: ' + escapeHtml(a.closeReason) + '</div>' : '') +
         '</div>';
     });
@@ -5257,10 +5353,11 @@ function _startAccountForm(acc) {
   const draft = acc ? {
     id: acc.id, category: acc.category, sizeRaw: String(acc.size), nickname: acc.nickname || '',
     startDate: acc.startDate,
-    stages: acc.stages.map(s => ({ ...s, targetRaw: String(s.target) })),
+    stages: acc.stages.map(s => ({ ...s, targetRaw: String(s.target),
+      slRaw: s.sl ? String(Math.abs(s.sl)) : '', tpRaw: s.tp ? String(s.tp) : '' })),
   } : {
     id: null, category: 'PA', sizeRaw: '', nickname: '', startDate: todayKeyStr(),
-    stages: [{ id: _newId(), name: 'Evaluación', targetRaw: '', status: 'pending' }],
+    stages: [{ id: _newId(), name: '', targetRaw: '', slRaw: '', tpRaw: '', status: 'pending' }],
   };
   _acctView = { mode: 'form', draft };
 }
@@ -5278,17 +5375,23 @@ function _acctFormHTML() {
     '<div class="cfg-row"><label class="cfg-label" for="acctStart">Fecha de inicio</label>' +
       '<div class="cfg-input-wrap"><input class="cfg-input acct-input-wide acct-input-text" id="acctStart" type="date" value="' + escapeHtml(d.startDate) + '" oninput="onAcctFormInput()"><span class="cfg-unit" style="visibility:hidden">USD</span></div></div>' +
     '<div class="cfg-rr" id="acctPreview"></div>' +
-    '<div class="cfg-section-title" style="margin-top:16px">Etapas y objetivos</div>' +
-    '<div class="cfg-hint">En orden. La primera etapa no cumplida es la activa; su contador arranca cuando se cumple la anterior.</div>';
+    '<div class="cfg-section-title" style="margin-top:16px">Etapas, objetivos y riesgo</div>' +
+    '<div class="cfg-hint">En orden. El objetivo es el <b>balance</b> de la cuenta a alcanzar. Mientras la etapa está en curso, el TP/SL automático de cada día usa estos montos. ' +
+      'Si dejás SL o TP vacío se usa la configuración general (SL ' + Math.abs(journalConfig.sl).toLocaleString('es-AR') + ' · TP ' + journalConfig.tp.toLocaleString('es-AR') + ').</div>';
   d.stages.forEach((s, i) => {
     const locked = s.status === 'completed';
-    h += '<div class="acct-stage-row' + (locked ? ' locked' : '') + '">' +
-      '<span class="acct-stage-num">' + (i + 1) + '</span>' +
-      '<input class="cfg-input acct-input-text acct-stage-name-in" data-i="' + i + '" type="text" maxlength="40" placeholder="Nombre (ej. Colchón)" value="' + escapeHtml(s.name || '') + '"' + (locked ? ' disabled' : '') + ' oninput="onAcctFormInput()">' +
-      '<span class="cfg-sign" style="color:var(--green)">+</span>' +
-      '<input class="cfg-input acct-stage-target-in" data-i="' + i + '" type="text" inputmode="numeric" placeholder="Objetivo" value="' + escapeHtml(s.targetRaw || '') + '"' + (locked ? ' disabled' : '') + ' oninput="onAcctFormInput()">' +
-      (locked ? '<span class="acct-stage-lock" title="Etapa cumplida: no se puede editar">✓</span>'
-              : '<button type="button" class="acct-stage-del" title="Quitar etapa" onclick="removeAcctStage(' + i + ')">✕</button>') +
+    h += '<div class="acct-stage-edit' + (locked ? ' locked' : '') + '">' +
+      '<div class="acct-stage-row">' +
+        '<span class="acct-stage-num">' + (i + 1) + '</span>' +
+        '<input class="cfg-input acct-input-text acct-stage-name-in" data-i="' + i + '" type="text" maxlength="40" placeholder="Nombre (ej. Hacer colchón)" value="' + escapeHtml(s.name || '') + '"' + (locked ? ' disabled' : '') + ' oninput="onAcctFormInput()">' +
+        (locked ? '<span class="acct-stage-lock" title="Etapa cumplida: nombre y objetivo no se editan">✓</span>'
+                : '<button type="button" class="acct-stage-del" title="Quitar etapa" onclick="removeAcctStage(' + i + ')">✕</button>') +
+      '</div>' +
+      '<div class="acct-stage-grid">' +
+        '<label><span>Balance objetivo</span><input class="cfg-input acct-stage-target-in" data-i="' + i + '" type="text" inputmode="numeric" placeholder="52400" value="' + escapeHtml(s.targetRaw || '') + '"' + (locked ? ' disabled' : '') + ' oninput="onAcctFormInput()"></label>' +
+        '<label><span style="color:var(--red)">SL −</span><input class="cfg-input acct-stage-sl-in" data-i="' + i + '" type="text" inputmode="numeric" placeholder="' + Math.abs(journalConfig.sl) + '" value="' + escapeHtml(s.slRaw || '') + '" oninput="onAcctFormInput()"></label>' +
+        '<label><span style="color:var(--green)">TP +</span><input class="cfg-input acct-stage-tp-in" data-i="' + i + '" type="text" inputmode="numeric" placeholder="' + journalConfig.tp + '" value="' + escapeHtml(s.tpRaw || '') + '" oninput="onAcctFormInput()"></label>' +
+      '</div>' +
       '</div>';
   });
   h += '<button type="button" class="acct-link-btn" style="margin:2px 0 12px" onclick="addAcctStage()">+ Agregar etapa</button>' +
@@ -5305,8 +5408,14 @@ function _syncAcctFormFromDOM() {
   if (g('acctSize'))  d.sizeRaw   = g('acctSize').value;
   if (g('acctNick'))  d.nickname  = g('acctNick').value;
   if (g('acctStart')) d.startDate = g('acctStart').value;
-  document.querySelectorAll('.acct-stage-name-in').forEach(el => { const s = d.stages[+el.dataset.i]; if (s && s.status !== 'completed') s.name = el.value; });
-  document.querySelectorAll('.acct-stage-target-in').forEach(el => { const s = d.stages[+el.dataset.i]; if (s && s.status !== 'completed') s.targetRaw = el.value; });
+  const each = (cls, field, allowLocked) => document.querySelectorAll(cls).forEach(el => {
+    const s = d.stages[+el.dataset.i];
+    if (s && (allowLocked || s.status !== 'completed')) s[field] = el.value;
+  });
+  each('.acct-stage-name-in', 'name', false);
+  each('.acct-stage-target-in', 'targetRaw', false);
+  each('.acct-stage-sl-in', 'slRaw', true);
+  each('.acct-stage-tp-in', 'tpRaw', true);
 }
 function _updateAcctPreview() {
   const d = _acctView.draft, el = document.getElementById('acctPreview');
@@ -5325,7 +5434,7 @@ function setAcctCategory(c) {
 }
 function addAcctStage() {
   _syncAcctFormFromDOM();
-  _acctView.draft.stages.push({ id: _newId(), name: '', targetRaw: '', status: 'pending' });
+  _acctView.draft.stages.push({ id: _newId(), name: '', targetRaw: '', slRaw: '', tpRaw: '', status: 'pending' });
   renderAccountsModal();
   const ins = document.querySelectorAll('.acct-stage-name-in');
   if (ins.length) ins[ins.length - 1].focus();
@@ -5336,6 +5445,14 @@ function removeAcctStage(i) {
   if (!s || s.status === 'completed') return;
   _acctView.draft.stages.splice(i, 1);
   renderAccountsModal();
+}
+
+/* SL/TP opcional de una etapa: vacío → null (usa config general) */
+function _parseStageRisk(raw, label, n, name) {
+  if (String(raw == null ? '' : raw).trim() === '') return { ok:true, value:null };
+  const p = parseConfigAmount(raw);
+  if (!p.ok) return { ok:false, msg:'El ' + label + ' de la etapa ' + n + ' (' + name + ') ' + p.msg + '.' };
+  return { ok:true, value:p.value };
 }
 
 /* Valida el borrador y devuelve { ok, account } o { ok:false, msg } */
@@ -5353,16 +5470,33 @@ function _validateAccountDraft(d) {
   }
   if (!d.stages.length) return { ok:false, msg:'Agregá al menos una etapa con su objetivo.' };
   const stages = [];
+  let prevTarget = size.value;
   for (let i = 0; i < d.stages.length; i++) {
-    const s = d.stages[i];
-    if (s.status === 'completed') { const { targetRaw, ...keep } = s; stages.push(keep); continue; }
-    const name = (s.name || '').trim();
-    if (!name) return { ok:false, msg:'La etapa ' + (i + 1) + ' necesita un nombre.' };
-    const t = parseConfigAmount(s.targetRaw);
-    if (!t.ok) return { ok:false, msg:'El objetivo de la etapa ' + (i + 1) + ' (' + name + ') ' + t.msg + '.' };
-    stages.push({ id: s.id || _newId(), name, target: t.value, status: 'pending' });
+    const s = d.stages[i], n = i + 1;
+    let base;
+    if (s.status === 'completed') {
+      const { targetRaw, slRaw, tpRaw, ...keep } = s;
+      base = keep;
+    } else {
+      const name = (s.name || '').trim();
+      if (!name) return { ok:false, msg:'La etapa ' + n + ' necesita un nombre.' };
+      const t = parseConfigAmount(s.targetRaw);
+      if (!t.ok) return { ok:false, msg:'El balance objetivo de la etapa ' + n + ' (' + name + ') ' + t.msg + '.' };
+      base = { id: s.id || _newId(), name, target: t.value, status: 'pending' };
+    }
+    if (base.status !== 'completed' && base.target <= prevTarget) {
+      return { ok:false, msg:'El balance objetivo de la etapa ' + n + ' (' + base.name + ') tiene que ser mayor a ' +
+        prevTarget.toLocaleString('es-AR') + (i === 0 ? ' (el tamaño de la cuenta).' : ' (el objetivo de la etapa anterior).') };
+    }
+    prevTarget = base.target;
+    const sl = _parseStageRisk(s.slRaw, 'SL', n, base.name);
+    if (!sl.ok) return sl;
+    const tp = _parseStageRisk(s.tpRaw, 'TP', n, base.name);
+    if (!tp.ok) return tp;
+    base.sl = sl.value ? -sl.value : null;
+    base.tp = tp.value || null;
+    stages.push(base);
   }
-  // Una etapa cumplida no puede quedar después de una pendiente
   const firstPending = stages.findIndex(s => s.status !== 'completed');
   if (firstPending >= 0 && stages.slice(firstPending).some(s => s.status === 'completed')) {
     return { ok:false, msg:'Las etapas cumplidas tienen que quedar antes que las pendientes.' };
@@ -5381,13 +5515,7 @@ function submitAccountForm(btn) {
   const isEdit = !!_acctView.draft.id;
   const res = _validateAccountDraft(_acctView.draft);
   if (!res.ok) { _acctError(res.msg); return; }
-  return _acctRun(btn, async () => {
-    const saved = await saveFondeoAccount(res.account);
-    if (!saved.ok) { _acctError(saved.msg); return; }
-    _acctView = { mode: 'main' };
-    _afterAccountsChange();
-    showToast(isEdit ? '✓ Cuenta actualizada' : '✓ Cuenta creada');
-  });
+  return _acctRun(btn, () => _saveAccountAndCheckRisk(res.account, isEdit ? '✓ Cuenta actualizada' : '✓ Cuenta creada'));
 }
 
 /* ── Marcar etapa cumplida (snapshot de balance) ── */
@@ -5398,15 +5526,16 @@ function _acctCompleteHTML() {
   const s = acc.stages[i], r = stageRanges(acc)[i];
   const today = todayKeyStr();
   const sum = rangeSummary(r.start, today);
+  const bal = accountBalanceAt(acc, today);
   const next = acc.stages[i + 1];
   return '<div class="cfg-change"><b>' + escapeHtml(s.name) + '</b> · ' + escapeHtml(accountDisplayName(acc)) + '<br>' +
-      'P&L de la etapa: <b style="color:' + _plColor(sum.pnl) + '">' + _signedES(sum.pnl) + '</b> / objetivo ' + _signedES(s.target) +
-      ' · ' + sum.days + ' día' + (sum.days === 1 ? '' : 's') + ' operado' + (sum.days === 1 ? '' : 's') + '</div>' +
-    (sum.pnl < s.target ? '<div class="cfg-hint" style="color:var(--yellow)">Todavía no llegaste al objetivo. Podés marcarla igual si tu broker ya la dio por cumplida.</div>' : '') +
+      'Balance: <b>' + bal.toLocaleString('es-AR') + '</b> / objetivo ' + s.target.toLocaleString('es-AR') +
+      ' · etapa <b style="color:' + _plColor(sum.pnl) + '">' + _signedES(sum.pnl) + '</b> en ' + sum.days + ' día' + (sum.days === 1 ? '' : 's') + '</div>' +
+    (bal < s.target ? '<div class="cfg-hint" style="color:var(--yellow)">Todavía no llegaste al balance objetivo. Podés marcarla igual si corresponde.</div>' : '') +
     '<div class="cfg-row"><label class="cfg-label" for="acctDoneDate">Cumplida el (último día incluido)</label>' +
       '<input class="cfg-input acct-input-wide acct-input-text" id="acctDoneDate" type="date" min="' + r.start + '" max="' + today + '" value="' + today + '"></div>' +
     '<div class="cfg-hint">Se guarda una foto del balance a esa fecha. ' +
-      (next ? 'El contador de "' + escapeHtml(next.name) + '" arranca en 0 el día siguiente.' : 'Es la última etapa de la cuenta.') + '</div>' +
+      (next ? 'Desde el día siguiente arranca "' + escapeHtml(next.name) + '" con contador en 0 y su riesgo (' + stageRiskText(next) + ').' : 'Es la última etapa: después se sigue con su riesgo (' + stageRiskText(s) + ').') + '</div>' +
     '<div class="cfg-error" id="acctError"></div>' +
     '<div class="cfg-btns"><button class="cfg-btn" onclick="setAccountsView(\'main\')">Volver</button>' +
     '<button class="cfg-btn primary" onclick="confirmStageCompletion(this)">Confirmar</button></div>';
@@ -5426,13 +5555,7 @@ function confirmStageCompletion(btn) {
   const upd = _cloneAccount(acc);
   upd.stages[i] = { ...upd.stages[i], status: 'completed', completedOn: date,
     snapshot: { balance: acc.size + account.pnl, accountPnl: account.pnl, stagePnl: stage.pnl, days: stage.days, takenAt: new Date().toISOString() } };
-  return _acctRun(btn, async () => {
-    const saved = await saveFondeoAccount(upd);
-    if (!saved.ok) { _acctError(saved.msg); return; }
-    _acctView = { mode: 'main' };
-    _afterAccountsChange();
-    showToast('✓ Etapa "' + upd.stages[i].name + '" cumplida');
-  });
+  return _acctRun(btn, () => _saveAccountAndCheckRisk(upd, '✓ Etapa "' + upd.stages[i].name + '" cumplida'));
 }
 
 function undoStageCompletion(btn) {
@@ -5445,11 +5568,57 @@ function undoStageCompletion(btn) {
   const upd = _cloneAccount(acc);
   const { completedOn, snapshot, ...rest } = upd.stages[i];
   upd.stages[i] = { ...rest, status: 'pending' };
+  return _acctRun(btn, () => _saveAccountAndCheckRisk(upd, '✓ Etapa reabierta'));
+}
+
+/* ── Actualizar días ya cargados al riesgo de su etapa ── */
+function _acctMigrateHTML() {
+  const cambios = _acctView.cambios || [];
+  const nTP = cambios.filter(c => c.tipo === 'tp').length, nSL = cambios.length - nTP;
+  const lista = cambios.slice(0, 12).map(c => fmtKeyShort(c.dia) + ': ' + c.tipo.toUpperCase() + ' ' + _signedES(Number(c.antes)) + ' → ' + _signedES(c.despues)).join('<br>');
+  return '<div class="cfg-change">Hay <b>' + cambios.length + ' día' + (cambios.length === 1 ? '' : 's') + '</b> de Fondeo ya cargado' + (cambios.length === 1 ? '' : 's') +
+      ' con el monto automático anterior (' + (nSL ? nSL + ' SL' : '') + (nSL && nTP ? ' · ' : '') + (nTP ? nTP + ' TP' : '') + ').<br>' +
+      'Con el riesgo de su etapa quedarían así:</div>' +
+    '<div class="acct-stage-sub" style="margin-bottom:12px">' + lista + (cambios.length > 12 ? '<br>… y ' + (cambios.length - 12) + ' más' : '') + '</div>' +
+    '<div class="cfg-hint">Si actualizás, antes se descarga un respaldo (.json) y se guarda una copia en este navegador. Los días con BE, SP o montos editados a mano no se tocan.</div>' +
+    '<div class="cfg-error" id="acctError"></div>' +
+    '<div class="cfg-btns"><button class="cfg-btn" onclick="setAccountsView(\'main\')">Dejarlos como están</button>' +
+    '<button class="cfg-btn primary" onclick="applyAccountRiskMigration(this)">Actualizar ' + cambios.length + ' día' + (cambios.length === 1 ? '' : 's') + '</button></div>';
+}
+
+function applyAccountRiskMigration(btn) {
+  const cambios = _acctView.cambios || [];
+  if (!cambios.length) { setAccountsView('main'); return; }
   return _acctRun(btn, async () => {
-    const saved = await saveFondeoAccount(upd);
-    if (!saved.ok) { _acctError(saved.msg); return; }
+    const fecha = new Date().toISOString();
+    const backup = { tipo: 'respaldo_pre_riesgo_etapas', fecha, cambios: cambios.map(c => ({ ...c })), fondeo: _stripPhotosForBackup(_fondeo) };
+    try { localStorage.setItem(MIGRACION_RIESGO_BACKUP_KEY, JSON.stringify(backup)); }
+    catch (e) { try { localStorage.setItem(MIGRACION_RIESGO_BACKUP_KEY, JSON.stringify({ ...backup, fondeo: undefined })); } catch (e2) {} }
+    _downloadJSON(backup, 'respaldo_riesgo_etapas_' + fecha.slice(0, 10) + '.json');
+    cambios.forEach(c => { if (_fondeo[c.dia]) _fondeo[c.dia].mainAmount = c.despues; });
+    saveFondeoData();
+    const fallidos = await _pushChangedDaysToCloud(cambios);
+    _acctView = { mode: 'main' };
     _afterAccountsChange();
+    renderFondeoCal();
+    if (fallidos) showToast('⚠ ' + fallidos + ' día(s) no se subieron a la nube. Revisá la consola.', true);
+    else showToast('✓ ' + cambios.length + ' día' + (cambios.length === 1 ? '' : 's') + ' actualizado' + (cambios.length === 1 ? '' : 's'));
   });
+}
+
+/* Revierte la última actualización de días por riesgo de etapa.
+   Uso: restaurarBackupRiesgoEtapas() en la consola. */
+async function restaurarBackupRiesgoEtapas() {
+  let bk = null;
+  try { bk = JSON.parse(localStorage.getItem(MIGRACION_RIESGO_BACKUP_KEY) || 'null'); } catch (e) {}
+  if (!bk || !Array.isArray(bk.cambios) || !bk.cambios.length) { alert('No hay respaldo guardado en este navegador.'); return; }
+  if (!confirm('Esto va a devolver ' + bk.cambios.length + ' día(s) de Fondeo a sus montos anteriores. ¿Continuar?')) return;
+  const revertidos = bk.cambios.filter(c => _fondeo[c.dia]);
+  revertidos.forEach(c => { _fondeo[c.dia].mainAmount = c.antes; });
+  saveFondeoData();
+  const fallidos = await _pushChangedDaysToCloud(revertidos);
+  renderStats(); renderFondeoCal();
+  alert(fallidos ? ('Revertido localmente, pero ' + fallidos + ' día(s) no se subieron a la nube.') : ('✓ ' + revertidos.length + ' día(s) revertidos.'));
 }
 
 /* ── Cerrar cuenta ── */
@@ -5482,12 +5651,8 @@ function confirmCloseAccount(btn) {
   const upd = _cloneAccount(acc);
   Object.assign(upd, { status: 'closed', endDate: date, closeReason: reason });
   return _acctRun(btn, async () => {
-    const saved = await saveFondeoAccount(upd);
-    if (!saved.ok) { _acctError(saved.msg); return; }
-    _acctView = { mode: 'main' };
     FS.statMode = null;
-    _afterAccountsChange();
-    showToast('✓ Cuenta cerrada');
+    await _saveAccountAndCheckRisk(upd, '✓ Cuenta cerrada');
   });
 }
 
@@ -5958,13 +6123,19 @@ function renderFondeoPnl() {
     const s = acc.stages[ai];
     const r = stageRanges(acc)[ai];
     const sum = rangeSummary(r.start, r.end);
-    const pct = Math.max(0, Math.min(100, sum.pnl / s.target * 100));
+    const balance = acc.size + accSt.totalPL;
+    const startBal = accountBalanceAt(acc, keyAddDays(r.start, -1));
+    const pct = s.target > startBal ? Math.max(0, Math.min(100, (balance - startBal) / (s.target - startBal) * 100)) : 100;
+    const falta = s.target - balance;
     html +=
       '<div class="pnl-block acct-panel-stage">'+
         '<div class="pnl-lbl">Etapa: '+escapeHtml(s.name)+' <span class="acct-opt">('+(ai+1)+'/'+acc.stages.length+')</span></div>'+
-        '<div class="pnl-big"><span style="color:'+_plColor(sum.pnl)+'">'+_signedES(sum.pnl)+'</span> <span class="acct-panel-target">/ '+s.target.toLocaleString('es-AR')+'</span></div>'+
+        '<div class="pnl-big"><span style="color:'+_plColor(sum.pnl)+'">'+_signedES(sum.pnl)+'</span> <span class="acct-panel-target">en la etapa</span></div>'+
         '<div class="acct-progress"><div class="acct-progress-bar" style="width:'+pct.toFixed(1)+'%"></div></div>'+
+        '<div class="acct-stage-sub">Objetivo balance '+s.target.toLocaleString('es-AR')+(falta > 0 ? ' · faltan '+falta.toLocaleString('es-AR') : '')+'</div>'+
+        '<div class="acct-stage-risk">'+stageRiskText(s)+'</div>'+
         '<div class="acct-stage-sub">'+sum.days+' día'+(sum.days===1?'':'s')+' operado'+(sum.days===1?'':'s')+' · desde '+fmtKeyShort(r.start)+'</div>'+
+        (falta <= 0 ? '<div class="acct-goal-hit">🎯 Llegaste al objetivo: marcá la etapa como cumplida</div>' : '')+
         '<button class="acct-link-btn" style="align-self:flex-start" onclick="openAccountsModal(\'complete\')">✓ Marcar etapa cumplida</button>'+
       '</div>';
     subStage = ' · ' + escapeHtml(s.name);

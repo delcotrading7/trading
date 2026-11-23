@@ -1279,6 +1279,9 @@ body{
 .acct-stage-grid label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px}
 .acct-stage-grid .cfg-input{width:100%;font-size:14px;padding:7px 9px}
 .f-auto-src{text-align:center;font-size:11.5px;color:var(--t3);margin-top:4px}
+.acct-maxdaily{font-size:12px;color:var(--t2);margin-top:10px}
+.f-cap-warn{margin-top:8px;font-size:12px;font-weight:700;color:var(--yellow);background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.35);border-radius:8px;padding:7px 10px;text-align:center}
+.f-cap-warn:empty{display:none}
 @media (max-width:520px){
   .acct-kpis{grid-template-columns:1fr 1fr}
   .acct-input-wide{width:130px}
@@ -4668,7 +4671,8 @@ function renderFMainSection() {
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<span style="font-size:13px;color:var(--t2)">'+RES_INFO[r].emoji+' '+RES_INFO[r].full+resultTagSuffix(isNE,isLT)+'</span>'+
         '<span id="fMainPL" style="font-size:22px;font-weight:900;color:'+plColor+'">'+(pl>=0?'+':'')+pl.toLocaleString('es-AR')+' USD</span>'+
-      '</div></div>';
+      '</div></div>'+
+      '<div class="f-cap-warn" id="fCapWarn">'+dailyMaxWarningHTML(pl, currentFondeoKey)+'</div>';
   }
 
   sec.innerHTML =
@@ -4743,6 +4747,8 @@ function onFMainAmtInput() {
   const plColor = val>0?'var(--green)':val<0?'var(--red)':'var(--yellow)';
   plEl.style.color = plColor;
   plEl.textContent = (val>=0?'+':'')+val.toLocaleString('es-AR')+' USD';
+  const capEl = document.getElementById('fCapWarn');
+  if (capEl) capEl.innerHTML = dailyMaxWarningHTML(val, currentFondeoKey);
 }
 
 /* ── Sección operaciones no tomadas ─────────────────────────── */
@@ -5033,12 +5039,17 @@ function parseAccountSize(raw) {
 
 /* ── Persistencia ─────────────────────────────────────────── */
 function accountToRow(a) {
-  return {
+  const row = {
     id: a.id, user_id: currentUser.id, category: a.category, size: a.size,
     nickname: a.nickname || null, start_date: a.startDate, end_date: a.endDate || null,
     status: a.status, close_reason: a.closeReason || null, stages: a.stages,
     updated_at: new Date().toISOString(),
   };
+  // Columna agregada en 006_fondeo_accounts_max_daily.sql: solo se envía si
+  // se usa (o se está borrando), así las cuentas sin límite se guardan
+  // aunque todavía no se haya corrido ese script.
+  if (a.maxDailyProfit || a._hadMaxDaily) row.max_daily_profit = a.maxDailyProfit || null;
+  return row;
 }
 function rowToAccount(r) {
   return {
@@ -5047,6 +5058,7 @@ function rowToAccount(r) {
     endDate: r.end_date ? String(r.end_date).slice(0, 10) : null,
     status: r.status, closeReason: r.close_reason || '',
     stages: Array.isArray(r.stages) ? r.stages : [],
+    maxDailyProfit: r.max_daily_profit ? Number(r.max_daily_profit) : null,
   };
 }
 function _cacheFondeoAccounts() {
@@ -5060,6 +5072,9 @@ function _accountsCloudErrorMsg(error) {
     return 'Falta crear la tabla de cuentas en Supabase. Corré el script supabase/sql/005_fondeo_accounts.sql en el SQL Editor y volvé a intentar.';
   }
   if (code === '23505') return 'Ya hay una cuenta activa guardada en la nube. Cerrala antes de crear otra.';
+  if (code === 'PGRST204' && /max_daily_profit/.test(error.message || '')) {
+    return 'Para guardar la ganancia máxima por día falta correr el script supabase/sql/006_fondeo_accounts_max_daily.sql en el SQL Editor de Supabase.';
+  }
   return 'No se pudo guardar en la nube (' + ((error && (error.message || code)) || 'error desconocido') + ').';
 }
 
@@ -5152,6 +5167,23 @@ function getFondeoAutoAmounts(key, list) {
     account,
   };
 }
+/* ── Ganancia máxima por día (por cuenta) ─────────────────── */
+function maxDailyProfitFor(key) {
+  const acc = accountForDate(key);
+  return acc && acc.maxDailyProfit ? { max: acc.maxDailyProfit, account: acc } : null;
+}
+/* Días de la cuenta cuyo P&L superó el máximo diario */
+function daysOverDailyMax(acc) {
+  if (!acc || !acc.maxDailyProfit) return [];
+  return accountKeys(acc).filter(k => _fondeo[k] && getDayPL(_fondeo[k]) > acc.maxDailyProfit);
+}
+function dailyMaxWarningHTML(pl, key) {
+  const cap = maxDailyProfitFor(key);
+  if (!cap || !(pl > cap.max)) return '';
+  return '⚠ Supera la ganancia máxima por día de ' + escapeHtml(accountDisplayName(cap.account)) +
+    ' (+' + cap.max.toLocaleString('es-AR') + ') por ' + (pl - cap.max).toLocaleString('es-AR') + ' USD';
+}
+
 function stageRiskText(s) {
   const sl = s.sl ? Math.abs(s.sl) : Math.abs(journalConfig.sl);
   const tp = s.tp ? s.tp : journalConfig.tp;
@@ -5267,6 +5299,18 @@ function renderAccountsModal() {
   }
 }
 
+/* "Máx. por día +1.500 · 1 día lo superó (25 Nov)" */
+function _acctMaxDailyLineHTML(acc) {
+  if (!acc.maxDailyProfit) return '';
+  const over = daysOverDailyMax(acc);
+  return '<div class="acct-maxdaily">Ganancia máxima por día: <b>+' + acc.maxDailyProfit.toLocaleString('es-AR') + '</b>' +
+    (over.length
+      ? ' · <span style="color:var(--yellow)">⚠ ' + over.length + ' día' + (over.length === 1 ? '' : 's') + ' lo superó' + (over.length === 1 ? '' : 'aron') +
+        ' (' + over.slice(-3).map(fmtKeyShort).join(', ') + (over.length > 3 ? '…' : '') + ')</span>'
+      : ' · ningún día lo superó') +
+    '</div>';
+}
+
 /* ── Vista principal ── */
 function _acctMainHTML() {
   const acc = getActiveAccount();
@@ -5287,6 +5331,7 @@ function _acctMainHTML() {
         '<div><div class="acct-kpi-lbl">P&L cuenta</div><div class="acct-kpi-val" style="color:' + _plColor(accSum.pnl) + '">' + _signedES(accSum.pnl) + '</div></div>' +
         '<div><div class="acct-kpi-lbl">Operaciones</div><div class="acct-kpi-val">' + accSum.days + '</div></div>' +
       '</div>' +
+      _acctMaxDailyLineHTML(acc) +
       '<div class="cfg-section-title" style="margin-top:14px">Etapas</div>';
     acc.stages.forEach((s, i) => {
       const r = ranges[i];
@@ -5352,11 +5397,11 @@ function _acctMainHTML() {
 function _startAccountForm(acc) {
   const draft = acc ? {
     id: acc.id, category: acc.category, sizeRaw: String(acc.size), nickname: acc.nickname || '',
-    startDate: acc.startDate,
+    startDate: acc.startDate, maxRaw: acc.maxDailyProfit ? String(acc.maxDailyProfit) : '',
     stages: acc.stages.map(s => ({ ...s, targetRaw: String(s.target),
       slRaw: s.sl ? String(Math.abs(s.sl)) : '', tpRaw: s.tp ? String(s.tp) : '' })),
   } : {
-    id: null, category: 'PA', sizeRaw: '', nickname: '', startDate: todayKeyStr(),
+    id: null, category: 'PA', sizeRaw: '', nickname: '', startDate: todayKeyStr(), maxRaw: '',
     stages: [{ id: _newId(), name: '', targetRaw: '', slRaw: '', tpRaw: '', status: 'pending' }],
   };
   _acctView = { mode: 'form', draft };
@@ -5374,6 +5419,9 @@ function _acctFormHTML() {
       '<div class="cfg-input-wrap"><input class="cfg-input acct-input-wide acct-input-text" id="acctNick" type="text" maxlength="40" autocomplete="off" placeholder="Ej: Apex #2" value="' + escapeHtml(d.nickname) + '" oninput="onAcctFormInput()"><span class="cfg-unit" style="visibility:hidden">USD</span></div></div>' +
     '<div class="cfg-row"><label class="cfg-label" for="acctStart">Fecha de inicio</label>' +
       '<div class="cfg-input-wrap"><input class="cfg-input acct-input-wide acct-input-text" id="acctStart" type="date" value="' + escapeHtml(d.startDate) + '" oninput="onAcctFormInput()"><span class="cfg-unit" style="visibility:hidden">USD</span></div></div>' +
+    '<div class="cfg-row"><label class="cfg-label" for="acctMaxDaily">Ganancia máxima por día <span class="acct-opt">(opcional)</span></label>' +
+      '<div class="cfg-input-wrap"><span class="cfg-sign" style="color:var(--green)">+</span><input class="cfg-input acct-input-wide" id="acctMaxDaily" type="text" inputmode="numeric" autocomplete="off" placeholder="Sin límite" value="' + escapeHtml(d.maxRaw || '') + '" oninput="onAcctFormInput()"><span class="cfg-unit">USD</span></div></div>' +
+    '<div class="cfg-hint">Lo máximo que podés ganar en un día en esta cuenta. El journal te avisa si un día lo supera, y ningún TP de etapa puede ser mayor.</div>' +
     '<div class="cfg-rr" id="acctPreview"></div>' +
     '<div class="cfg-section-title" style="margin-top:16px">Etapas, objetivos y riesgo</div>' +
     '<div class="cfg-hint">En orden. El objetivo es el <b>balance</b> de la cuenta a alcanzar. Mientras la etapa está en curso, el TP/SL automático de cada día usa estos montos. ' +
@@ -5408,6 +5456,7 @@ function _syncAcctFormFromDOM() {
   if (g('acctSize'))  d.sizeRaw   = g('acctSize').value;
   if (g('acctNick'))  d.nickname  = g('acctNick').value;
   if (g('acctStart')) d.startDate = g('acctStart').value;
+  if (g('acctMaxDaily')) d.maxRaw = g('acctMaxDaily').value;
   const each = (cls, field, allowLocked) => document.querySelectorAll(cls).forEach(el => {
     const s = d.stages[+el.dataset.i];
     if (s && (allowLocked || s.status !== 'completed')) s[field] = el.value;
@@ -5468,6 +5517,10 @@ function _validateAccountDraft(d) {
   if (lastEnd && d.startDate <= lastEnd) {
     return { ok:false, msg:'La fecha de inicio tiene que ser posterior al cierre de la cuenta anterior (' + fmtKeyShort(lastEnd) + ').' };
   }
+  const maxDaily = _parseStageRisk(d.maxRaw, 'máximo', 0, '');
+  if (!maxDaily.ok) {
+    return { ok:false, msg:'La ganancia máxima por día ' + parseConfigAmount(d.maxRaw).msg + '.' };
+  }
   if (!d.stages.length) return { ok:false, msg:'Agregá al menos una etapa con su objetivo.' };
   const stages = [];
   let prevTarget = size.value;
@@ -5495,6 +5548,11 @@ function _validateAccountDraft(d) {
     if (!tp.ok) return tp;
     base.sl = sl.value ? -sl.value : null;
     base.tp = tp.value || null;
+    const effTp = base.tp || journalConfig.tp;
+    if (maxDaily.value && effTp > maxDaily.value) {
+      return { ok:false, msg:'El TP de la etapa ' + n + ' (' + base.name + ') es +' + effTp.toLocaleString('es-AR') +
+        (base.tp ? '' : ' (general)') + ' y supera la ganancia máxima por día (+' + maxDaily.value.toLocaleString('es-AR') + '). Bajalo o subí el máximo.' };
+    }
     stages.push(base);
   }
   const firstPending = stages.findIndex(s => s.status !== 'completed');
@@ -5506,7 +5564,9 @@ function _validateAccountDraft(d) {
     return { ok:false, msg:'La fecha de inicio no puede ser posterior al ' + fmtKeyShort(firstDone.completedOn) + ' (cuando se cumplió "' + firstDone.name + '").' };
   }
   const account = existing ? _cloneAccount(existing) : { id: _newId(), status: 'active', endDate: null, closeReason: '' };
-  Object.assign(account, { category: d.category, size: size.value, nickname: (d.nickname || '').trim(), startDate: d.startDate, stages });
+  account._hadMaxDaily = !!(existing && existing.maxDailyProfit);
+  Object.assign(account, { category: d.category, size: size.value, nickname: (d.nickname || '').trim(), startDate: d.startDate, stages,
+    maxDailyProfit: maxDaily.value || null });
   return { ok:true, account };
 }
 
@@ -6115,6 +6175,10 @@ function renderFondeoPnl() {
       '<div class="pnl-lbl">Balance · '+escapeHtml(accountDisplayName(acc))+'</div>'+
       '<div class="pnl-big">'+(acc.size + accSt.totalPL).toLocaleString('es-AR')+'</div>'+
       '<div class="pnl-pill '+(accSt.totalPL>0?'pos':accSt.totalPL<0?'neg':'')+'">Cuenta '+_signedES(accSt.totalPL)+' · '+accSt.tradingDays+' operaciones</div>'+
+      (acc.maxDailyProfit
+        ? '<div class="acct-stage-risk">Máx. por día +'+acc.maxDailyProfit.toLocaleString('es-AR')+
+          (_fondeo[tk] && todayPL > acc.maxDailyProfit ? ' · <span style="color:var(--yellow)">⚠ hoy lo superaste</span>' : '')+'</div>'
+        : '')+
     '</div>';
 
   let subStage = '';

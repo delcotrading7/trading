@@ -1289,13 +1289,16 @@ body{
    Espacios verticales un poco más chicos para que entre todo sin cortarse. */
 .fondeo-stats-main{align-self:stretch;scrollbar-width:none}
 .fondeo-stats-main::-webkit-scrollbar{display:none}
-.fondeo-main-card{display:flex;flex-direction:column;min-height:100%;padding:24px 30px}
-.fondeo-main-card .pnls-card{gap:6px}
-.fondeo-main-card .pnl-block{gap:3px}
-.fondeo-risk-section{border-top:1px solid var(--border);margin-top:12px;padding-top:12px}
-.fondeo-risk-section .stat-divider{margin:7px 0}
-.fondeo-risk-section .risk-key{margin:2px 0 6px;padding:6px 10px}
-.fondeo-risk-section .acct-wd-line{margin-bottom:4px}
+/* Los espacios crecen con el alto de la pantalla (vh) para que la tarjeta se vea
+   pareja sin un vacío grande abajo; en pantallas bajas vuelven al mínimo. */
+.fondeo-main-card{display:flex;flex-direction:column;min-height:100%;padding:clamp(24px,3.2vh,34px) 30px}
+.fondeo-main-card .pnls-card{gap:clamp(6px,1.25vh,13px)}
+.fondeo-main-card .pnl-block{gap:clamp(3px,.6vh,6px)}
+.fondeo-risk-section{border-top:1px solid var(--border);margin-top:clamp(12px,2vh,22px);padding-top:clamp(12px,2vh,22px)}
+.fondeo-risk-section .stat-card-title{margin-bottom:clamp(8px,1.2vh,14px)}
+.fondeo-risk-section .stat-divider{margin:clamp(7px,1.2vh,14px) 0}
+.fondeo-risk-section .risk-key{margin:2px 0 clamp(6px,1.1vh,12px);padding:clamp(6px,1vh,11px) 10px}
+.fondeo-risk-section .acct-wd-line{margin-bottom:clamp(4px,.8vh,8px)}
 .fondeo-risk-section .acct-wd-title{font-size:11px;letter-spacing:.3px}
 .acct-wd-line .acct-stage-sub b{color:var(--t1)}
 /* Datos clave del panel de riesgo: SL que quedan, RR, TP que faltan */
@@ -6675,18 +6678,15 @@ function renderFondeoRisk() {
   if (!acc || !stage) { card.style.display = 'none'; card.innerHTML = ''; return; }
   card.style.display = '';
   const rs = accountRiskState(acc);
-  const row = (label, value, cls) => '<div class="stat-row"><span class="stat-label">'+label+'</span><span class="stat-value '+(cls||'')+'">'+value+'</span></div>';
   // Filas destacadas (SL que quedan, RR, TP que faltan): mismo estilo entre las tres.
   // cls: 'neg' (rojo) / 'pos' (verde), los mismos que usa el calendario para SL / TP.
   const key = (label, value, extra, cls) => '<div class="risk-key"><span class="risk-key-lbl">'+label+'</span><span class="risk-key-val'+(cls ? ' '+cls : '')+'">'+value+(extra ? ' <small>'+extra+'</small>' : '')+'</span></div>';
   // Límite de pérdida (rs.threshold) y Objetivo de la etapa (rs.target) se siguen calculando,
   // pero no se muestran: el colchón, los SL que quedan y los TP que faltan dependen de ellos.
 
+  // Balance de cuenta y Ganancia (rs.balance / rs.profit) ya se ven en la parte de PNLS:
+  // no se muestran acá, pero se siguen calculando (los usan SL que quedan, RR y TP que faltan).
   let html = '<div class="stat-card-title">Gestión de riesgo</div>';
-  html += row('Balance de cuenta', rs.balance.toLocaleString('es-AR'));
-  html += row('Ganancia', _signedES(rs.profit), rs.profit > 0 ? 'pos' : rs.profit < 0 ? 'neg' : '');
-
-  html += '<hr class="stat-divider">';
   if (rs.sl != null) {
     // El SL en uso (rs.sl) no tiene fila propia: se ve en el RR "SL – TP"
     html += key('SL que quedan', fmtCount(rs.slBackup), 'SL', 'neg');

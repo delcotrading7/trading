@@ -2028,6 +2028,9 @@ body::before{
   --an-tip-bg:#1b1d22;
   --an-chart-h:214px;
   --an-gap-top:48px;
+  --an-tab-active-bg:rgba(34,197,94,.06);
+  --an-best-bg:rgba(34,197,94,.06);
+  --an-worst-bg:rgba(244,63,94,.06);
 }
 /* Desktop: el panel de cada sección pasa a poder deslizarse (sin barra
    visible, para no achicar la primera pantalla) */
@@ -2087,6 +2090,36 @@ body::before{
 .an-tip-row{display:flex;justify-content:space-between;gap:14px;line-height:1.7}
 .an-tip-row b{font-family:var(--an-mono);font-weight:500;color:var(--t1)}
 
+/* Tarjeta de métricas con pestañas */
+.an-tabs-card{overflow:hidden}
+.an-tabbar{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--an-line)}
+.an-tabbar button{background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--t3);padding:15px 10px;font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;transition:color .15s,background .15s}
+.an-tabbar button:hover{color:var(--t2)}
+.an-tabbar button.active{color:var(--green);border-bottom-color:var(--green);background:var(--an-tab-active-bg)}
+.an-tabpanes{display:grid}
+.an-tabpane{grid-area:1/1;padding:4px 26px 12px;min-width:0}
+.an-tabpane:not(.active){visibility:hidden;pointer-events:none}
+.an-ov{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:30px;overflow:hidden}
+.an-ov-cell{padding:20px 0 18px;border-bottom:1px solid var(--an-line);margin-bottom:-1px;min-width:0}
+.an-ov-cell .an-lbl{font-size:11px}
+.an-ov-val{font-family:var(--an-mono);font-variant-numeric:tabular-nums;font-size:26px;font-weight:500;margin-top:9px;line-height:1.15;white-space:nowrap}
+.an-ov-sub{font-size:11px;color:var(--an-sub);margin-top:7px}
+.an-tbl{padding-top:6px}
+.an-tbl-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,.6fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,1fr);align-items:center;column-gap:14px;padding:13px 12px;border-bottom:1px solid var(--an-line)}
+.an-tbl-row:last-child{border-bottom:none}
+.an-tbl-row > :not(:first-child){text-align:right}
+.an-tbl-head{padding-top:12px;padding-bottom:10px}
+.an-tbl-head span{font-size:11px;font-weight:600;color:var(--an-label);text-transform:uppercase;letter-spacing:1px}
+.an-tbl-name{font-size:14px;font-weight:600;color:var(--t1);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.an-tbl-num{font-family:var(--an-mono);font-variant-numeric:tabular-nums;font-size:15px;color:var(--t1);white-space:nowrap}
+.an-tbl-num.dim{color:var(--t3)}
+.an-share{height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:8px;overflow:hidden;width:100%}
+.an-share > span{display:block;height:100%;border-radius:2px}
+.an-tbl-row.best{background:var(--an-best-bg);box-shadow:inset 2px 0 0 var(--green)}
+.an-tbl-row.worst{background:var(--an-worst-bg);box-shadow:inset 2px 0 0 var(--red)}
+.an-chip{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 6px;border-radius:4px;border:1px solid currentColor}
+.an-tbl-note{font-size:11px;color:var(--an-sub);padding:10px 12px 0}
+
 @media (max-width:640px){
   .tab-pane{overflow:visible}
   .an-zone{padding:0 12px 40px}
@@ -2106,6 +2139,16 @@ body::before{
   .an-yl{width:40px;font-size:10px}
   .an-xlabels{margin-left:46px}
   .an-bval{font-size:9px}
+  .an-tabpane{padding:2px 14px 10px}
+  .an-tabbar button{padding:13px 4px;font-size:13px}
+  .an-ov{column-gap:14px}
+  .an-ov-val{font-size:18px}
+  .an-ov-cell .an-lbl{font-size:10px;letter-spacing:.6px}
+  .an-ov-sub{font-size:10px}
+  .an-tbl-row{column-gap:8px;padding:11px 6px}
+  .an-tbl-head span{font-size:9px;letter-spacing:.4px}
+  .an-tbl-name{font-size:12px}
+  .an-tbl-num{font-size:12px}
 }
 </style>
 </head>
@@ -8598,6 +8641,103 @@ function anPerfHTML(s, days) {
   '</div>';
 }
 
+
+/* ── Tarjeta de métricas con pestañas (Overview / By Strategy / By Weekday) ──
+   Las tres pestañas se apilan en la misma celda de la grilla y solo se ve
+   la activa: así la tarjeta siempre mide lo que la más alta y no salta. */
+const AN_TABS = [['overview','Overview'],['strategy','By Strategy'],['weekday','By Weekday']];
+const AN_STRATEGY_GROUPS = [
+  { val: true,     label: 'Sí cumplí',      color: 'var(--green)'  },
+  { val: false,    label: 'No cumplí',      color: 'var(--red)'    },
+  { val: 'dudoso', label: 'No sé / Dudoso', color: 'var(--yellow)' },
+];
+const AN_WEEKDAYS = [[1,'Lun'],[2,'Mar'],[3,'Mié'],[4,'Jue'],[5,'Vie']];
+
+function anCell(label, val, cls, sub) {
+  return '<div class="an-ov-cell"><div class="an-lbl">' + label + '</div>' +
+    '<div class="an-ov-val ' + cls + '">' + val + '</div>' +
+    '<div class="an-ov-sub">' + sub + '</div></div>';
+}
+function anOverviewHTML(s) {
+  const none = !s.n;
+  const dash = v => none ? '—' : v;
+  return '<div class="an-ov">' +
+    anCell('Total P&amp;L',    dash(anMoney(s.total, true)), none ? 'an-zero' : anCls(s.total), 'período seleccionado') +
+    anCell('Largest gain',     s.best  ? anMoney(s.best.pl, true)  : '—', s.best  ? 'an-pos' : 'an-zero', 'single day') +
+    anCell('Largest loss',     s.worst ? anMoney(s.worst.pl, true) : '—', s.worst ? 'an-neg' : 'an-zero', 'single day') +
+    anCell('Win rate',         anPct(s.wr), s.wr === null ? 'an-zero' : 'an-pos',
+           s.wins + 'W / ' + s.losses + 'L / ' + s.be + 'BE') +
+    anCell('Profit factor',    anPF(s.pf), s.pf === null ? 'an-zero' : 'an-neu', 'gross profit / gross loss') +
+    anCell('Avg win',          anMoney(s.avgWin),  s.avgWin  === null ? 'an-zero' : 'an-pos', 'per winning day') +
+    anCell('Avg loss',         anMoney(s.avgLoss), s.avgLoss === null ? 'an-zero' : 'an-neg', 'per losing day') +
+    anCell('Best streak',      dash(s.bestStreak + 'd'),  none ? 'an-zero' : 'an-neu', 'consecutive wins') +
+    anCell('Worst streak',     dash(s.worstStreak + 'd'), none ? 'an-zero' : 'an-neg', 'consecutive losses') +
+  '</div>';
+}
+function anTblHead(first) {
+  return '<div class="an-tbl-row an-tbl-head"><span>' + first + '</span><span>Days</span>' +
+         '<span>P&amp;L</span><span>Win rate</span><span>Avg / day</span></div>';
+}
+function anTblNums(g) {
+  if (!g.n) return '<span class="an-tbl-num dim">—</span><span class="an-tbl-num dim">—</span>' +
+                   '<span class="an-tbl-num dim">—</span><span class="an-tbl-num dim">—</span>';
+  return '<span class="an-tbl-num">' + g.n + '</span>' +
+    '<span class="an-tbl-num ' + anCls(g.total) + '">' + anFull(g.total, true) + '</span>' +
+    '<span class="an-tbl-num">' + anPct(g.wr) + '</span>' +
+    '<span class="an-tbl-num ' + anCls(g.total) + '">' + anFull(g.total / g.n, true) + '</span>';
+}
+function anStrategyHTML(days) {
+  let h = '<div class="an-tbl">' + anTblHead('Strategy');
+  AN_STRATEGY_GROUPS.forEach(gr => {
+    const g = anSummarize(days.filter(d => d.est === gr.val));
+    const share = days.length ? g.n / days.length * 100 : 0;
+    h += '<div class="an-tbl-row"><div><div class="an-tbl-name">' + gr.label + '</div>' +
+         '<div class="an-share"><span style="width:' + share + '%;background:' + gr.color + '"></span></div></div>' +
+         anTblNums(g) + '</div>';
+  });
+  h += '</div>';
+  const unanswered = days.filter(d => d.est !== true && d.est !== false && d.est !== 'dudoso').length;
+  if (unanswered) h += '<div class="an-tbl-note">' + unanswered + (unanswered === 1 ? ' día operado' : ' días operados') +
+                       ' sin respuesta en "¿Cumplí la estrategia?"</div>';
+  return h;
+}
+function anWeekdayStats(days) {
+  return AN_WEEKDAYS.map(([dow, label]) => {
+    const g = anSummarize(days.filter(d => { const p = parseKey(d.key); return new Date(p.y, p.m, p.d).getDay() === dow; }));
+    g.dow = dow; g.label = label;
+    return g;
+  });
+}
+function anWeekdayHTML(days) {
+  const rows = anWeekdayStats(days);
+  const withData = rows.filter(r => r.n);
+  let best = null, worst = null;
+  if (withData.length) {
+    best  = withData.reduce((a, b) => b.total > a.total ? b : a);
+    worst = withData.reduce((a, b) => b.total < a.total ? b : a);
+    if (worst === best) worst = null;
+  }
+  let h = '<div class="an-tbl">' + anTblHead('Weekday');
+  rows.forEach(r => {
+    const cls = r === best ? ' best' : r === worst ? ' worst' : '';
+    const chip = r === best ? '<span class="an-chip an-pos">Best</span>' : r === worst ? '<span class="an-chip an-neg">Worst</span>' : '';
+    h += '<div class="an-tbl-row' + cls + '"><div class="an-tbl-name">' + r.label + chip + '</div>' + anTblNums(r) + '</div>';
+  });
+  return h + '</div>';
+}
+function anTabsHTML(s, days) {
+  const panes = { overview: anOverviewHTML(s), strategy: anStrategyHTML(days), weekday: anWeekdayHTML(days) };
+  return '<div class="an-card an-tabs-card">' +
+    '<div class="an-tabbar" role="tablist">' +
+      AN_TABS.map(([v, l]) => '<button type="button" role="tab" aria-selected="' + (AN.tab === v) + '" class="' +
+        (AN.tab === v ? 'active' : '') + '" onclick="setAnTab(\'' + v + '\')">' + l + '</button>').join('') +
+    '</div>' +
+    '<div class="an-tabpanes">' +
+      AN_TABS.map(([v]) => '<div class="an-tabpane' + (AN.tab === v ? ' active' : '') + '">' + panes[v] + '</div>').join('') +
+    '</div>' +
+  '</div>';
+}
+function setAnTab(t) { AN.tab = t; renderAllAnalytics(); }
 /* ── Render de la zona ── */
 function renderAnalytics(mode) {
   const el = document.getElementById('anZone-' + mode);
@@ -8616,7 +8756,7 @@ function renderAnalytics(mode) {
         '</div>' +
       '</div>' +
       '<div class="an-body">' +
-        '<div class="an-col-left">' + anPerfHTML(s, days) + '</div>' +
+        '<div class="an-col-left">' + anPerfHTML(s, days) + anTabsHTML(s, days) + '</div>' +
         '<div class="an-col-right"></div>' +
       '</div>';
   } catch (e) {

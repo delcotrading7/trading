@@ -54,10 +54,33 @@ check('Día reiniciado (todo vacío) → vuelve a ser feriado',
       usAutoHoliday('2026-11-26', { contextNote: '', contextPhotos: [], photos: [], mainResult: null, mainAmount: 0,
         ne: false, lt: false, missedOps: [], reviewed: false, estrategiaCumplida: null, slStatus: null }) === 'Thanksgiving');
 
-// 5) Lista completa en el rango
+// 5) Cierres anticipados a la 1 pm: notas al pie de la tabla oficial de NYSE 2026–2028
+const NYSE_EARLY = {
+  2026: ['2026-11-27','2026-12-24'],
+  2027: ['2027-11-26'],
+  2028: ['2028-07-03','2028-11-24'],
+};
+Object.keys(NYSE_EARLY).forEach(y => {
+  const mine = usMarketShortDays(+y).filter(h => h.type === 'early').map(h => h.key), off = NYSE_EARLY[y];
+  const extra = mine.filter(k => !off.includes(k)), missing = off.filter(k => !mine.includes(k));
+  check('Cierres 1 pm coinciden con NYSE ' + y + (extra.length || missing.length ? '  sobran: ' + extra + '  faltan: ' + missing : ''),
+        !extra.length && !missing.length);
+});
+check('31/12/2026 = baja actividad', (usMarketDayInfo('2026-12-31') || {}).type === 'quiet');
+check('24/12/2027 sigue siendo feriado (no cierre 1 pm)', (usMarketDayInfo('2027-12-24') || {}).type === 'holiday');
+check('Día con datos el 24/12/2026 → manda lo mío', usAutoMarketDay('2026-12-24', { mainResult: 'sl', mainAmount: -450 }) === null);
+for (let y = 2027; y <= HOLIDAYS_UNTIL_YEAR; y++) {
+  check(y + ': días especiales de lunes a viernes y sin pisar feriados',
+        usMarketShortDays(y).every(h => !['Sáb','Dom'].includes(dow(h.key)) && !keysOf(y).includes(h.key)));
+}
+
+// 6) Lista completa en el rango
+const TIPO = { holiday: 'Feriado     ', early: 'Cierre 1 pm ', quiet: 'Baja activ. ' };
 lines.push('', 'LISTA COMPLETA (desde ' + HOLIDAYS_FROM + ' hasta ' + HOLIDAYS_UNTIL_YEAR + ')');
 for (let y = 2026; y <= HOLIDAYS_UNTIL_YEAR; y++) {
-  usMarketHolidays(y).filter(h => h.key >= HOLIDAYS_FROM).forEach(h => lines.push(h.key + ' ' + dow(h.key) + '  ' + h.name));
+  usMarketHolidays(y).map(h => ({ ...h, type: 'holiday' })).concat(usMarketShortDays(y))
+    .filter(h => h.key >= HOLIDAYS_FROM).sort((a, b) => a.key < b.key ? -1 : 1)
+    .forEach(h => lines.push(h.key + ' ' + dow(h.key) + '  ' + TIPO[h.type] + h.name));
 }
 lines.unshift((fails ? 'RESULTADO: ' + fails + ' FALLAS' : 'RESULTADO: TODO OK'), '');
 document.getElementById('out').textContent = lines.join('\n');

@@ -3503,8 +3503,8 @@ function renderPracticaCal() {
     const data     = _practica[key] || {};
     const dow      = new Date(PS.y, PS.m, n).getDay();
     const isWeekend = dow === 0 || dow === 6;
-    // Feriado de EE.UU. calculado (us-market-holidays.js): solo si el día no tiene datos míos
-    const autoHol  = typeof usAutoHoliday === 'function' ? usAutoHoliday(key, _practica[key]) : null;
+    // Feriado / cierre 1 pm / baja actividad de EE.UU. (us-market-holidays.js): solo si el día no tiene datos míos
+    const autoHol  = typeof usAutoMarketDay === 'function' ? usAutoMarketDay(key, _practica[key]) : null;
     const dr       = data.mainResult || (autoHol ? 'fe' : null);
     const missed   = data.missedOps || [];
     const calMT    = missed.filter(op => op.type === 'mt').length;
@@ -3546,10 +3546,11 @@ function renderPracticaCal() {
       el.appendChild(lockEl);
     } else if (dr === 'fe') {
       const feLbl = document.createElement('div');
-      feLbl.className = 'day-trades-mini'; feLbl.textContent = 'Día feriado';
+      feLbl.className = 'day-trades-mini'; feLbl.textContent = (autoHol && autoHol.label) || 'Día feriado';
       feLbl.style.cssText = 'margin-top:6px;color:var(--fe);font-weight:700';
       el.appendChild(feLbl);
-      const holName = typeof usMarketHolidayName === 'function' ? usMarketHolidayName(key) : null;
+      const holInfo = typeof usMarketDayInfo === 'function' ? usMarketDayInfo(key) : null;
+      const holName = holInfo ? holInfo.name : null;
       if (holName) {
         const hEl = document.createElement('div');
         hEl.className = 'day-trades-mini'; hEl.textContent = holName;
@@ -4608,8 +4609,8 @@ function renderFondeoCal() {
                     data.contextNote ||
                     (data.contextPhotos&&data.contextPhotos.length) ||
                     (data.photos&&data.photos.length);
-    // Feriado de EE.UU. calculado (us-market-holidays.js): solo si el día no tiene datos míos
-    const autoHol = typeof usAutoHoliday === 'function' ? usAutoHoliday(key, _fondeo[key]) : null;
+    // Feriado / cierre 1 pm / baja actividad de EE.UU. (us-market-holidays.js): solo si el día no tiene datos míos
+    const autoHol = typeof usAutoMarketDay === 'function' ? usAutoMarketDay(key, _fondeo[key]) : null;
     const dr  = hasMain ? getDayResult(data) : (autoHol ? 'fe' : null);
     const pl  = dr !== null ? getDayPL(data) : null;
     const dow = new Date(FS.y, FS.m, d).getDay();
@@ -4646,10 +4647,11 @@ function renderFondeoCal() {
       el.appendChild(lockEl);
     } else if (dr === 'fe') {
       const feLbl = document.createElement('div');
-      feLbl.className = 'day-trades-mini'; feLbl.textContent = 'Día feriado';
+      feLbl.className = 'day-trades-mini'; feLbl.textContent = (autoHol && autoHol.label) || 'Día feriado';
       feLbl.style.cssText = 'margin-top:6px;color:var(--fe);font-weight:700';
       el.appendChild(feLbl);
-      const holName = typeof usMarketHolidayName === 'function' ? usMarketHolidayName(key) : null;
+      const holInfo = typeof usMarketDayInfo === 'function' ? usMarketDayInfo(key) : null;
+      const holName = holInfo ? holInfo.name : null;
       if (holName) {
         const hEl = document.createElement('div');
         hEl.className = 'day-trades-mini'; hEl.textContent = holName;

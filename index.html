@@ -24,14 +24,16 @@
   /* ── Fondos — grafito neutro (sin tinte de color) ── */
   --bg0:#0a0a0b;
   /* ── Fondo de la app ("negro con luz tenue") y paneles/islas ── */
-  --app-bg-base:#07080a;
-  --glow-1:radial-gradient(ellipse 70% 55% at 10% 0%, rgba(70,110,170,.28) 0%, transparent 70%);
-  --glow-2:radial-gradient(ellipse 60% 50% at 95% 100%, rgba(50,90,150,.16) 0%, transparent 70%);
+  --app-bg-base:#050506;
+  --glow-1:radial-gradient(ellipse 70% 55% at 10% 0%, rgba(120,140,170,.10) 0%, transparent 70%);
+  --glow-2:radial-gradient(ellipse 60% 50% at 95% 100%, rgba(100,120,150,.06) 0%, transparent 70%);
   --app-bg:var(--glow-1), var(--glow-2), var(--app-bg-base);
-  --panel-bg:#14171c;
+  /* Intensidad de las estrellas del fondo: 0 = sin estrellas, 1 = normal */
+  --star-opacity:1;
+  --panel-bg:#101114;
   --panel-border:rgba(255,255,255,.08);
   /* Barra superior translúcida: deja ver el fondo por detrás */
-  --topbar-bg:rgba(7,8,10,.55);
+  --topbar-bg:rgba(5,5,6,.55);
   --topbar-border:rgba(255,255,255,.06);
   --bg1:#111113;
   --bg2:#17181b;
@@ -124,6 +126,129 @@ body::before{
   content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:var(--app-bg);
 }
+/* Estrellas: tres capas fijas detrás del contenido (posiciones fijas, generadas
+   una sola vez con semilla; sin imágenes). Cada capa es un punto de 1px y las
+   estrellas son sus box-shadow (las de 2px usan spread .5px). La capa A queda
+   quieta; B y C parpadean muy lento y alternadas animando solo la opacidad
+   (barato para la GPU, no afecta el scroll). Intensidad general: --star-opacity. */
+.starfield{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;opacity:var(--star-opacity)}
+.starfield .stars{position:absolute;top:0;left:0;width:1px;height:1px;border-radius:50%;background:transparent}
+.starfield .stars-b,.starfield .stars-c{will-change:opacity;animation:starTwinkle 8s ease-in-out infinite alternate}
+.starfield .stars-c{animation-duration:10s;animation-delay:-5s}
+@keyframes starTwinkle{from{opacity:1}to{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.starfield .stars{animation:none!important}}
+@media (max-width:640px){.starfield .stars{animation:none!important}}
+.starfield .stars-a{box-shadow:
+    48.39vw 51.18vh rgba(255,255,255,0.16),
+    21.6vw 10.33vh rgba(255,255,255,0.33),
+    41.98vw 2.57vh rgba(255,255,255,0.28),
+    64.92vw 19.39vh rgba(210,225,255,0.47),
+    61.2vw 40.29vh rgba(255,255,255,0.19),
+    48.05vw 55.46vh rgba(210,225,255,0.56),
+    6.65vw 38.34vh rgba(210,225,255,0.5),
+    47.67vw 45.19vh 0 .5px rgba(255,255,255,0.46),
+    88.18vw 55.02vh rgba(210,225,255,0.41),
+    28vw 7.95vh rgba(255,255,255,0.24),
+    51.89vw 52.79vh rgba(210,225,255,0.39),
+    59.4vw 45.27vh rgba(255,255,255,0.35),
+    31.96vw 66.92vh rgba(255,255,255,0.34),
+    40.16vw 16.04vh rgba(210,225,255,0.33),
+    99.09vw 27.67vh rgba(210,225,255,0.58),
+    41.23vw 45.9vh rgba(255,255,255,0.34),
+    52.86vw 66.62vh rgba(210,225,255,0.18),
+    77.54vw 62.4vh rgba(210,225,255,0.3),
+    24.46vw 43.29vh rgba(210,225,255,0.37),
+    34.95vw 28.7vh rgba(255,255,255,0.25),
+    27.17vw 93.35vh rgba(255,255,255,0.43),
+    30.29vw 24.57vh rgba(255,255,255,0.33),
+    69.01vw 56.48vh rgba(255,255,255,0.54),
+    83.8vw 0.25vh rgba(255,255,255,0.42),
+    32.84vw 71.29vh rgba(255,255,255,0.35),
+    20.44vw 61.94vh rgba(210,225,255,0.32),
+    89.48vw 58.13vh rgba(255,255,255,0.23),
+    20.45vw 45.39vh rgba(210,225,255,0.34),
+    45.48vw 29.08vh rgba(255,255,255,0.59),
+    90.37vw 49.79vh rgba(255,255,255,0.49),
+    95.09vw 98.97vh rgba(255,255,255,0.3),
+    56.32vw 47.06vh rgba(255,255,255,0.16),
+    52.41vw 4.33vh rgba(255,255,255,0.28),
+    71.44vw 5.61vh rgba(255,255,255,0.44),
+    40.77vw 98.04vh rgba(210,225,255,0.48),
+    11.12vw 80.36vh rgba(255,255,255,0.47),
+    17.57vw 59.47vh rgba(255,255,255,0.3),
+    84.28vw 77.95vh rgba(255,255,255,0.32),
+    72.05vw 72.63vh rgba(255,255,255,0.27),
+    46.85vw 13.85vh rgba(255,255,255,0.4),
+    55.12vw 60.6vh rgba(210,225,255,0.23),
+    47.51vw 93.28vh rgba(255,255,255,0.58),
+    41.83vw 53.97vh rgba(255,255,255,0.59),
+    95.27vw 75.74vh rgba(255,255,255,0.28),
+    94.61vw 95.94vh rgba(255,255,255,0.45),
+    96.19vw 81vh rgba(255,255,255,0.27),
+    44.52vw 77.51vh rgba(210,225,255,0.52),
+    92.85vw 67.79vh rgba(255,255,255,0.52),
+    45.35vw 35.32vh 0 .5px rgba(255,255,255,0.6),
+    36.81vw 21.97vh 0 .5px rgba(210,225,255,0.15),
+    37.74vw 62.06vh rgba(255,255,255,0.43),
+    62.32vw 34.9vh rgba(210,225,255,0.34),
+    93.04vw 57.42vh rgba(255,255,255,0.43),
+    90.15vw 91.01vh rgba(255,255,255,0.15),
+    46.98vw 16.71vh rgba(210,225,255,0.6),
+    4.88vw 22.92vh rgba(210,225,255,0.21),
+    86.19vw 96.17vh 0 .5px rgba(210,225,255,0.23),
+    98.85vw 88.36vh rgba(255,255,255,0.55),
+    73.37vw 39.7vh rgba(210,225,255,0.54),
+    92.06vw 82.8vh rgba(255,255,255,0.28)
+;}
+.starfield .stars-b{box-shadow:
+    95.49vw 83.02vh rgba(255,255,255,0.24),
+    0.89vw 80.82vh rgba(255,255,255,0.3),
+    50.13vw 98.16vh rgba(255,255,255,0.55),
+    71.44vw 3.65vh rgba(255,255,255,0.49),
+    53.53vw 86.56vh rgba(210,225,255,0.27),
+    95.96vw 97.55vh rgba(255,255,255,0.18),
+    17.74vw 2.96vh rgba(210,225,255,0.49),
+    25.13vw 82.61vh rgba(255,255,255,0.19),
+    8.06vw 76.02vh rgba(255,255,255,0.37),
+    55.89vw 50.99vh rgba(210,225,255,0.36),
+    13.38vw 17.59vh 0 .5px rgba(210,225,255,0.36),
+    45.16vw 64.46vh rgba(255,255,255,0.35),
+    46.39vw 60.28vh rgba(255,255,255,0.34),
+    55.99vw 78.18vh rgba(255,255,255,0.36),
+    94.73vw 65.2vh rgba(255,255,255,0.54),
+    14.82vw 8.51vh rgba(210,225,255,0.4),
+    73.76vw 78.99vh rgba(255,255,255,0.3),
+    28.7vw 22.89vh 0 .5px rgba(255,255,255,0.22),
+    43.66vw 22.83vh rgba(210,225,255,0.58),
+    10.1vw 65.9vh rgba(255,255,255,0.31),
+    53.57vw 47.23vh 0 .5px rgba(210,225,255,0.52),
+    66.22vw 3.64vh rgba(210,225,255,0.2),
+    19.96vw 16.95vh rgba(210,225,255,0.55),
+    60.05vw 74.84vh rgba(210,225,255,0.49),
+    42.23vw 80.34vh rgba(210,225,255,0.3)
+;}
+.starfield .stars-c{box-shadow:
+    23.54vw 38.19vh rgba(255,255,255,0.42),
+    60.47vw 59.29vh rgba(255,255,255,0.48),
+    30.46vw 6.81vh rgba(210,225,255,0.24),
+    76.45vw 50.56vh rgba(255,255,255,0.35),
+    98.6vw 19.65vh rgba(210,225,255,0.52),
+    43.98vw 87.08vh rgba(255,255,255,0.32),
+    19.62vw 21.43vh rgba(255,255,255,0.22),
+    95.76vw 51.91vh rgba(210,225,255,0.43),
+    91.06vw 64.5vh rgba(210,225,255,0.26),
+    67.13vw 96.74vh 0 .5px rgba(210,225,255,0.52),
+    80.42vw 12.8vh 0 .5px rgba(210,225,255,0.5),
+    8.14vw 74.95vh 0 .5px rgba(255,255,255,0.47),
+    66.18vw 78.03vh rgba(210,225,255,0.39),
+    1.66vw 85.12vh rgba(210,225,255,0.31),
+    7.75vw 55.21vh rgba(255,255,255,0.17),
+    31.48vw 17.98vh rgba(210,225,255,0.53),
+    75.49vw 7.25vh rgba(210,225,255,0.3),
+    28.35vw 37.29vh rgba(255,255,255,0.55),
+    55.29vw 80.95vh rgba(255,255,255,0.48),
+    68.78vw 86.2vh rgba(255,255,255,0.2)
+;}
 
 /* ═══════════════════════════════════════════════════════════
    APP SHELL
@@ -1659,6 +1784,8 @@ body::before{
 </style>
 </head>
 <body>
+<!-- Fondo: estrellas (capa fija decorativa detrás de todo) -->
+<div class="starfield" aria-hidden="true"><div class="stars stars-a"></div><div class="stars stars-b"></div><div class="stars stars-c"></div></div>
 
 <!-- ── LOGIN ── -->
 <div id="authOverlay" style="position:fixed;inset:0;z-index:900;background:rgba(5,5,6,.94);display:flex;align-items:center;justify-content:center;padding:20px;">

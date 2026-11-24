@@ -23,8 +23,11 @@
 :root{
   /* ── Fondos — grafito neutro (sin tinte de color) ── */
   --bg0:#0a0a0b;
-  /* Oscuridad del fondo de agua: 0 = foto tal cual, 1 = negro. Ajustar solo este número. */
-  --bg-overlay-opacity:.88;
+  /* ── Fondo de la app ("negro con luz tenue") y paneles/islas ── */
+  --app-bg-base:#07080a;
+  --app-bg:radial-gradient(ellipse at 15% 0%, #16202e 0%, #0a0c10 55%, #07080a 100%);
+  --panel-bg:#111317;
+  --panel-border:rgba(255,255,255,.07);
   --bg1:#111113;
   --bg2:#17181b;
   --bg3:#202226;
@@ -104,24 +107,17 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{
-  background:var(--bg0);
+  background:var(--app-bg-base);
   color:var(--t1);
   font-family:var(--font-body);
   -webkit-font-smoothing:antialiased;
 }
-/* Fondo de la app: agua azul oscura. Capa fija (cubre toda la pantalla y no se
-   mueve al hacer scroll, también en celular) con un desenfoque leve para que no
-   se noten los píxeles al estirarla. Se extiende 12px por fuera de la pantalla
-   para que el desenfoque no aclare los bordes. La oscuridad se regula con
-   --bg-overlay-opacity (en :root). */
+/* Fondo de la app: solo CSS (--app-bg). Va en una capa fija detrás del contenido
+   en vez de background-attachment:fixed, porque en celular (iPhone) el fixed no
+   funciona: así cubre toda la pantalla y no se mueve al hacer scroll en todos lados. */
 body::before{
-  content:'';position:fixed;inset:-12px;z-index:-1;pointer-events:none;
-  background:url('assets/fondo-agua.jpg') center/cover no-repeat var(--bg0);
-  filter:blur(1.5px);
-}
-body::after{
   content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:rgb(9,10,12);opacity:var(--bg-overlay-opacity);
+  background:var(--app-bg);background-color:var(--app-bg-base);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -597,7 +593,8 @@ body::after{
 }
 .fondeo-cal-side{
   flex:1;overflow:hidden;min-width:0;min-height:0;
-  background-color:var(--bg1);background-image:none;
+  background-color:var(--panel-bg);background-image:none;
+  border:1px solid var(--panel-border);
   border-radius:16px;padding:18px 22px 18px;
   display:flex;flex-direction:column;
 }
@@ -610,8 +607,8 @@ body::after{
 
 /* Stat cards */
 .stat-card{
-  background-color:var(--cal-bg);background-image:none;
-  border:1px solid var(--border);
+  background-color:var(--panel-bg);background-image:none;
+  border:1px solid var(--panel-border);
   border-radius:var(--radius);padding:40px 34px;
   transition:border-color .2s,box-shadow .2s;
   position:relative;
@@ -1141,7 +1138,7 @@ body::after{
 .repaso-alerts-side{width:230px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;align-self:flex-start}
 .sl-alert-card{
   display:flex;align-items:flex-start;gap:10px;text-align:left;width:100%;
-  background:var(--cal-bg);border:1px solid var(--goldborder);border-radius:12px;
+  background:var(--panel-bg);border:1px solid var(--goldborder);border-radius:12px;
   padding:14px 15px;cursor:pointer;transition:all .2s;font-family:var(--font-body);
 }
 .sl-alert-card:hover{background:var(--bgh);border-color:var(--gold);box-shadow:0 8px 22px rgba(0,0,0,.4)}

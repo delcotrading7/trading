@@ -25,9 +25,14 @@
   --bg0:#0a0a0b;
   /* ── Fondo de la app ("negro con luz tenue") y paneles/islas ── */
   --app-bg-base:#07080a;
-  --app-bg:radial-gradient(ellipse at 15% 0%, #16202e 0%, #0a0c10 55%, #07080a 100%);
-  --panel-bg:#111317;
-  --panel-border:rgba(255,255,255,.07);
+  --glow-1:radial-gradient(ellipse 70% 55% at 10% 0%, rgba(70,110,170,.28) 0%, transparent 70%);
+  --glow-2:radial-gradient(ellipse 60% 50% at 95% 100%, rgba(50,90,150,.16) 0%, transparent 70%);
+  --app-bg:var(--glow-1), var(--glow-2), var(--app-bg-base);
+  --panel-bg:#14171c;
+  --panel-border:rgba(255,255,255,.08);
+  /* Barra superior translúcida: deja ver el fondo por detrás */
+  --topbar-bg:rgba(7,8,10,.55);
+  --topbar-border:rgba(255,255,255,.06);
   --bg1:#111113;
   --bg2:#17181b;
   --bg3:#202226;
@@ -117,7 +122,7 @@ body{
    funciona: así cubre toda la pantalla y no se mueve al hacer scroll en todos lados. */
 body::before{
   content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:var(--app-bg);background-color:var(--app-bg-base);
+  background:var(--app-bg);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -126,14 +131,18 @@ body::before{
 #app{display:flex;flex-direction:column;height:100vh}
 
 .top-bar{
-  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg1) 100%);
-  border-bottom:1px solid var(--goldborder);
+  /* Translúcida con blur leve; position + z-index para que el menú quede
+     por encima del contenido (backdrop-filter crea su propio apilado), pero
+     debajo de los modales (600) y del login (900) */
+  position:relative;z-index:500;
+  background:var(--topbar-bg);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--topbar-border);
   height:58px;flex-shrink:0;
   /* Margen izquierdo = el de los paneles (.fondeo-body: 46px, centrado con
      max-width 2200px), para que el botón quede alineado con el panel PNLS */
   padding:0 28px 0 max(46px, calc((100% - 2200px) / 2 + 46px));
   display:flex;align-items:center;justify-content:flex-start;
-  box-shadow:0 2px 24px rgba(0,0,0,.6);
 }
 /* Barra superior: solo el botón de tres barritas (a la izquierda); las opciones van en un menú desplegable */
 .topbar-right{position:relative;display:flex;align-items:center}
@@ -1561,7 +1570,7 @@ body::before{
   .fondeo-layout{height:auto}
 
   /* — Barra superior: fija arriba + menú hamburguesa — */
-  .top-bar{padding:0 12px;position:sticky;top:0;z-index:900}
+  .top-bar{padding:0 12px;position:sticky;top:0;z-index:500}
   .topbar-menu{min-width:240px;max-width:calc(100vw - 24px)}
   .topbar-menu-item{padding:12px 14px;min-height:44px;font-size:14px}
 

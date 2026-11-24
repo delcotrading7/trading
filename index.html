@@ -1519,6 +1519,65 @@ body::before{
 .sl-alert-card.sl-alert-month .sl-alert-label,
 .sl-alert-card.sl-alert-month .sl-alert-count{color:var(--mt)}
 
+/* ── Repaso SL: pantalla con todos los SL del mes ────────────── */
+.slr-overlay{z-index:590}                 /* debajo del modal del día (600) */
+.slr-modal{width:min(980px,calc(100vw - 80px));max-height:88vh}
+.slr-month{font-size:14px;font-weight:700;color:var(--t1);min-width:120px;text-align:center}
+.slr-counters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:14px 22px;border-bottom:1px solid var(--border);flex-shrink:0}
+.slr-counter{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;padding:10px 12px;min-width:0}
+.slr-counter-lbl{font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.8px}
+.slr-counter-val{font-size:20px;font-weight:800;color:var(--t1);margin-top:4px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.slr-counter-sum{font-size:12px;font-weight:700;color:var(--red)}
+.slr-body{padding:6px 22px 22px;overflow-y:auto}
+.slr-block{margin-top:16px}
+.slr-block-title{font-size:11px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;gap:8px;align-items:center}
+.slr-block-count{color:var(--t3)}
+.slr-none{font-size:12px;color:var(--t3);padding:6px 2px}
+.slr-empty{font-size:13px;color:var(--t3);text-align:center;padding:40px 0}
+.slr-row{display:grid;grid-template-columns:96px 70px minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:4px;
+  background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.slr-date{font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap}
+.slr-amt{font-size:14px;font-weight:800;color:var(--red);white-space:nowrap}
+.slr-tags{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+.slr-tag{font-size:10.5px;font-weight:700;color:var(--t2);border:1px solid var(--border);border-radius:5px;padding:2px 6px;white-space:nowrap}
+.slr-ctrls{display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.slr-check{display:flex;align-items:center;gap:7px;background:none;border:none;color:var(--t2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body);padding:4px 2px}
+.slr-box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--borderl);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.slr-check.on{color:var(--t1)}
+.slr-check.on .slr-box{background:var(--gold);border-color:var(--gold)}
+.slr-check.on .slr-box::after{content:'';width:8px;height:4px;border-left:2px solid #0a0a0b;border-bottom:2px solid #0a0a0b;transform:rotate(-45deg) translate(1px,-1px)}
+.slr-seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.slr-seg button{background:transparent;border:none;color:var(--t3);font-size:11.5px;font-weight:700;padding:6px 10px;cursor:pointer;font-family:var(--font-body);white-space:nowrap}
+.slr-seg button + button{border-left:1px solid var(--border)}
+.slr-seg button:hover{color:var(--t1)}
+.slr-seg button.stat.active{background:var(--bg3);color:var(--t1)}
+.slr-seg button.nostat.active{background:var(--redbg);color:var(--red)}
+.slr-view{background:var(--bg3);border:1px solid var(--border);color:var(--t1);font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:8px;cursor:pointer;font-family:var(--font-body);white-space:nowrap}
+.slr-view:hover{border-color:var(--borderl)}
+.slr-msg{grid-column:1/-1;display:flex;justify-content:flex-end;gap:10px;align-items:center}
+.slr-warn{font-size:11px;color:var(--yellow)}
+.slr-err{background:var(--redbg);border:1px solid var(--redborder);color:var(--red);font-size:11px;font-weight:800;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body)}
+.repaso-nav-btn{width:auto;padding:0 12px;font-size:12px;font-weight:700;white-space:nowrap}
+
+/* Etiqueta Estadístico / No estadístico en la celda del calendario (SL revisados) */
+.sl-cal-tag{position:absolute;top:6px;right:18px;max-width:calc(100% - 46px);font-size:9px;font-weight:700;line-height:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;letter-spacing:.2px}
+.sl-cal-tag.stat{color:var(--t3)}
+.sl-cal-tag.nostat{color:var(--red)}
+.sl-cal-tag .short{display:none}
+@media (max-width:1100px){ .sl-cal-tag .long{display:none} .sl-cal-tag .short{display:inline} }
+@media (max-width:640px){
+  .slr-modal{width:100%}
+  .slr-modal .modal-head{flex-wrap:wrap}
+  .slr-counters{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px}
+  .slr-body{padding:4px 12px 16px}
+  .slr-row{grid-template-columns:auto auto minmax(0,1fr)}
+  .slr-ctrls{grid-column:1/-1;justify-content:flex-start}
+  .slr-msg{justify-content:flex-start}
+  .repaso-nav-btn{padding:0 9px;font-size:11px}
+  .sl-cal-tag{top:5px;right:15px;font-size:8px;max-width:calc(100% - 34px)}
+}
+
 /* ── Botón Eliminar/Reiniciar día ─────────────────────────── */
 .btn-reset-day{
   display:flex;align-items:center;gap:5px;
@@ -2398,10 +2457,10 @@ body::before{
       </div>
     </div>
     <div class="repaso-mode-bar" id="repasoModeBar" style="display:none">
-      <div class="repaso-mode-nav">
-        <button class="nbtn" id="repasoPrevBtn" onclick="repasoModalNav(-1)" title="SL anterior">‹</button>
+      <div class="repaso-mode-nav" id="repasoModeNav">
+        <button class="nbtn repaso-nav-btn" id="repasoPrevBtn" onclick="repasoModalNav(-1)" title="SL anterior">‹ SL anterior</button>
         <span class="repaso-mode-pos" id="repasoModePos">1/1</span>
-        <button class="nbtn" id="repasoNextBtn" onclick="repasoModalNav(1)" title="SL siguiente">›</button>
+        <button class="nbtn repaso-nav-btn" id="repasoNextBtn" onclick="repasoModalNav(1)" title="SL siguiente">SL siguiente ›</button>
       </div>
       <div class="repaso-toggle-btns repaso-mode-status">
         <button class="repaso-toggle-btn stat" id="repasoModeStatBtn" onclick="setRepasoModalStatus('estadistico')">Estadístico</button>
@@ -2416,6 +2475,26 @@ body::before{
       </button>
       <button class="f-save-btn" id="fSaveBtn" onclick="saveFondeoDay()">Guardar Día</button>
     </div>
+  </div>
+</div>
+
+<!-- REPASO SL — todos los SL del mes (solo Real/Fondeo). Lo arma renderSlReview(). -->
+<div class="modal-overlay slr-overlay" id="slReviewModal" onclick="if(event.target===this)closeSlReview()">
+  <div class="modal slr-modal" role="dialog" aria-label="Repaso SL">
+    <div class="modal-head">
+      <div>
+        <div class="modal-date">Repaso SL</div>
+        <div class="modal-meta">Todos los Stop Loss del mes</div>
+      </div>
+      <div class="modal-head-right">
+        <button class="nbtn" onclick="slReviewMonth(-1)" title="Mes anterior">‹</button>
+        <span class="slr-month" id="slrMonthLbl">—</span>
+        <button class="nbtn" onclick="slReviewMonth(1)" title="Mes siguiente">›</button>
+        <button class="modal-close-btn" onclick="closeSlReview()" title="Cerrar">✕</button>
+      </div>
+    </div>
+    <div class="slr-counters" id="slrCounters"></div>
+    <div class="modal-body slr-body" id="slrBody"></div>
   </div>
 </div>
 
@@ -4548,6 +4627,11 @@ async function saveDayFondeo(k, data) {
 
 function toggleFReviewed(key) {
   const d = getDayFondeo(key);
+  // Un SL no se marca revisado sin elegir antes si es Estadístico o No estadístico
+  if (!d.reviewed && getDayResult(d) === 'sl' && !d.slStatus) {
+    showToast('Elegí si es estadístico o no', true);
+    return;
+  }
   d.reviewed = !d.reviewed;
   saveDayFondeo(key, d);
   const btn = document.getElementById('fReviewedBtn');
@@ -4638,6 +4722,16 @@ function renderFondeoCal() {
       const rvEl = document.createElement('div');
       rvEl.className = 'p-reviewed-mark'; rvEl.textContent = '✔';
       el.appendChild(rvEl);
+    }
+    // SL revisado → etiqueta "Estadístico" / "No estadístico" arriba a la derecha
+    if (!isWeekend && dr === 'sl' && data.reviewed &&
+        (data.slStatus === 'estadistico' || data.slStatus === 'no_estadistico')) {
+      const ns = data.slStatus === 'no_estadistico';
+      const tagEl = document.createElement('div');
+      tagEl.className = 'sl-cal-tag ' + (ns ? 'nostat' : 'stat');
+      tagEl.innerHTML = ns ? '<span class="long">No estadístico</span><span class="short">No est.</span>'
+                           : '<span class="long">Estadístico</span><span class="short">Est.</span>';
+      el.appendChild(tagEl);
     }
 
     if (isWeekend) {
@@ -4733,6 +4827,7 @@ function openFondeoModal(key) {
     }
   }
   document.getElementById('fondeoModal').classList.add('open');
+  updateRepasoModeBar();
 }
 
 function closeFondeoModal() {
@@ -6851,7 +6946,7 @@ function renderSlAlerts() {
     '</button>';
   }
   if (monthCount > 0) {
-    html += '<button class="sl-alert-card sl-alert-month" onclick="openFondeoModalForRepaso(\'month\')">' +
+    html += '<button class="sl-alert-card sl-alert-month" onclick="openSlReview()">' +
       '<span class="sl-alert-icon">' + ICON_CAL_MONTH + '</span>' +
       '<span>' +
         '<span class="sl-alert-label">Mensual</span>' +
@@ -6862,6 +6957,7 @@ function renderSlAlerts() {
     '</button>';
   }
   el.innerHTML = html;
+  renderSlReview();          // si la pantalla Repaso SL está abierta, se actualiza
 }
 
 /* ── Modo repaso dentro del modal de día de Fondeo ───────────────
@@ -6894,29 +6990,174 @@ function repasoModalNav(dir) {
   openRepasoModalAt(newIdx);
 }
 
+/* La barra aparece en modo repaso (con SL anterior / siguiente) y también al
+   abrir un día de SL desde el calendario (solo Estadístico / No estadístico),
+   para poder clasificarlo antes de marcarlo revisado. */
 function updateRepasoModeBar() {
   const bar = document.getElementById('repasoModeBar');
   if (!bar) return;
-  if (!repasoNavCtx) { bar.style.display = 'none'; return; }
+  const modalOpen = document.getElementById('fondeoModal').classList.contains('open');
+  const key = repasoNavCtx ? repasoNavCtx.keys[repasoNavCtx.idx] : currentFondeoKey;
+  const isSl = !!(key && _fondeo[key] && getDayResult(_fondeo[key]) === 'sl');
+  if (!repasoNavCtx && !(modalOpen && isSl)) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
-  const { keys, idx } = repasoNavCtx;
-  const d = getDayFondeo(keys[idx]);
-  document.getElementById('repasoModePos').textContent = (idx + 1) + '/' + keys.length + (d.reviewed ? ' ✔' : '');
-  document.getElementById('repasoPrevBtn').disabled = idx === 0;
-  document.getElementById('repasoNextBtn').disabled = idx === keys.length - 1;
+  const d = getDayFondeo(key);
+  const nav = document.getElementById('repasoModeNav');
+  if (nav) nav.style.display = repasoNavCtx ? '' : 'none';
+  if (repasoNavCtx) {
+    const { keys, idx } = repasoNavCtx;
+    document.getElementById('repasoModePos').textContent = (idx + 1) + '/' + keys.length + (d.reviewed ? ' ✔' : '');
+    document.getElementById('repasoPrevBtn').disabled = idx === 0;
+    document.getElementById('repasoNextBtn').disabled = idx === keys.length - 1;
+  }
   document.getElementById('repasoModeStatBtn').classList.toggle('active', d.slStatus === 'estadistico');
   document.getElementById('repasoModeNostatBtn').classList.toggle('active', d.slStatus === 'no_estadistico');
 }
 
 function setRepasoModalStatus(val) {
-  if (!repasoNavCtx) return;
-  const key = repasoNavCtx.keys[repasoNavCtx.idx];
+  const key = repasoNavCtx ? repasoNavCtx.keys[repasoNavCtx.idx] : currentFondeoKey;
+  if (!key) return;
   const d = getDayFondeo(key);
   d.slStatus = d.slStatus === val ? null : val;
   saveDayFondeo(key, d);
   updateRepasoModeBar();
   renderSlAlerts();
 }
+
+/* ══════════════════════════════════════════════════════════════
+   REPASO SL — pantalla con todos los SL de un mes (solo Real/Fondeo)
+   - Día de SL: el mismo criterio que el resto del Repaso SL,
+     getDayResult(día) === 'sl' (resultado principal SL).
+   - Usa los campos que ya existen y se guardan en Supabase:
+     reviewed (Revisado) y slStatus ('estadistico' | 'no_estadistico').
+   - Bloques: Pendientes = sin revisar, o revisado sin clasificar;
+     Revisados · Estadísticos; Revisados · No estadísticos.
+══════════════════════════════════════════════════════════════ */
+const SLR = { y: null, m: null, warn: {}, err: {} };
+
+function slKeysInMonth(y, m) {
+  return getMonthKeys(y, m).filter(k => _fondeo[k] && getDayResult(_fondeo[k]) === 'sl');
+}
+function slGroupOf(d) {
+  if (d.reviewed && d.slStatus === 'estadistico')    return 'stat';
+  if (d.reviewed && d.slStatus === 'no_estadistico') return 'nostat';
+  return 'pending';
+}
+function slDateLabel(k) {
+  const p = parseKey(k);
+  return DAYS_S[new Date(p.y, p.m, p.d).getDay()] + ' ' + p.d + ' ' + MONTHS[p.m].slice(0, 3);
+}
+function slTagsOf(d) {
+  const t = [];
+  if (d.lt) t.push('Lateral');
+  if (d.ne) t.push('NE');
+  const mt = (d.missedOps || []).filter(op => op.type === 'mt').length;
+  if (mt) t.push('MT: ' + mt);
+  return t;
+}
+function slAmountText(d) { const pl = getDayPL(d); return (pl > 0 ? '+' : '') + pl.toLocaleString('es-AR'); }
+function isSlReviewOpen() { return document.getElementById('slReviewModal').classList.contains('open'); }
+
+function openSlReview(y, m) {
+  setTopbarMenuOpen(false);
+  SLR.y = y === undefined ? FS.y : y;
+  SLR.m = m === undefined ? FS.m : m;
+  SLR.warn = {};
+  document.getElementById('slReviewModal').classList.add('open');
+  renderSlReview();
+}
+function closeSlReview() { document.getElementById('slReviewModal').classList.remove('open'); }
+function slReviewMonth(dir) {
+  const d = new Date(SLR.y, SLR.m + dir, 1);
+  SLR.y = d.getFullYear(); SLR.m = d.getMonth(); SLR.warn = {};
+  renderSlReview();
+}
+
+function slReviewRowHTML(k) {
+  const d = _fondeo[k];
+  const st = d.slStatus;
+  const needsClass = (d.reviewed && !st) || SLR.warn[k];
+  const tags = slTagsOf(d).map(t => '<span class="slr-tag">' + t + '</span>').join('');
+  return '<div class="slr-row">' +
+    '<div class="slr-date">' + slDateLabel(k) + '</div>' +
+    '<div class="slr-amt">' + slAmountText(d) + '</div>' +
+    '<div class="slr-tags">' + tags + '</div>' +
+    '<div class="slr-ctrls">' +
+      '<button type="button" class="slr-check' + (d.reviewed ? ' on' : '') + '" onclick="slrToggleReviewed(\'' + k + '\')">' +
+        '<span class="slr-box"></span>Revisado</button>' +
+      '<div class="slr-seg">' +
+        '<button type="button" class="stat' + (st === 'estadistico' ? ' active' : '') + '" onclick="slrSetStatus(\'' + k + '\',\'estadistico\')">Estadístico</button>' +
+        '<button type="button" class="nostat' + (st === 'no_estadistico' ? ' active' : '') + '" onclick="slrSetStatus(\'' + k + '\',\'no_estadistico\')">No estadístico</button>' +
+      '</div>' +
+      '<button type="button" class="slr-view" onclick="slrOpenDay(\'' + k + '\')">Ver día</button>' +
+    '</div>' +
+    (needsClass || SLR.err[k]
+      ? '<div class="slr-msg">' +
+          (needsClass ? '<span class="slr-warn">Elegí si es estadístico o no</span>' : '') +
+          (SLR.err[k] ? '<button type="button" class="slr-err" onclick="slrRetry(\'' + k + '\')">Error — Reintentar</button>' : '') +
+        '</div>'
+      : '') +
+  '</div>';
+}
+
+function renderSlReview() {
+  if (!isSlReviewOpen()) return;
+  document.getElementById('slrMonthLbl').textContent = MONTHS[SLR.m] + ' ' + SLR.y;
+  const keys = slKeysInMonth(SLR.y, SLR.m);
+  const groups = { pending: [], stat: [], nostat: [] };
+  keys.forEach(k => groups[slGroupOf(_fondeo[k])].push(k));
+  const sum = ks => ks.reduce((t, k) => t + getDayPL(_fondeo[k]), 0);
+  const fmtSum = n => (n > 0 ? '+' : '') + n.toLocaleString('es-AR');
+  const counter = (lbl, val, extra) => '<div class="slr-counter"><div class="slr-counter-lbl">' + lbl + '</div>' +
+    '<div class="slr-counter-val">' + val + (extra ? '<span class="slr-counter-sum">' + extra + '</span>' : '') + '</div></div>';
+  document.getElementById('slrCounters').innerHTML =
+    counter('Total de SL', keys.length) +
+    counter('Pendientes', groups.pending.length) +
+    counter('Revisados', groups.stat.length + groups.nostat.length) +
+    counter('Estadísticos', groups.stat.length, groups.stat.length ? fmtSum(sum(groups.stat)) : '') +
+    counter('No estadísticos', groups.nostat.length, groups.nostat.length ? fmtSum(sum(groups.nostat)) : '');
+  const body = document.getElementById('slrBody');
+  if (!keys.length) { body.innerHTML = '<div class="slr-empty">No hay SL en este mes</div>'; return; }
+  const block = (title, ks) => '<div class="slr-block"><div class="slr-block-title">' + title +
+    '<span class="slr-block-count">' + ks.length + '</span></div>' +
+    (ks.length ? ks.map(slReviewRowHTML).join('') : '<div class="slr-none">Ninguno</div>') + '</div>';
+  body.innerHTML = block('Pendientes', groups.pending) +
+                   block('Revisados · Estadísticos', groups.stat) +
+                   block('Revisados · No estadísticos', groups.nostat);
+}
+
+async function slrSave(k) {
+  delete SLR.err[k];
+  const ok = await saveDayFondeo(k, getDayFondeo(k));   // guarda local + nube y redibuja todo
+  if (!ok) SLR.err[k] = true;
+  renderSlReview();
+  return ok;
+}
+function slrToggleReviewed(k) {
+  const d = getDayFondeo(k);
+  if (!d.reviewed && !d.slStatus) { SLR.warn[k] = true; renderSlReview(); return; }
+  d.reviewed = !d.reviewed;
+  delete SLR.warn[k];
+  slrSave(k);
+}
+function slrSetStatus(k, val) {
+  const d = getDayFondeo(k);
+  d.slStatus = d.slStatus === val ? null : val;
+  delete SLR.warn[k];
+  slrSave(k);
+}
+function slrRetry(k) { slrSave(k); }
+function slrOpenDay(k) {
+  const keys = slKeysInMonth(SLR.y, SLR.m);
+  repasoNavCtx = { keys, idx: Math.max(0, keys.indexOf(k)) };
+  openRepasoModalAt(repasoNavCtx.idx);
+}
+// Esc cierra la pantalla de Repaso SL solo si no hay un día abierto encima
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !isSlReviewOpen()) return;
+  if (document.getElementById('fondeoModal').classList.contains('open')) return;
+  closeSlReview();
+}, true);
 
 /* ── Pie Chart ────────────────────────────────────────────────── */
 function drawPieChart(canvasId, counts) {

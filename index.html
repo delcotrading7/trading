@@ -2031,6 +2031,8 @@ body::before{
   --an-tab-active-bg:rgba(34,197,94,.06);
   --an-best-bg:rgba(34,197,94,.06);
   --an-worst-bg:rgba(244,63,94,.06);
+  --an-ring-track:#222429;
+  --an-ins-icon-border:rgba(34,197,94,.45);
 }
 /* Desktop: el panel de cada sección pasa a poder deslizarse (sin barra
    visible, para no achicar la primera pantalla) */
@@ -2119,6 +2121,37 @@ body::before{
 .an-tbl-row.worst{background:var(--an-worst-bg);box-shadow:inset 2px 0 0 var(--red)}
 .an-chip{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 6px;border-radius:4px;border:1px solid currentColor}
 .an-tbl-note{font-size:11px;color:var(--an-sub);padding:10px 12px 0}
+
+/* Columna derecha: Trading Score */
+.an-score{padding:26px 22px 22px;text-align:center}
+.an-ring{position:relative;width:84px;height:84px;margin:0 auto}
+.an-ring svg{display:block}
+.an-ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--an-mono);font-size:26px;font-weight:600;color:#fff}
+.an-score-level{margin-top:14px;font-size:15px;font-weight:600;color:var(--green)}
+.an-score-sub{margin-top:4px;font-size:12px;color:var(--t3)}
+.an-score-sep{height:1px;background:var(--an-line);margin:20px 0 16px}
+.an-sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.an-sbox{border:1px solid var(--an-card-border);border-radius:8px;padding:12px 8px 11px}
+.an-sbox-lbl{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.9px}
+.an-sbox-val{margin-top:7px;font-family:var(--an-mono);font-size:20px;font-weight:600;color:#fff}
+.an-sbox-val small{font-size:11px;font-weight:400;color:var(--t3);margin-left:1px}
+/* Quick stats */
+.an-quick{padding:20px 22px 12px}
+.an-quick .an-lbl{margin-bottom:8px}
+.an-qrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:9px 0;font-size:13px;color:var(--t2)}
+.an-qrow b{font-size:14px;font-weight:500;white-space:nowrap}
+.an-qrow b small{font-family:var(--font-body);font-size:11px;color:var(--t3);font-weight:400;margin-left:8px}
+/* Insights */
+.an-ins{display:flex;flex-direction:column;gap:10px}
+.an-ins > .an-lbl{margin:2px 0 2px}
+.an-ins-card{padding:16px 18px}
+.an-ins-head{display:flex;gap:12px;align-items:flex-start}
+.an-ins-icon{flex-shrink:0;width:30px;height:30px;border:1px solid var(--an-ins-icon-border);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--green)}
+.an-ins-title{font-size:14px;font-weight:600;color:#fff;line-height:1.3}
+.an-ins-key{font-size:12px;color:var(--green);margin-top:3px}
+.an-ins-key.an-neg{color:var(--red)}
+.an-ins-text{font-size:12px;color:var(--t2);line-height:1.55;margin-top:10px}
+.an-ins-empty{font-size:13px;color:var(--t3);padding:6px 0}
 
 @media (max-width:640px){
   .tab-pane{overflow:visible}
@@ -8460,6 +8493,15 @@ function anPeriodKeys(src) {
   return keys.sort();
 }
 
+/* "¿Cumplí la estrategia?": acepta true/false y también "true"/"false" como
+   texto (así llegan muchos días guardados). Devuelve true / false / 'dudoso' / null. */
+function anEst(v) {
+  if (v === true || v === 'true') return true;
+  if (v === false || v === 'false') return false;
+  if (v === 'dudoso') return 'dudoso';
+  return null;
+}
+
 /* Días operados del período, en orden cronológico */
 function anOperatedDays(src, keys) {
   const out = [];
@@ -8471,7 +8513,7 @@ function anOperatedDays(src, keys) {
       key: k,
       pl: src.pl(d) || 0,
       trades: st.total || 1,
-      est: d.estrategiaCumplida === undefined ? null : d.estrategiaCumplida,
+      est: anEst(d.estrategiaCumplida),
       hasRecord: !!(((d.contextNote || '').trim()) ||
                     (d.photos || []).filter(Boolean).length ||
                     (d.contextPhotos || []).filter(Boolean).length),
@@ -8738,13 +8780,156 @@ function anTabsHTML(s, days) {
   '</div>';
 }
 function setAnTab(t) { AN.tab = t; renderAllAnalytics(); }
+
+/* ── Columna derecha: Trading Score, Quick Stats e Insights ──
+   Constantes del puntaje en un solo lugar para poder ajustarlas. */
+const AN_SCORE = {
+  WINRATE_MAX: 30,          // puntos máximos por win rate
+  WINRATE_FULL_AT: 50,      // con este win rate (%) o más se llega al máximo
+  PF_MAX: 25,               // puntos máximos por profit factor
+  PF_POINTS_PER_UNIT: 10,   // puntos = profit factor × 10 (PF 2,5 = máximo)
+  JOURNAL_MAX: 25,          // % de días con registro completo × 25
+  CONSISTENCY_MAX: 20,      // % de "Sí cumplí" sobre días con respuesta × 20
+  LEVELS: [[85, 'Excellent'], [70, 'Good'], [50, 'Fair'], [0, 'Needs work']],
+};
+const AN_INSIGHTS = {
+  MIN_DAYS: 5,              // días operados mínimos para mostrar insights
+  STREAK_MIN: 3,            // racha activa mínima para avisar
+  MAX_CARDS: 3,
+};
+const AN_DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const AN_ICONS = {
+  calendar: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>',
+  check:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16.5 9.5"/></svg>',
+  trend:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
+  target:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>',
+};
+
+function anDateShort(key) { const p = parseKey(key); return p.d + ' ' + AN_MON[p.m] + ' ' + String(p.y).slice(2); }
+
+function anScore(days, s) {
+  if (!s.n) return null;
+  const C = AN_SCORE;
+  const wr = s.wr === null ? null : Math.min(C.WINRATE_MAX, Math.round(s.wr * C.WINRATE_MAX / C.WINRATE_FULL_AT));
+  const pf = s.pf === null ? null : s.pf === Infinity ? C.PF_MAX : Math.min(C.PF_MAX, Math.round(s.pf * C.PF_POINTS_PER_UNIT));
+  const complete = days.filter(d => d.hasRecord && d.est !== null).length;
+  const journal = Math.round(complete / s.n * C.JOURNAL_MAX);
+  const answered = days.filter(d => d.est !== null);
+  const consistency = answered.length
+    ? Math.round(answered.filter(d => d.est === true).length / answered.length * C.CONSISTENCY_MAX) : null;
+  const total = (wr || 0) + (pf || 0) + journal + (consistency || 0);
+  const level = C.LEVELS.find(([min]) => total >= min)[1];
+  return { wr, pf, journal, consistency, total, level };
+}
+function anScoreHTML(sc) {
+  const R = 37, CIRC = 2 * Math.PI * R;
+  const pct = sc ? sc.total / 100 : 0;
+  const box = (label, v, max) => '<div class="an-sbox"><div class="an-sbox-lbl">' + label + '</div>' +
+    '<div class="an-sbox-val">' + (v === null || v === undefined ? '—' : v) + '<small>/' + max + '</small></div></div>';
+  return '<div class="an-card an-score">' +
+    '<div class="an-ring">' +
+      '<svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true">' +
+        '<circle cx="42" cy="42" r="' + R + '" fill="none" style="stroke:var(--an-ring-track)" stroke-width="5"/>' +
+        (pct > 0 ? '<circle cx="42" cy="42" r="' + R + '" fill="none" style="stroke:var(--green)" stroke-width="5" stroke-linecap="round"' +
+          ' stroke-dasharray="' + (CIRC * pct) + ' ' + CIRC + '" transform="rotate(-90 42 42)"/>' : '') +
+      '</svg>' +
+      '<div class="an-ring-val">' + (sc ? sc.total : '—') + '</div>' +
+    '</div>' +
+    (sc ? '<div class="an-score-level">' + sc.level + '</div>' : '') +
+    '<div class="an-score-sub">Trading Score</div>' +
+    '<div class="an-score-sep"></div>' +
+    '<div class="an-sgrid">' +
+      box('Win rate', sc && sc.wr, AN_SCORE.WINRATE_MAX) +
+      box('Prof. factor', sc && sc.pf, AN_SCORE.PF_MAX) +
+      box('Journal', sc && sc.journal, AN_SCORE.JOURNAL_MAX) +
+      box('Consistency', sc && sc.consistency, AN_SCORE.CONSISTENCY_MAX) +
+    '</div>' +
+  '</div>';
+}
+function anQuickHTML(s) {
+  const row = (label, val) => '<div class="an-qrow"><span>' + label + '</span>' + val + '</div>';
+  return '<div class="an-card an-quick"><div class="an-lbl">Quick stats</div>' +
+    row('Win Rate', '<b class="an-mono ' + (s.wr === null ? 'an-zero' : 'an-pos') + '">' + anPct(s.wr) + '</b>') +
+    row('Profit Factor', '<b class="an-mono ' + (s.pf === null ? 'an-zero' : 'an-neu') + '">' + anPF(s.pf) + '</b>') +
+    row('Total P&amp;L', '<b class="an-mono ' + (s.n ? anCls(s.total) : 'an-zero') + '">' + (s.n ? anMoney(s.total, true) : '—') + '</b>') +
+    row('Best Day', s.best
+      ? '<b class="an-mono an-pos">' + anMoney(s.best.pl, true) + '<small>' + anDateShort(s.best.key) + '</small></b>'
+      : '<b class="an-mono an-zero">—</b>') +
+  '</div>';
+}
+function anInsightsList(days, s, mt) {
+  if (s.n < AN_INSIGHTS.MIN_DAYS) return [];
+  const out = [];
+  // Mejor día de la semana (por P&L total, solo si es positivo)
+  const wd = anWeekdayStats(days).filter(r => r.n);
+  if (wd.length) {
+    const b = wd.reduce((a, c) => c.total > a.total ? c : a);
+    if (b.total > 0) out.push({ icon: 'calendar',
+      title: AN_DOW_FULL[b.dow] + ' is your strongest day',
+      key: anPct(b.wr) + ' win rate · ' + b.n + (b.n === 1 ? ' day' : ' days'),
+      text: 'Your ' + AN_DOW_FULL[b.dow] + ' sessions generated ' + anFull(b.total, true) + ' in total.' });
+  }
+  // Disciplina: promedio por día cumpliendo vs no cumpliendo la estrategia
+  const si = anSummarize(days.filter(d => d.est === true));
+  const no = anSummarize(days.filter(d => d.est === false));
+  if (si.n && no.n) {
+    const a = si.total / si.n, b = no.total / no.n;
+    out.push({ icon: 'check',
+      title: a > b ? 'Following your plan pays off' : 'Your plan isn\'t showing an edge yet',
+      key: anFull(a, true) + ' vs ' + anFull(b, true) + ' per day',
+      text: 'Average per day when you followed your strategy (' + si.n + ' days) vs when you didn\'t (' + no.n + ' days).' });
+  }
+  // Racha activa
+  if (s.current && s.current.n >= AN_INSIGHTS.STREAK_MIN) {
+    const sum = s.current.days.reduce((t, d) => t + d.pl, 0);
+    const win = s.current.type === 'win';
+    out.push({ icon: 'trend',
+      title: 'You\'re on a ' + s.current.n + '-day ' + (win ? 'winning' : 'losing') + ' streak',
+      key: anFull(sum, true) + ' over the streak', keyCls: win ? '' : 'an-neg',
+      text: win ? 'Your last ' + s.current.n + ' trading days closed positive. Keep the same process.'
+                : 'Your last ' + s.current.n + ' trading days closed negative. Review them before the next session.' });
+  }
+  // Miss Trades: el journal guarda cuántos hubo, no el monto
+  if (mt.count) out.push({ icon: 'target',
+    title: 'Miss trades recorded',
+    key: mt.count + ' miss trade' + (mt.count === 1 ? '' : 's') + ' · ' + mt.days + (mt.days === 1 ? ' day' : ' days'),
+    text: 'The journal doesn\'t store the size of a miss trade, so the profit left on the table can\'t be calculated.' });
+  return out.slice(0, AN_INSIGHTS.MAX_CARDS);
+}
+function anInsightsHTML(list) {
+  let h = '<div class="an-ins"><div class="an-lbl">Insights</div>';
+  if (!list.length) return h + '<div class="an-ins-empty">Not enough data yet</div></div>';
+  list.forEach(i => {
+    h += '<div class="an-card an-ins-card">' +
+      '<div class="an-ins-head"><span class="an-ins-icon">' + AN_ICONS[i.icon] + '</span>' +
+        '<div><div class="an-ins-title">' + anEsc(i.title) + '</div><div class="an-ins-key ' + (i.keyCls || '') + '">' + anEsc(i.key) + '</div></div></div>' +
+      '<div class="an-ins-text">' + anEsc(i.text) + '</div>' +
+    '</div>';
+  });
+  return h + '</div>';
+}
+function anMissTrades(src, keys) {
+  let count = 0, days = 0;
+  keys.forEach(k => {
+    const d = src.store[k];
+    if (!d) return;
+    const n = src.stats(d).mt || 0;
+    if (n) { count += n; days++; }
+  });
+  return { count, days };
+}
+function anRightHTML(src, keys, days, s) {
+  return anScoreHTML(anScore(days, s)) + anQuickHTML(s) +
+         anInsightsHTML(anInsightsList(days, s, anMissTrades(src, keys)));
+}
 /* ── Render de la zona ── */
 function renderAnalytics(mode) {
   const el = document.getElementById('anZone-' + mode);
   if (!el) return;
   try {
     const src  = anSource(mode);
-    const days = anOperatedDays(src, anPeriodKeys(src));
+    const keys = anPeriodKeys(src);
+    const days = anOperatedDays(src, keys);
     const s    = anSummarize(days);
     el.innerHTML =
       '<div class="an-divider"></div>' +
@@ -8757,7 +8942,7 @@ function renderAnalytics(mode) {
       '</div>' +
       '<div class="an-body">' +
         '<div class="an-col-left">' + anPerfHTML(s, days) + anTabsHTML(s, days) + '</div>' +
-        '<div class="an-col-right"></div>' +
+        '<div class="an-col-right">' + anRightHTML(src, keys, days, s) + '</div>' +
       '</div>';
   } catch (e) {
     console.error('Analytics:', e);

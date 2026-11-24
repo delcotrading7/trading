@@ -3495,11 +3495,10 @@ function calcPStats(keys) {
   });
   const tradesTotal = tpC + beC + slC + spC;
   const wr = tradingDays>0 ? Math.round(tpC/tradingDays*100) : null;
-  const pf = grossLoss > 0 ? Math.round(grossProfit / grossLoss * 100) / 100 : (grossProfit > 0 ? Infinity : null);
   const esperanza = tradesTotal > 0 ? totalPL / tradesTotal : null;
   const estrategiaTot = estrategiaSi + estrategiaNo + estrategiaDudoso;
   const estrategiaPct = estrategiaTot > 0 ? Math.round(estrategiaSi/estrategiaTot*100) : null;
-  return { tpC,beC,slC,spC,neC,ltC,feC,mtC,tradingDays,totalPL,grossProfit,grossLoss,pf,esperanza,tradesTotal,wr,estrategiaSi,estrategiaNo,estrategiaDudoso,estrategiaTot,estrategiaPct };
+  return { tpC,beC,slC,spC,neC,ltC,feC,mtC,tradingDays,totalPL,grossProfit,grossLoss,esperanza,tradesTotal,wr,estrategiaSi,estrategiaNo,estrategiaDudoso,estrategiaTot,estrategiaPct };
 }
 
 function pEstrategiaStatsHTML(st) {
@@ -3592,13 +3591,8 @@ function renderPMonthStats() {
 
   const wrPct   = st.wr != null ? st.wr : 0;
   const wrColor = st.wr != null && st.wr >= 50 ? 'var(--green)' : 'var(--red)';
-  const pfIsInf = st.pf === Infinity;
-  const pfVal   = pfIsInf ? '∞' : (st.pf != null ? formatStatRatio(st.pf) : '—');
-  const pfPct   = pfIsInf ? 100 : (st.pf != null ? Math.min(st.pf / 3 * 100, 100) : 0);
-  const pfColor = (pfIsInf || (st.pf != null && st.pf >= 1)) ? 'var(--green)' : 'var(--red)';
   html += '<div class="gauge-row">'+
     gaugeHTML('Winrate', (st.wr!=null?st.wr+'%':'—'), wrPct, wrColor)+
-    gaugeHTML('Net Profit Ratio', pfVal, pfPct, pfColor)+
   '</div>';
 
   if (st.mtC||st.neC||st.ltC||st.feC||st.estrategiaTot) {
@@ -6767,13 +6761,8 @@ function renderFondeoStats() {
 
   const wrPct   = st.wr != null ? st.wr : 0;
   const wrColor = st.wr != null && st.wr >= 50 ? 'var(--green)' : 'var(--red)';
-  const pfIsInf = st.pf === Infinity;
-  const pfVal   = pfIsInf ? '∞' : (st.pf != null ? formatStatRatio(st.pf) : '—');
-  const pfPct   = pfIsInf ? 100 : (st.pf != null ? Math.min(st.pf / 3 * 100, 100) : 0);
-  const pfColor = (pfIsInf || (st.pf != null && st.pf >= 1)) ? 'var(--green)' : 'var(--red)';
   html += '<div class="gauge-row">'+
     gaugeHTML('Winrate', (st.wr!=null?st.wr+'%':'—'), wrPct, wrColor)+
-    gaugeHTML('Net Profit Ratio', pfVal, pfPct, pfColor)+
   '</div>';
 
   if (st.mtCount||st.neCount||st.ltCount||st.feCount||st.estrategiaTot) {

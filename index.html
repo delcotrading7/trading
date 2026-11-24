@@ -2005,6 +2005,108 @@ body::before{
   .mentor-drawing-thumb{max-width:100%}
 }
 
+/* ═══════════════════════════════════════════════════════════
+   ANALYTICS — zona de estadísticas debajo del calendario
+   Zona nueva y aislada: todas sus clases empiezan con "an-" y sus
+   colores/tamaños están en estas variables. La primera pantalla
+   (calendario + paneles) mide lo mismo que antes; la zona aparece
+   al deslizar hacia abajo.
+═══════════════════════════════════════════════════════════ */
+:root{
+  --an-mono:ui-monospace,"JetBrains Mono","SF Mono",Consolas,monospace;
+  --an-title-font:Georgia,'Times New Roman',serif;
+  --an-line:rgba(255,255,255,.07);          /* divisorias de la zona */
+  --an-grid-line:rgba(255,255,255,.06);     /* guías punteadas del gráfico */
+  --an-zero-line:rgba(255,255,255,.18);     /* línea de cero */
+  --an-label:var(--t2);                     /* etiquetas chicas en mayúsculas */
+  --an-sub:var(--t3);                       /* subtextos */
+  --an-card-bg:var(--panel-bg);
+  --an-card-border:var(--panel-border);
+  --an-radius:var(--radius);
+  --an-seg-bg:var(--panel-bg);
+  --an-seg-active:#2a2c31;
+  --an-tip-bg:#1b1d22;
+  --an-chart-h:214px;
+  --an-gap-top:48px;
+}
+/* Desktop: el panel de cada sección pasa a poder deslizarse (sin barra
+   visible, para no achicar la primera pantalla) */
+.tab-pane{overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.tab-pane::-webkit-scrollbar{display:none}
+.tab-pane > .fondeo-layout{flex-shrink:0}
+
+.an-zone{max-width:2200px;width:100%;margin:0 auto;padding:0 67px 64px 46px;flex-shrink:0;font-family:var(--font-body);color:var(--t1)}
+.an-zone:empty{display:none}
+.an-divider{height:1px;background:var(--an-line);margin:calc(var(--an-gap-top) - 40px) 0 var(--an-gap-top)}
+.an-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--an-line)}
+.an-title{font-family:var(--an-title-font);font-size:32px;font-weight:400;letter-spacing:-.3px;color:var(--t1);line-height:1}
+.an-seg{display:flex;gap:2px;padding:3px;background:var(--an-seg-bg);border:1px solid var(--an-card-border);border-radius:10px}
+.an-seg button{border:none;background:transparent;color:var(--t3);font-family:var(--font-body);font-size:14px;font-weight:500;padding:7px 16px;border-radius:7px;cursor:pointer;transition:background .15s,color .15s}
+.an-seg button:hover{color:var(--t2)}
+.an-seg button.active{background:var(--an-seg-active);color:#fff;font-weight:600}
+
+.an-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,3fr)}
+.an-col-left{padding:24px 28px 0 0;border-right:1px solid var(--an-line);display:flex;flex-direction:column;gap:20px;min-width:0}
+.an-col-right:empty{display:none}
+.an-col-right{padding:24px 0 0 28px;display:flex;flex-direction:column;gap:20px;min-width:0}
+
+.an-card{background:var(--an-card-bg);border:1px solid var(--an-card-border);border-radius:var(--an-radius)}
+.an-lbl{font-size:12px;font-weight:600;color:var(--an-label);text-transform:uppercase;letter-spacing:1.1px}
+.an-mono{font-family:var(--an-mono);font-variant-numeric:tabular-nums}
+.an-pos{color:var(--green)} .an-neg{color:var(--red)} .an-neu{color:var(--yellow)} .an-zero{color:var(--t1)}
+
+/* P&L PERFORMANCE */
+.an-perf{padding:22px 26px 18px}
+.an-perf-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px}
+.an-perf-total{font-family:var(--an-mono);font-size:34px;font-weight:600;letter-spacing:-.5px;margin-top:8px;line-height:1.1}
+.an-perf-kpis{display:flex;gap:30px;text-align:right}
+.an-perf-kpis .an-lbl{font-size:11px}
+.an-perf-kpi-val{font-family:var(--an-mono);font-size:22px;font-weight:500;margin-top:6px}
+
+/* Gráfico de barras */
+.an-chart{position:relative;height:var(--an-chart-h)}
+.an-chart-inner{position:absolute;left:0;right:0;top:22px;bottom:22px}
+.an-gl{position:absolute;left:58px;right:0;height:0;border-top:1px dashed var(--an-grid-line)}
+.an-gl.zero{border-top:1px solid var(--an-zero-line)}
+.an-yl{position:absolute;left:0;width:48px;text-align:right;transform:translateY(-50%);font-family:var(--an-mono);font-size:11px;color:var(--t3);white-space:nowrap}
+.an-bars{position:absolute;left:58px;right:0;top:0;bottom:0;display:flex}
+.an-bcol{flex:1;min-width:0;position:relative;cursor:default}
+.an-bcol:hover{background:rgba(255,255,255,.02)}
+.an-bar{position:absolute;left:50%;transform:translateX(-50%);width:min(46px,56%);min-height:2px}
+.an-bar.pos{background:var(--green);border-radius:3px 3px 0 0}
+.an-bar.neg{background:var(--red);border-radius:0 0 3px 3px}
+.an-bar.flat{background:var(--t3);height:2px}
+.an-bval{position:absolute;left:50%;transform:translateX(-50%);font-family:var(--an-mono);font-size:11px;white-space:nowrap;pointer-events:none}
+.an-xlabels{display:flex;margin-left:58px;margin-top:2px}
+.an-xlabels span{flex:1;min-width:0;text-align:center;font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:clip}
+.an-xlabels.dense span{font-size:10px}
+.an-empty{display:flex;align-items:center;justify-content:center;height:var(--an-chart-h);color:var(--t3);font-size:14px}
+.an-tip{position:absolute;z-index:5;pointer-events:none;background:var(--an-tip-bg);border:1px solid var(--borderl);border-radius:8px;padding:10px 12px;min-width:150px;box-shadow:0 10px 30px rgba(0,0,0,.6);font-size:12px;color:var(--t2);display:none;transform:translateX(-50%)}
+.an-tip.show{display:block}
+.an-tip-title{color:var(--t1);font-weight:600;margin-bottom:6px;font-size:12px}
+.an-tip-row{display:flex;justify-content:space-between;gap:14px;line-height:1.7}
+.an-tip-row b{font-family:var(--an-mono);font-weight:500;color:var(--t1)}
+
+@media (max-width:640px){
+  .tab-pane{overflow:visible}
+  .an-zone{padding:0 12px 40px}
+  .an-divider{margin:24px 0 28px}
+  .an-header{flex-wrap:wrap;padding-bottom:16px}
+  .an-title{font-size:28px}
+  .an-seg button{padding:7px 12px;font-size:13px}
+  .an-body{grid-template-columns:minmax(0,1fr)}
+  .an-col-left{padding:18px 0 0;border-right:none}
+  .an-col-right{padding:20px 0 0;border-top:1px solid var(--an-line);margin-top:20px}
+  .an-perf{padding:18px 16px 14px}
+  .an-perf-head{flex-wrap:wrap}
+  .an-perf-total{font-size:28px}
+  .an-perf-kpis{gap:20px}
+  .an-perf-kpi-val{font-size:18px}
+  .an-gl,.an-bars{left:46px}
+  .an-yl{width:40px;font-size:10px}
+  .an-xlabels{margin-left:46px}
+  .an-bval{font-size:9px}
+}
 </style>
 </head>
 <body>
@@ -2103,6 +2205,8 @@ body::before{
           </div>
         </div>
       </div>
+      <!-- Zona de estadísticas (Analytics) debajo del calendario: la arma renderAnalytics('practica') -->
+      <section class="an-zone" id="anZone-practica" aria-label="Analytics"></section>
     </div><!-- /pane-practica -->
 
     <!-- TAB: FONDEO -->
@@ -2165,6 +2269,8 @@ body::before{
 
         </div>
       </div>
+      <!-- Zona de estadísticas (Analytics) debajo del calendario: la arma renderAnalytics('fondeo') -->
+      <section class="an-zone" id="anZone-fondeo" aria-label="Analytics"></section>
     </div><!-- /pane-fondeo -->
 
   </main>
@@ -3917,6 +4023,7 @@ function pEstrategiaStatsHTML(st) {
 function renderPStats() {
   renderPPnl();
   renderPMonthStats();
+  renderAnalytics('practica');   // zona Analytics debajo del calendario
 }
 
 function renderPPnl() {
@@ -6834,6 +6941,7 @@ function renderStats() {
   renderFondeoRisk();
   renderFondeoStats();
   renderSlAlerts();
+  renderAnalytics('fondeo');     // zona Analytics debajo del calendario
 }
 
 function renderDayStats() {
@@ -8258,6 +8366,265 @@ window.onload = async function() {
     document.getElementById('authOverlay').style.display = 'flex';
   }
 };
+
+/* ══════════════════════════════════════════════════════════════
+   ANALYTICS — zona de estadísticas debajo del calendario
+   - Lee los mismos datos del calendario (_practica / _fondeo); no
+     guarda nada propio. En Fondeo usa la cuenta activa (si no hay
+     ninguna, todos los días de Fondeo).
+   - Se vuelve a dibujar desde renderPStats() / renderStats(), así que
+     se actualiza sola al cargar o editar un día, cambiar de mes, etc.
+   Definiciones (iguales en toda la zona):
+   - Día operado: resultado principal TP / SL / BE / SP. Sin entrada,
+     NE, Día Lateral y Feriado no cuentan.
+   - Ganador: resultado del día > 0 (incluye SP positivo).
+     Perdedor: < 0 (incluye SL y SP negativo). BE: = 0.
+   - Win rate = ganadores / (ganadores + perdedores); BE no entra.
+   - Profit factor = ganancia bruta / pérdida bruta.
+   - Rachas: orden cronológico sobre días operados; BE no corta ni suma.
+══════════════════════════════════════════════════════════════ */
+const AN = { filter: 'all', tab: 'overview' };
+const AN_FILTERS = [['all','All'],['week','Week'],['month','Month'],['year','Year']];
+const AN_MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const AN_MON_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const AN_DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const AN_OPERATED = { tp: 1, sl: 1, be: 1, sp: 1 };
+
+/* Fuente de datos de la sección activa */
+function anSource(mode) {
+  if (mode === 'practica') {
+    return { store: _practica, keys: Object.keys(_practica), y: PS.y, m: PS.m,
+             pl: getDayPLPractica, res: getPDayResult, stats: getDayStatsP };
+  }
+  const acc = getActiveAccount();
+  return { store: _fondeo, keys: acc ? accountKeys(acc) : Object.keys(_fondeo), y: FS.y, m: FS.m,
+           pl: getDayPL, res: getDayResult, stats: getDayStats };
+}
+
+/* Días del período según el filtro (All / Week / Month / Year) */
+function anPeriodKeys(src) {
+  let keys = src.keys.filter(_isDateKey);
+  if (AN.filter === 'week') {
+    const t = todayKeyStr(), s = keyAddDays(t, -6);
+    keys = keys.filter(k => k >= s && k <= t);
+  } else if (AN.filter === 'month') {
+    const p = mkKey(src.y, src.m, 1).slice(0, 7);
+    keys = keys.filter(k => k.slice(0, 7) === p);
+  } else if (AN.filter === 'year') {
+    const p = String(src.y);
+    keys = keys.filter(k => k.slice(0, 4) === p);
+  }
+  return keys.sort();
+}
+
+/* Días operados del período, en orden cronológico */
+function anOperatedDays(src, keys) {
+  const out = [];
+  keys.forEach(k => {
+    const d = src.store[k];
+    if (!d || !AN_OPERATED[src.res(d)]) return;
+    const st = src.stats(d);
+    out.push({
+      key: k,
+      pl: src.pl(d) || 0,
+      trades: st.total || 1,
+      est: d.estrategiaCumplida === undefined ? null : d.estrategiaCumplida,
+      hasRecord: !!(((d.contextNote || '').trim()) ||
+                    (d.photos || []).filter(Boolean).length ||
+                    (d.contextPhotos || []).filter(Boolean).length),
+    });
+  });
+  return out;
+}
+
+/* Métricas de una lista de días operados */
+function anSummarize(days) {
+  const s = { n: days.length, trades: 0, total: 0, wins: 0, losses: 0, be: 0, gp: 0, gl: 0,
+              best: null, worst: null };
+  days.forEach(d => {
+    s.trades += d.trades;
+    s.total  += d.pl;
+    if (d.pl > 0) {
+      s.wins++; s.gp += d.pl;
+      if (!s.best || d.pl > s.best.pl) s.best = d;
+    } else if (d.pl < 0) {
+      s.losses++; s.gl += -d.pl;
+      if (!s.worst || d.pl < s.worst.pl) s.worst = d;
+    } else s.be++;
+  });
+  s.total   = Math.round(s.total * 100) / 100;
+  s.wr      = (s.wins + s.losses) ? s.wins / (s.wins + s.losses) * 100 : null;
+  s.pf      = s.gl > 0 ? s.gp / s.gl : (s.gp > 0 ? Infinity : null);
+  s.avgWin  = s.wins   ? s.gp / s.wins   : null;
+  s.avgLoss = s.losses ? s.gl / s.losses : null;
+  let cw = 0, cl = 0, bw = 0, bl = 0, run = [];
+  days.forEach(d => {
+    if (d.pl > 0)      { if (cl) run = []; cw++; cl = 0; run.push(d); }
+    else if (d.pl < 0) { if (cw) run = []; cl++; cw = 0; run.push(d); }
+    bw = Math.max(bw, cw); bl = Math.max(bl, cl);
+  });
+  s.bestStreak = bw; s.worstStreak = bl;
+  s.current = cw ? { type: 'win', n: cw, days: run } : cl ? { type: 'loss', n: cl, days: run } : null;
+  return s;
+}
+
+/* ── Formato (es-AR: punto de miles, coma decimal) ── */
+function anNum(n, minDec, maxDec) {
+  return Number(n).toLocaleString('es-AR', { minimumFractionDigits: minDec || 0,
+    maximumFractionDigits: maxDec === undefined ? 2 : maxDec });
+}
+function anRound(n) { return Math.round(n * 100) / 100; }
+function anAbbr(n, signed) {                 // 11600 → 11,6k · 628 → 628
+  const a = Math.abs(n);
+  const body = a >= 1000 ? anNum(Math.round(a / 100) / 10, 1, 1) + 'k' : anNum(anRound(a));
+  return (n < 0 ? '-' : (signed && n > 0 ? '+' : '')) + body;
+}
+function anMoney(n, signed) {                // completo; abreviado con k desde 10.000
+  if (n === null || n === undefined) return '—';
+  if (Math.abs(n) >= 10000) return anAbbr(n, signed);
+  const r = anRound(n);
+  return (r < 0 ? '-' : (signed && r > 0 ? '+' : '')) + anNum(Math.abs(r));
+}
+function anFull(n, signed) {                 // siempre completo: +27.741
+  const r = anRound(n);
+  return (r < 0 ? '-' : (signed && r > 0 ? '+' : '')) + anNum(Math.abs(r));
+}
+function anPct(v) { return v === null || v === undefined ? '—' : anNum(v, 1, 1) + '%'; }
+function anPF(v)  { return v === null || v === undefined ? '—' : v === Infinity ? '∞' : anNum(v, 2, 2); }
+function anCls(n) { return n > 0 ? 'an-pos' : n < 0 ? 'an-neg' : 'an-zero'; }
+function anEsc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function anDateLong(key) {
+  const p = parseKey(key), dt = new Date(p.y, p.m, p.d);
+  return AN_DOW[dt.getDay()] + ', ' + p.d + ' ' + AN_MON[p.m] + ' ' + p.y;
+}
+
+/* ── Gráfico de P&L ── */
+function anChartBuckets(days) {
+  const byMonth = AN.filter === 'all' || AN.filter === 'year';
+  const groups = new Map();
+  days.forEach(d => {
+    const id = byMonth ? d.key.slice(0, 7) : d.key;
+    if (!groups.has(id)) groups.set(id, []);
+    groups.get(id).push(d);
+  });
+  return [...groups.entries()].map(([id, ds]) => {
+    const s = anSummarize(ds);
+    const p = parseKey(byMonth ? id + '-01' : id);
+    return {
+      label: byMonth ? AN_MON[p.m] + ' ' + String(p.y).slice(2) : String(p.d),
+      title: byMonth ? AN_MON_FULL[p.m] + ' ' + p.y : anDateLong(id),
+      pl: s.total, n: s.n, wr: s.wr,
+    };
+  });
+}
+function anNiceMax(v) {                      // 1, 2, 2,5, 5 × 10^n
+  if (!(v > 0)) return 100;
+  const e = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const f of [1, 2, 2.5, 5, 10]) if (f * e >= v) return f * e;
+  return 10 * e;
+}
+function anChartHTML(days) {
+  if (!days.length) return '<div class="an-empty">Sin datos en este período</div>';
+  const b = anChartBuckets(days);
+  const maxPos = Math.max(0, ...b.map(x => x.pl));
+  const maxNeg = Math.max(0, ...b.map(x => -x.pl));
+  const M = anNiceMax(Math.max(maxPos, maxNeg));
+  const top = M, bottom = maxNeg > 0 ? -M : 0;          // simétrico si hay negativos
+  const range = top - bottom;
+  const yPct = v => (top - v) / range * 100;             // % desde arriba
+  const zero = yPct(0);
+  const ticks = bottom < 0 ? [M, M / 2, 0, -M / 2, -M] : [M, M / 2, 0];
+  let h = '<div class="an-chart"><div class="an-chart-inner">';
+  ticks.forEach(t => {
+    h += '<div class="an-gl' + (t === 0 ? ' zero' : '') + '" style="top:' + yPct(t) + '%"></div>' +
+         '<div class="an-yl" style="top:' + yPct(t) + '%">' + (t === 0 ? '0' : anAbbr(t, true).replace(',0k', 'k')) + '</div>';
+  });
+  h += '<div class="an-bars">';
+  b.forEach((x, i) => {
+    const hPct = Math.abs(x.pl) / range * 100;
+    const tip = anEsc(JSON.stringify({ t: x.title, pl: x.pl, n: x.n, wr: x.wr }));
+    h += '<div class="an-bcol" data-tip="' + tip + '" onmouseenter="anTipShow(this)" onmouseleave="anTipHide(this)">';
+    if (x.pl > 0) {
+      h += '<div class="an-bar pos" style="bottom:' + (100 - zero) + '%;height:' + hPct + '%"></div>' +
+           '<div class="an-bval an-pos" style="bottom:calc(' + (100 - zero + hPct) + '% + 4px)">' + anAbbr(x.pl, true) + '</div>';
+    } else if (x.pl < 0) {
+      h += '<div class="an-bar neg" style="top:' + zero + '%;height:' + hPct + '%"></div>' +
+           '<div class="an-bval an-neg" style="top:calc(' + (zero + hPct) + '% + 4px)">' + anAbbr(x.pl, true) + '</div>';
+    } else {
+      h += '<div class="an-bar flat" style="top:calc(' + zero + '% - 1px)"></div>' +
+           '<div class="an-bval" style="color:var(--t3);bottom:calc(' + (100 - zero) + '% + 4px)">0</div>';
+    }
+    h += '</div>';
+  });
+  h += '</div></div><div class="an-tip"></div></div>';
+  h += '<div class="an-xlabels' + (b.length > 14 ? ' dense' : '') + '">' +
+       b.map(x => '<span>' + anEsc(x.label) + '</span>').join('') + '</div>';
+  return h;
+}
+function anTipShow(col) {
+  const chart = col.closest('.an-chart');
+  const tip = chart && chart.querySelector('.an-tip');
+  if (!tip) return;
+  let d; try { d = JSON.parse(col.dataset.tip); } catch (e) { return; }
+  tip.innerHTML =
+    '<div class="an-tip-title">' + anEsc(d.t) + '</div>' +
+    '<div class="an-tip-row"><span>Result</span><b class="' + anCls(d.pl) + '">' + anMoney(d.pl, true) + '</b></div>' +
+    '<div class="an-tip-row"><span>Days traded</span><b>' + d.n + '</b></div>' +
+    '<div class="an-tip-row"><span>Win rate</span><b>' + anPct(d.wr) + '</b></div>';
+  const cr = chart.getBoundingClientRect(), r = col.getBoundingClientRect();
+  tip.classList.add('show');
+  const half = tip.offsetWidth / 2;
+  const x = Math.min(Math.max(r.left - cr.left + r.width / 2, half), cr.width - half);
+  tip.style.left = x + 'px';
+  tip.style.top = '0px';
+}
+function anTipHide(col) {
+  const tip = col.closest('.an-chart') && col.closest('.an-chart').querySelector('.an-tip');
+  if (tip) tip.classList.remove('show');
+}
+
+/* ── Tarjeta P&L PERFORMANCE ── */
+function anPerfHTML(s, days) {
+  return '<div class="an-card an-perf">' +
+    '<div class="an-perf-head">' +
+      '<div><div class="an-lbl">P&amp;L Performance</div>' +
+        '<div class="an-perf-total ' + anCls(s.total) + '">' + anFull(s.total, true) + '</div></div>' +
+      '<div class="an-perf-kpis">' +
+        '<div><div class="an-lbl">Trades</div><div class="an-perf-kpi-val an-zero">' + s.trades + '</div></div>' +
+        '<div><div class="an-lbl">Win rate</div><div class="an-perf-kpi-val an-pos">' + anPct(s.wr) + '</div></div>' +
+      '</div>' +
+    '</div>' +
+    anChartHTML(days) +
+  '</div>';
+}
+
+/* ── Render de la zona ── */
+function renderAnalytics(mode) {
+  const el = document.getElementById('anZone-' + mode);
+  if (!el) return;
+  try {
+    const src  = anSource(mode);
+    const days = anOperatedDays(src, anPeriodKeys(src));
+    const s    = anSummarize(days);
+    el.innerHTML =
+      '<div class="an-divider"></div>' +
+      '<div class="an-header">' +
+        '<h2 class="an-title">Analytics</h2>' +
+        '<div class="an-seg" role="tablist">' +
+          AN_FILTERS.map(([v, l]) => '<button type="button" class="' + (AN.filter === v ? 'active' : '') +
+            '" onclick="setAnFilter(\'' + v + '\')">' + l + '</button>').join('') +
+        '</div>' +
+      '</div>' +
+      '<div class="an-body">' +
+        '<div class="an-col-left">' + anPerfHTML(s, days) + '</div>' +
+        '<div class="an-col-right"></div>' +
+      '</div>';
+  } catch (e) {
+    console.error('Analytics:', e);
+  }
+}
+function renderAllAnalytics() { renderAnalytics('practica'); renderAnalytics('fondeo'); }
+function setAnFilter(f) { AN.filter = f; renderAllAnalytics(); }
 </script>
 
 <!-- ── Image Editor Overlay ────────────────────────────────────── -->

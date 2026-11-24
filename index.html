@@ -1559,6 +1559,40 @@ body::before{
 .slr-err{background:var(--redbg);border:1px solid var(--redborder);color:var(--red);font-size:11px;font-weight:800;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body)}
 .repaso-nav-btn{width:auto;padding:0 12px;font-size:12px;font-weight:700;white-space:nowrap}
 
+/* Tarjeta "Repaso SL · No estadísticos" (columna derecha, siempre visible) */
+.repaso-alerts-side{align-self:stretch;min-height:0}
+.repaso-ns-mobile{display:none}
+.ns-card{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:12px;padding:14px 14px 12px;
+  display:flex;flex-direction:column;min-height:0;flex:0 1 auto;font-family:var(--font-body)}
+.ns-title{font-size:9.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--t2);margin-bottom:8px}
+.ns-list{overflow-y:auto;min-height:0;margin:0 -4px;padding:0 4px}
+.ns-month{font-size:10px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 6px}
+.ns-month:first-child{margin-top:0}
+.ns-item{display:block;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:8px 9px;margin-bottom:6px;cursor:pointer;font-family:var(--font-body);transition:border-color .15s}
+.ns-item:hover{border-color:var(--borderl)}
+.ns-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ns-date{font-size:12px;font-weight:700;color:var(--t1);white-space:nowrap}
+.ns-amt{font-size:12px;font-weight:800;color:var(--red);white-space:nowrap}
+.ns-row2{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:5px}
+.ns-tags{display:flex;gap:4px;flex-wrap:wrap;min-width:0}
+.ns-tags span{font-size:9.5px;font-weight:700;color:var(--t2);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+.ns-state{font-size:9.5px;font-weight:700;white-space:nowrap;margin-left:auto}
+.ns-state.done{color:var(--t3)}
+.ns-state.todo{color:var(--yellow)}
+.ns-empty{font-size:12px;color:var(--t3);line-height:1.45;padding:4px 0}
+.ns-foot{border-top:1px solid var(--border);margin-top:8px;padding-top:10px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.ns-pending{font-size:11px;font-weight:700;color:var(--t2)}
+.ns-all-btn{background:var(--bg3);border:1px solid var(--border);color:var(--t1);font-size:11.5px;font-weight:700;padding:8px 10px;
+  border-radius:8px;cursor:pointer;font-family:var(--font-body)}
+.ns-all-btn:hover{border-color:var(--borderl)}
+@media (max-width:640px){
+  .repaso-alerts-side .ns-card{display:none}
+  .repaso-alerts-side:not(:has(.sl-alert-card)){display:none}
+  .repaso-ns-mobile{display:block;width:100%;order:1}
+  .repaso-ns-mobile .ns-list{max-height:none}
+}
+
 /* Etiqueta Estadístico / No estadístico en la celda del calendario (SL revisados) */
 .sl-cal-tag{position:absolute;top:6px;right:18px;max-width:calc(100% - 46px);font-size:9px;font-weight:700;line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;letter-spacing:.2px}
@@ -2401,6 +2435,8 @@ body::before{
             <div class="cal-grid" id="calGridF"></div>
           </div>
           <div class="repaso-alerts-side" id="fRepasoAlerts"></div>
+          <!-- Celular: la tarjeta "Repaso SL · No estadísticos" va debajo del calendario -->
+          <div class="repaso-ns-mobile" id="fRepasoNsMobile"></div>
 
         </div>
       </div>
@@ -6956,8 +6992,57 @@ function renderSlAlerts() {
       '</span>' +
     '</button>';
   }
-  el.innerHTML = html;
+  const ns = slNoStatCardHTML();
+  el.innerHTML = html + ns;
+  const mob = document.getElementById('fRepasoNsMobile');
+  if (mob) mob.innerHTML = ns;   // en celular se muestra esta copia, debajo del calendario
   renderSlReview();          // si la pantalla Repaso SL está abierta, se actualiza
+}
+
+/* ── Tarjeta "Repaso SL · No estadísticos" ──────────────────────
+   SL marcados No estadístico del mes actual real y del anterior,
+   aunque el calendario muestre otro mes. Más reciente arriba. */
+function slNoStatKeys() {
+  const t = new Date();
+  return [0, -1].map(off => {
+    const d = new Date(t.getFullYear(), t.getMonth() + off, 1);
+    const y = d.getFullYear(), m = d.getMonth();
+    return { y, m, keys: slKeysInMonth(y, m).filter(k => _fondeo[k].slStatus === 'no_estadistico').sort().reverse() };
+  });
+}
+function slNoStatCardHTML() {
+  const months = slNoStatKeys();
+  const all = months.flatMap(g => g.keys);
+  let h = '<div class="ns-card"><div class="ns-title">Repaso SL · No estadísticos</div>';
+  if (!all.length) {
+    h += '<div class="ns-empty">No hay SL no estadísticos en este mes ni en el anterior</div>';
+  } else {
+    h += '<div class="ns-list">';
+    months.forEach(g => {
+      if (!g.keys.length) return;
+      h += '<div class="ns-month">' + MONTHS[g.m] + ' ' + g.y + '</div>';
+      g.keys.forEach(k => {
+        const d = _fondeo[k];
+        h += '<button type="button" class="ns-item" onclick="openNoStatDay(\'' + k + '\')">' +
+          '<div class="ns-row"><span class="ns-date">' + slDateLabel(k) + '</span><span class="ns-amt">' + slAmountText(d) + '</span></div>' +
+          '<div class="ns-row2"><span class="ns-tags">' + slTagsOf(d).map(t => '<span>' + t + '</span>').join('') + '</span>' +
+            '<span class="ns-state ' + (d.reviewed ? 'done">Revisado' : 'todo">Sin revisar') + '</span></div>' +
+        '</button>';
+      });
+    });
+    h += '</div>';
+  }
+  const pending = all.filter(k => !_fondeo[k].reviewed).length;
+  h += '<div class="ns-foot">' +
+    '<div class="ns-pending">' + pending + (pending === 1 ? ' pendiente' : ' pendientes') + ' de revisar</div>' +
+    '<button type="button" class="ns-all-btn" onclick="openSlReview()">Ver todos los SL del mes</button>' +
+  '</div></div>';
+  return h;
+}
+function openNoStatDay(k) {
+  const keys = slNoStatKeys().flatMap(g => g.keys);   // SL anterior / siguiente recorre solo esta lista
+  repasoNavCtx = { keys, idx: Math.max(0, keys.indexOf(k)) };
+  openRepasoModalAt(repasoNavCtx.idx);
 }
 
 /* ── Modo repaso dentro del modal de día de Fondeo ───────────────

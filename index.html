@@ -122,27 +122,37 @@ body{
   display:flex;align-items:center;justify-content:flex-end;
   box-shadow:0 2px 24px rgba(0,0,0,.6);
 }
-.user-chip{
-  font-size:12px;font-weight:700;color:var(--gold);
-  background:var(--goldbg);border:1px solid var(--goldborder);
-  padding:4px 14px;border-radius:20px;letter-spacing:.4px;
+/* Barra superior: solo el botón de tres barritas; las opciones van en un menú desplegable */
+.topbar-right{position:relative;display:flex;align-items:center}
+.topbar-menu-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:40px;height:40px;padding:0;background:transparent;
+  border:1px solid transparent;border-radius:8px;
+  color:var(--t2);cursor:pointer;transition:background .15s,color .15s,border-color .15s;
 }
-.topbar-right{display:flex;align-items:center;gap:8px}
-.topbar-btn{
-  display:flex;align-items:center;gap:5px;
-  background:var(--bg3);border:1px solid var(--border);
-  color:var(--t2);padding:6px 13px;border-radius:8px;
-  font-size:12px;font-weight:700;cursor:pointer;
-  transition:all .2s;letter-spacing:.2px;white-space:nowrap;
-  font-family:var(--font-body);
+.topbar-menu-btn:hover,.topbar-menu-btn[aria-expanded="true"]{background:var(--bg3);border-color:var(--border);color:var(--t1)}
+.topbar-menu{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:950;
+  flex-direction:column;min-width:250px;padding:6px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 14px 32px rgba(0,0,0,.6);
 }
-.topbar-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--goldbg)}
-.topbar-btn.success{background:var(--greenbg);border-color:var(--greenborder);color:var(--green)}
-.topbar-btn.success:hover{border-color:var(--green)}
-.topbar-btn.danger:hover{border-color:var(--red);color:var(--red);background:var(--redbg)}
-.topbar-sep{width:1px;height:22px;background:var(--border);flex-shrink:0}
-.topbar-menu-btn{display:none}
-.topbar-menu{display:flex;align-items:center;gap:8px}
+.topbar-menu.open{display:flex}
+.topbar-menu-user{
+  padding:10px 12px 10px;margin-bottom:4px;border-bottom:1px solid var(--border);
+  font-size:14px;font-weight:800;color:var(--t1);letter-spacing:.2px;font-family:var(--font-body);
+}
+.topbar-menu-item{
+  display:block;width:100%;text-align:left;
+  background:none;border:none;border-radius:8px;
+  padding:9px 12px;font-size:13px;font-weight:600;color:var(--t2);
+  cursor:pointer;font-family:var(--font-body);white-space:nowrap;
+  transition:background .12s,color .12s;
+}
+.topbar-menu-item:hover,.topbar-menu-item:focus-visible{background:var(--bg3);color:var(--t1);outline:none}
+.topbar-menu-item.danger{color:#c9707a}
+.topbar-menu-item.danger:hover,.topbar-menu-item.danger:focus-visible{color:#e08a93;background:rgba(244,63,94,.08)}
+.topbar-menu-sep{height:1px;background:var(--border);margin:6px 4px}
 
 .content{flex:1;overflow:hidden;position:relative}
 .tab-pane{position:absolute;inset:0;display:none;flex-direction:column}
@@ -1535,24 +1545,8 @@ body{
 
   /* — Barra superior: fija arriba + menú hamburguesa — */
   .top-bar{padding:0 12px;position:sticky;top:0;z-index:900}
-  .topbar-right{position:relative;gap:8px}
-  .topbar-menu-btn{
-    display:flex;align-items:center;justify-content:center;
-    width:40px;height:40px;background:var(--bg3);border:1px solid var(--border);
-    color:var(--t2);border-radius:8px;font-size:18px;cursor:pointer;flex-shrink:0;
-  }
-  .topbar-menu-btn:hover{border-color:var(--gold);color:var(--gold)}
-  .topbar-menu{
-    display:none;position:absolute;top:calc(100% + 10px);right:0;
-    flex-direction:column;align-items:stretch;gap:6px;
-    background:var(--bg2);border:1px solid var(--border);border-radius:12px;
-    padding:10px;box-shadow:0 14px 32px rgba(0,0,0,.6);z-index:950;
-    min-width:220px;
-  }
-  .topbar-menu.open{display:flex}
-  .topbar-menu .topbar-btn{width:100%;justify-content:center;padding:12px 14px;font-size:13px;min-height:44px}
-  .topbar-menu .topbar-sep{display:none}
-  .user-chip{font-size:11px;padding:4px 10px}
+  .topbar-menu{min-width:240px;max-width:calc(100vw - 24px)}
+  .topbar-menu-item{padding:12px 14px;min-height:44px;font-size:14px}
 
   /* — Layout de 2 columnas → apilado: calendario arriba, stats abajo — */
   .fondeo-body{flex-direction:column;gap:16px;padding:12px 12px 28px;overflow:visible;max-width:100%}
@@ -1665,19 +1659,19 @@ body{
   <!-- ── BARRA SUPERIOR ── -->
   <header class="top-bar">
     <div class="topbar-right">
-      <button class="topbar-menu-btn" id="topbarMenuBtn" onclick="toggleTopbarMenu(event)" title="Menú" aria-label="Menú">☰</button>
-      <div class="topbar-menu" id="topbarMenu">
-        <button class="topbar-btn" onclick="openAccountsModal()" title="Cuenta activa, etapas e historial de cuentas de fondeo">🏦 Cuentas de Fondeo</button>
-        <button class="topbar-btn" onclick="openConfigModal()" title="Editar montos automáticos de TP y SL">⚙ Configurar Journal</button>
-        <div class="topbar-sep"></div>
-        <button class="topbar-btn success" onclick="exportBackup()" title="Descargar copia de seguridad con todos los trades y fotos">Guardar Copia de Seguridad</button>
-        <button class="topbar-btn" onclick="document.getElementById('backupFileInput').click()" title="Cargar copia de seguridad previamente exportada">Cargar Copia de Seguridad</button>
-        <div class="topbar-sep"></div>
-        <button class="topbar-btn danger" onclick="clearLocalData()" title="Eliminar todos los datos (esta compu y la nube)">Limpiar Datos</button>
-        <div class="topbar-sep"></div>
-        <button class="topbar-btn" onclick="handleLogout()" title="Cerrar sesión">Cerrar sesión</button>
+      <button class="topbar-menu-btn" id="topbarMenuBtn" onclick="toggleTopbarMenu(event)" title="Menú" aria-label="Menú" aria-haspopup="true" aria-expanded="false" aria-controls="topbarMenu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
+      <div class="topbar-menu" id="topbarMenu" role="menu">
+        <div class="topbar-menu-user">Benja</div>
+        <button class="topbar-menu-item" role="menuitem" onclick="openAccountsModal()" title="Cuenta activa, etapas e historial de cuentas de fondeo">Cuentas de Fondeo</button>
+        <button class="topbar-menu-item" role="menuitem" onclick="openConfigModal()" title="Editar montos automáticos de TP y SL">Configurar Journal</button>
+        <button class="topbar-menu-item" role="menuitem" id="menuExportBackup" onclick="exportBackup()" title="Descargar copia de seguridad con todos los trades y fotos">Guardar Copia de Seguridad</button>
+        <button class="topbar-menu-item" role="menuitem" id="menuImportBackup" onclick="document.getElementById('backupFileInput').click()" title="Cargar copia de seguridad previamente exportada">Cargar Copia de Seguridad</button>
+        <div class="topbar-menu-sep"></div>
+        <button class="topbar-menu-item danger" role="menuitem" onclick="clearLocalData()" title="Eliminar todos los datos (esta compu y la nube)">Limpiar Datos</button>
+        <button class="topbar-menu-item" role="menuitem" onclick="handleLogout()" title="Cerrar sesión">Cerrar sesión</button>
       </div>
-      <div class="user-chip">Benja</div>
     </div>
   </header>
 
@@ -1901,8 +1895,8 @@ body{
     </div>
     <div class="share-sub">Cualquiera con el link puede ver este día (resultado, monto, notas y fotos) sin necesidad de loguearse en tu cuenta.</div>
     <div class="share-perm-toggle">
-      <button class="share-perm-btn active" id="sharePermView" onclick="setSharePermission('view')">👁 Solo lectura</button>
-      <button class="share-perm-btn" id="sharePermEdit" onclick="setSharePermission('edit')">✏️ Edición</button>
+      <button class="share-perm-btn active" id="sharePermView" onclick="setSharePermission('view')">Solo lectura</button>
+      <button class="share-perm-btn" id="sharePermEdit" onclick="setSharePermission('edit')">Edición</button>
     </div>
     <div class="share-perm-hint" id="sharePermHint">La otra persona solo puede ver el día, no puede modificar nada.</div>
     <div class="share-links-list" id="shareLinksList"></div>
@@ -1914,7 +1908,7 @@ body{
 <div class="share-overlay" id="configOverlay" onclick="if(event.target===this)closeConfigModal()">
   <div class="share-box cfg-box" role="dialog" aria-modal="true" aria-labelledby="cfgTitle">
     <div class="share-head">
-      <div class="share-title" id="cfgTitle">⚙ Configuración del Journal</div>
+      <div class="share-title" id="cfgTitle">Configuración del Journal</div>
       <button class="modal-close-btn" onclick="closeConfigModal()" title="Cerrar">✕</button>
     </div>
 
@@ -2285,7 +2279,7 @@ function setSharePermission(perm) {
 
 async function openShareDialog(mode, key) {
   if (!key) return;
-  if (!currentUser) { showToast('⚠ Iniciá sesión para compartir'); return; }
+  if (!currentUser) { showToast('Iniciá sesión para compartir'); return; }
   _shareTargetMode = mode;
   _shareTargetKey  = key;
   setSharePermission('view');
@@ -2328,8 +2322,8 @@ function renderShareLinksList(links) {
     const exp = new Date(l.expires_at);
     const expStr = String(exp.getDate()).padStart(2,'0') + '/' + String(exp.getMonth()+1).padStart(2,'0') + '/' + exp.getFullYear();
     const permTag = l.permission === 'edit'
-      ? '<span class="share-link-perm edit">✏️ EDICIÓN</span>'
-      : '<span class="share-link-perm view">👁 LECTURA</span>';
+      ? '<span class="share-link-perm edit">EDICIÓN</span>'
+      : '<span class="share-link-perm view">LECTURA</span>';
     return '<div class="share-link-row">' +
       '<div class="share-link-top">' +
         '<input class="share-link-input" type="text" readonly value="' + url + '" onclick="this.select()">' +
@@ -2358,7 +2352,7 @@ async function generateShareLink() {
   };
   const { error } = await sb.from('shared_links').insert(row);
   btn.disabled = false; btn.textContent = '+ Generar nuevo link';
-  if (error) { showToast('⚠ Error generando el link: ' + error.message); return; }
+  if (error) { showToast('Error generando el link: ' + error.message); return; }
   await loadShareLinks();
   await copyShareLink(token);
 }
@@ -2376,7 +2370,7 @@ async function copyShareLink(token) {
 async function revokeShareLink(token) {
   if (!confirm('¿Revocar este link? Quien lo tenga ya no va a poder verlo.')) return;
   const { error } = await sb.from('shared_links').update({ revoked: true }).eq('token', token).eq('owner_id', currentUser.id);
-  if (error) { showToast('⚠ Error revocando el link'); return; }
+  if (error) { showToast('Error revocando el link'); return; }
   await loadShareLinks();
 }
 
@@ -2427,7 +2421,7 @@ function lbShowUrl(url) {
 async function deleteMentorAnnotation(id, mode, key) {
   if (!confirm('¿Borrar este comentario/anotación? No se puede deshacer.')) return;
   const { error } = await sb.from('shared_annotations').delete().eq('id', id).eq('owner_id', currentUser.id);
-  if (error) { showToast('⚠ Error borrando'); return; }
+  if (error) { showToast('Error borrando'); return; }
   await loadMentorAnnotations(mode, key);
 }
 
@@ -2435,7 +2429,7 @@ async function pushAllLocalToCloud(silent) {
   if (!currentUser) return;
   const keysP = Object.keys(_practica), keysF = Object.keys(_fondeo);
   if (!keysP.length && !keysF.length) return;
-  if (!silent) showToast('⏳ Subiendo a la nube...');
+  if (!silent) showToast('Subiendo a la nube...');
   let fallidos = 0;
   for (const k of keysP) {
     try {
@@ -2455,7 +2449,7 @@ async function pushAllLocalToCloud(silent) {
       if (!res.ok) fallidos++;
     } catch (e) { fallidos++; console.warn('Error subiendo fondeo ' + k + ':', e); }
   }
-  if (!silent) showToast(fallidos ? ('⚠ Subido con ' + fallidos + ' error(es), revisá la consola') : '✓ Sincronizado con la nube');
+  if (!silent) showToast(fallidos ? ('Subido con ' + fallidos + ' error(es), revisá la consola') : '✓ Sincronizado con la nube');
 }
 
 async function resincronizarTodoConLaNube() {
@@ -2633,9 +2627,9 @@ async function saveDayPractica(k, data) {
   if (res.ok) {
     showToast();
   } else if (res.reason === 'no-session') {
-    showToast('⚠ Sin sesión activa: guardado solo en este dispositivo', true);
+    showToast('Sin sesión activa: guardado solo en este dispositivo', true);
   } else {
-    showToast('⚠ Error guardando en la nube — no se confirmó el guardado', true);
+    showToast('Error guardando en la nube — no se confirmó el guardado', true);
   }
   return res.ok;
 }
@@ -2700,7 +2694,7 @@ function confirmResetDay() {
     _deleteImgsForDay(_practica[key]);
     delete _practica[key];
     savePracticaData();
-    deletePracticaDayCloud(key).then(res => { if (!res.ok) showToast('⚠ No se pudo borrar en la nube, reintentá', true); });
+    deletePracticaDayCloud(key).then(res => { if (!res.ok) showToast('No se pudo borrar en la nube, reintentá', true); });
     closeResetConfirm();
     currentPracticaKey      = key;
     practicaModalMain       = { result: null };
@@ -2720,7 +2714,7 @@ function confirmResetDay() {
     _deleteImgsForDay(_fondeo[key]);
     delete _fondeo[key];
     saveFondeoData();
-    deleteFondeoDayCloud(key).then(res => { if (!res.ok) showToast('⚠ No se pudo borrar en la nube, reintentá', true); });
+    deleteFondeoDayCloud(key).then(res => { if (!res.ok) showToast('No se pudo borrar en la nube, reintentá', true); });
     closeResetConfirm();
     currentFondeoKey      = key;
     fondeoModalMain       = { result: null, amount: 0 };
@@ -2865,17 +2859,37 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.cal-title-wrap')) closeSectionMenus();
 });
 
-/* ── Menú hamburguesa de la barra superior (solo mobile) ─────── */
+/* ── Menú de tres barritas de la barra superior ───────────────
+   Se cierra al tocar afuera, al apretar Esc o al elegir una opción. */
+function isTopbarMenuOpen() {
+  const menu = document.getElementById('topbarMenu');
+  return !!(menu && menu.classList.contains('open'));
+}
+function setTopbarMenuOpen(open) {
+  const menu = document.getElementById('topbarMenu');
+  const btn  = document.getElementById('topbarMenuBtn');
+  if (!menu) return;
+  menu.classList.toggle('open', open);
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
 function toggleTopbarMenu(e) {
   if (e) e.stopPropagation();
-  document.getElementById('topbarMenu').classList.toggle('open');
+  setTopbarMenuOpen(!isTopbarMenuOpen());
 }
 document.addEventListener('click', function(e) {
   if (e.target.closest('.topbar-menu-btn')) return;
-  if (e.target.closest('.topbar-menu') || !e.target.closest('.topbar-right')) {
-    document.getElementById('topbarMenu').classList.remove('open');
-  }
+  // Click en una opción (cierra después de que corre su onclick) o fuera del menú
+  if (e.target.closest('.topbar-menu-item') || !e.target.closest('.topbar-menu')) setTopbarMenuOpen(false);
 });
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  if (isTopbarMenuOpen()) {
+    e.stopPropagation();
+    setTopbarMenuOpen(false);
+    const btn = document.getElementById('topbarMenuBtn');
+    if (btn) btn.focus();
+  }
+}, true);
 
 /* ══════════════════════════════════════════════════════════════
    CALENDARIO PRÁCTICA
@@ -3351,7 +3365,7 @@ async function savePracticaDay() {
         if (b2) { b2.textContent='Guardar Día'; b2.classList.remove('saved'); }
       }, 2000);
     } else {
-      b.textContent = '⚠ Error — Reintentar'; b.classList.add('save-error'); b.classList.remove('saved');
+      b.textContent = 'Error — Reintentar'; b.classList.add('save-error'); b.classList.remove('saved');
     }
   }
 }
@@ -3954,9 +3968,9 @@ async function saveDayFondeo(k, data) {
   if (res.ok) {
     showToast();
   } else if (res.reason === 'no-session') {
-    showToast('⚠ Sin sesión activa: guardado solo en este dispositivo', true);
+    showToast('Sin sesión activa: guardado solo en este dispositivo', true);
   } else {
-    showToast('⚠ Error guardando en la nube — no se confirmó el guardado', true);
+    showToast('Error guardando en la nube — no se confirmó el guardado', true);
   }
   return res.ok;
 }
@@ -4275,7 +4289,7 @@ function renderFondeoModalBody(key) {
 /* ── Sección trade principal ─────────────────────────────────── */
 /* Valores automáticos por resultado.
    tp / sl NO se editan acá: los define la Configuración del Journal
-   (botón "⚙ Configurar Journal", tabla user_settings en Supabase).
+   (botón "Configurar Journal", tabla user_settings en Supabase).
    Ver applyJournalConfig() más abajo. */
 const FIXED_AMOUNTS = {
   tp: null,   // TP = journalConfig.tp (automático)
@@ -4415,8 +4429,7 @@ function _countCambios(cambios, tipo, tabla) {
 let _cfgPending = null; // { oldCfg, newCfg, cambios }
 
 function openConfigModal() {
-  const menu = document.getElementById('topbarMenu');
-  if (menu) menu.classList.remove('open');
+  setTopbarMenuOpen(false);
   document.getElementById('cfgTpInput').value = String(journalConfig.tp);
   document.getElementById('cfgSlInput').value = String(Math.abs(journalConfig.sl));
   _cfgPending = null;
@@ -4620,7 +4633,7 @@ async function confirmConfigChange() {
     closeConfigModal();
 
     if (fallidos) {
-      showToast('⚠ Config guardada, pero ' + fallidos + ' día(s) no se subieron a la nube. Revisá la consola.', true);
+      showToast('Config guardada, pero ' + fallidos + ' día(s) no se subieron a la nube. Revisá la consola.', true);
     } else if (migrar) {
       showToast('✓ Configuración guardada · ' + cambios.length + ' día' + (cambios.length!==1?'s':'') + ' migrado' + (cambios.length!==1?'s':''));
     } else {
@@ -4894,7 +4907,7 @@ async function saveFondeoDay() {
       b.textContent = '✓ Guardado'; b.classList.add('saved'); b.classList.remove('save-error');
       setTimeout(() => { const b2=document.getElementById('fSaveBtn'); if(b2){b2.textContent='Guardar Día';b2.classList.remove('saved');} }, 2000);
     } else {
-      b.textContent = '⚠ Error — Reintentar'; b.classList.add('save-error'); b.classList.remove('saved');
+      b.textContent = 'Error — Reintentar'; b.classList.add('save-error'); b.classList.remove('saved');
     }
   }
 }
@@ -5410,7 +5423,7 @@ function daysOverDailyMax(acc) {
 function dailyMaxWarningHTML(pl, key) {
   const cap = maxDailyProfitFor(key);
   if (!cap || !(pl > cap.max)) return '';
-  return '⚠ Supera la ganancia máxima por día de ' + escapeHtml(accountDisplayName(cap.account)) +
+  return 'Supera la ganancia máxima por día de ' + escapeHtml(accountDisplayName(cap.account)) +
     ' (+' + cap.max.toLocaleString('es-AR') + ') por ' + (pl - cap.max).toLocaleString('es-AR') + ' USD';
 }
 
@@ -5457,8 +5470,7 @@ let _acctBusy = false;
 const MIGRACION_RIESGO_BACKUP_KEY = 'trading_backup_pre_riesgo_etapas';
 
 function openAccountsModal(mode) {
-  const menu = document.getElementById('topbarMenu');
-  if (menu) menu.classList.remove('open');
+  setTopbarMenuOpen(false);
   _acctView = { mode: 'main' };
   const acc = getActiveAccount();
   if (mode === 'new' && !acc) _startAccountForm(null);
@@ -5545,7 +5557,7 @@ function _acctMaxDailyLineHTML(acc) {
   const over = daysOverDailyMax(acc);
   return '<div class="acct-maxdaily">Ganancia máxima por día: <b>+' + acc.maxDailyProfit.toLocaleString('es-AR') + '</b>' +
     (over.length
-      ? ' · <span style="color:var(--yellow)">⚠ ' + over.length + ' día' + (over.length === 1 ? '' : 's') + ' lo superó' + (over.length === 1 ? '' : 'aron') +
+      ? ' · <span style="color:var(--yellow)">' + over.length + ' día' + (over.length === 1 ? '' : 's') + ' lo superó' + (over.length === 1 ? '' : 'aron') +
         ' (' + over.slice(-3).map(fmtKeyShort).join(', ') + (over.length > 3 ? '…' : '') + ')</span>'
       : ' · ningún día lo superó') +
     '</div>';
@@ -5716,7 +5728,7 @@ function _acctFormHTML() {
 
     '<div class="cfg-section-title" style="margin-top:16px">Etapas, objetivos y escalera de SL</div>' +
     '<div class="cfg-hint">El objetivo y los escalones se cargan en <b>balance de cuenta</b> (tamaño + ganancia). El SL a usar es el del escalón según tu balance, sin pasar el SL máximo de la etapa; el TP es RR × SL. ' +
-      'Se marca ⚠ si un escalón deja menos de ' + MIN_SL_BACKUP + ' SL de respaldo en el colchón.</div>';
+      'Se marca en amarillo si un escalón deja menos de ' + MIN_SL_BACKUP + ' SL de respaldo en el colchón.</div>';
   d.stages.forEach((s, i) => {
     const locked = s.status === 'completed';
     h += '<div class="acct-stage-edit' + (locked ? ' locked' : '') + '">' +
@@ -5801,7 +5813,7 @@ function _updateAcctPreview() {
     if (!pv || !from.ok || !sl.ok) { em.textContent = ''; em.className = 'acct-ladder-check'; return; }
     const chk = computeRiskState({ size: pv.size, balance: from.value, peak: from.value, risk: pv.risk,
       stage: { maxSl: maxSl.ok ? maxSl.value : null, ladder: [{ from: from.value, sl: sl.value }] } }).ladderChecks[0];
-    em.textContent = (chk.ok ? '✓ ' : '⚠ ') + fmtCount(chk.count) + ' SL';
+    em.textContent = (chk.ok ? '✓ ' : '') + fmtCount(chk.count) + ' SL';
     em.className = 'acct-ladder-check ' + (chk.ok ? 'ok' : 'warn');
     em.title = 'Colchón a ese balance: ' + chk.cushion.toLocaleString('es-AR') + ' ÷ SL ' + chk.sl.toLocaleString('es-AR');
   });
@@ -6104,7 +6116,7 @@ function applyAccountRiskMigration(btn) {
     _acctView = { mode: 'main' };
     _afterAccountsChange();
     renderFondeoCal();
-    if (fallidos) showToast('⚠ ' + fallidos + ' día(s) no se subieron a la nube. Revisá la consola.', true);
+    if (fallidos) showToast(fallidos + ' día(s) no se subieron a la nube. Revisá la consola.', true);
     else showToast('✓ ' + cambios.length + ' día' + (cambios.length === 1 ? '' : 's') + ' actualizado' + (cambios.length === 1 ? '' : 's'));
   });
 }
@@ -6455,7 +6467,7 @@ function renderDayStats() {
   const { y, m, day2 } = (() => { const p=parseKey(key); return {y:p.y,m:p.m,day2:p.d}; })();
   const p = parseKey(key);
 
-  let html = '<div class="stat-card-title">📅 ' + p.d + ' de ' + MONTHS[p.m] + '</div>';
+  let html = '<div class="stat-card-title">' + p.d + ' de ' + MONTHS[p.m] + '</div>';
 
   const dr = getDayResult(d);
   const st = getDayStats(d);
@@ -6624,7 +6636,7 @@ function renderFondeoPnl() {
       (ser.withdrawn ? '<div class="acct-stage-sub">Retirado '+ser.withdrawn.toLocaleString('es-AR')+' · P&L de trading '+_signedES(accSt.totalPL)+'</div>' : '')+
       (acc.maxDailyProfit
         ? '<div class="acct-stage-risk">Máx. por día +'+acc.maxDailyProfit.toLocaleString('es-AR')+
-          (_fondeo[tk] && todayPL > acc.maxDailyProfit ? ' · <span style="color:var(--yellow)">⚠ hoy lo superaste</span>' : '')+'</div>'
+          (_fondeo[tk] && todayPL > acc.maxDailyProfit ? ' · <span style="color:var(--yellow)">hoy lo superaste</span>' : '')+'</div>'
         : '')+
     '</div>';
 
@@ -6646,7 +6658,7 @@ function renderFondeoPnl() {
         '<div class="acct-progress"><div class="acct-progress-bar" style="width:'+pct.toFixed(1)+'%"></div></div>'+
         '<div class="acct-stage-sub">Objetivo balance '+s.target.toLocaleString('es-AR')+' (ganancia '+(s.target - acc.size).toLocaleString('es-AR')+')'+(falta > 0 ? ' · faltan '+falta.toLocaleString('es-AR') : '')+'</div>'+
         '<div class="acct-stage-sub">'+sum.days+' día'+(sum.days===1?'':'s')+' operado'+(sum.days===1?'':'s')+' · desde '+fmtKeyShort(r.start)+'</div>'+
-        (falta <= 0 ? '<div class="acct-goal-hit">🎯 Llegaste al objetivo: marcá la etapa como cumplida</div>' : '')+
+        (falta <= 0 ? '<div class="acct-goal-hit">Llegaste al objetivo: marcá la etapa como cumplida</div>' : '')+
         '<button class="acct-link-btn" style="align-self:flex-start" onclick="openAccountsModal(\'complete\')">✓ Marcar etapa cumplida</button>'+
       '</div>';
     subStage = ' · ' + escapeHtml(s.name);
@@ -6686,7 +6698,7 @@ function renderFondeoRisk() {
   if (rs.sl != null) {
     // El SL en uso (rs.sl) no tiene fila propia: se ve en el RR "SL – TP"
     html += key('SL que quedan', fmtCount(rs.slBackup), 'SL', 'neg');
-    if (rs.lowBackup) html += '<div class="acct-risk-warn">⚠ Te quedan '+fmtCount(rs.slBackup)+' SL de '+rs.sl.toLocaleString('es-AR')+': no llegás a '+MIN_SL_BACKUP+'.</div>';
+    if (rs.lowBackup) html += '<div class="acct-risk-warn">Te quedan '+fmtCount(rs.slBackup)+' SL de '+rs.sl.toLocaleString('es-AR')+': no llegás a '+MIN_SL_BACKUP+'.</div>';
   }
   if (rs.target) {
     html += key('TP que faltan', rs.tpLeft != null ? fmtCount(rs.tpLeft, 2) : '—', rs.tpLeft != null ? 'TP de '+rs.tp.toLocaleString('es-AR') : '', 'pos');
@@ -6699,7 +6711,7 @@ function renderFondeoRisk() {
     if (sug !== rs.sl) html += '<div class="risk-suggest">Sugerido: <b>'+sug.toLocaleString('es-AR')+'</b>'+(rs.suggestedCapped ? ' (tope de etapa)' : '')+'</div>';
   }
   if (rs.ladderWarnings.length) {
-    html += '<div class="acct-risk-warn">⚠ Escalones con menos de '+MIN_SL_BACKUP+' SL de respaldo: '+
+    html += '<div class="acct-risk-warn">Escalones con menos de '+MIN_SL_BACKUP+' SL de respaldo: '+
       rs.ladderWarnings.map(c => 'desde '+c.from.toLocaleString('es-AR')+' (SL '+c.sl.toLocaleString('es-AR')+' → '+fmtCount(c.count)+' SL)').join(' · ')+'</div>';
   }
 
@@ -7739,8 +7751,8 @@ function _setReturnBtn(tradeId, visible) {
 ══════════════════════════════════════════════════════════════ */
 
 async function exportBackup() {
-  const btn = document.querySelector('.topbar-btn.success');
-  if (btn) btn.textContent = '⏳ Preparando...';
+  const btn = document.getElementById('menuExportBackup');
+  if (btn) btn.textContent = 'Preparando...';
 
   try {
     // Reunir texto (localStorage) + imágenes (imgCache en memoria = lo que hay en IndexedDB)
@@ -7781,10 +7793,10 @@ async function importBackup(event) {
   event.target.value = '';   // resetear input para poder volver a cargar el mismo archivo
   if (!file) return;
 
-  if (!confirm('⚠️ Esto reemplazará TODOS los datos actuales (trades y fotos) con la copia de seguridad.\n\n¿Querés continuar?')) return;
+  if (!confirm('Esto reemplazará TODOS los datos actuales (trades y fotos) con la copia de seguridad.\n\n¿Querés continuar?')) return;
 
-  const btn = document.querySelector('.topbar-btn:not(.success):not(.danger)');
-  if (btn) btn.textContent = '⏳ Cargando...';
+  const btn = document.getElementById('menuImportBackup');
+  if (btn) btn.textContent = 'Cargando...';
 
   try {
     const text   = await file.text();
@@ -7850,7 +7862,7 @@ window.onload = async function() {
   // Solicitar al navegador que NUNCA limpie automáticamente estos datos
   if (navigator.storage && navigator.storage.persist) {
     const granted = await navigator.storage.persist();
-    console.log('[Storage] Persistencia solicitada:', granted ? '✓ Garantizada' : '⚠ No garantizada (los datos siguen guardados)');
+    console.log('[Storage] Persistencia solicitada:', granted ? '✓ Garantizada' : 'No garantizada (los datos siguen guardados)');
   }
   try {
     await openIDB();
@@ -7879,14 +7891,14 @@ window.onload = async function() {
     <div class="ie-group">
       <button class="ie-tool"        id="ie-select"    data-tool="select"    title="Seleccionar / Mover / Redimensionar (S)">⊕</button>
       <div class="ie-sep" style="height:20px"></div>
-      <button class="ie-tool active" id="ie-pen"       data-tool="pen"       title="Lápiz libre">✏️</button>
-      <button class="ie-tool"        id="ie-highlight" data-tool="highlight" title="Resaltador transparente">🖍</button>
+      <button class="ie-tool active" id="ie-pen"       data-tool="pen"       title="Lápiz libre"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20H4v-4L17 3z"/></svg></button>
+      <button class="ie-tool"        id="ie-highlight" data-tool="highlight" title="Resaltador transparente"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l5 5-8 8H7v-5l8-8z"/><line x1="4" y1="21" x2="20" y2="21"/></svg></button>
       <button class="ie-tool"        id="ie-path"      data-tool="path"      title="Ruta de precio (click por click)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 5"/><polyline points="15 5 21 5 21 11"/></svg></button>
       <button class="ie-tool"        id="ie-line"      data-tool="line"      title="Línea">╱</button>
         <button class="ie-tool"        id="ie-arrow"     data-tool="arrow"     title="Flecha">→</button>
-      <button class="ie-tool"        id="ie-text"      data-tool="text"      title="Texto">🅰️</button>
+      <button class="ie-tool"        id="ie-text"      data-tool="text"      title="Texto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 7 5 4 19 4 19 7"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="9" y1="20" x2="15" y2="20"/></svg></button>
       <button class="ie-tool"        id="ie-rect"      data-tool="rect"      title="Rectángulo">▭</button>
-      <button class="ie-tool"        id="ie-eraser"    data-tool="eraser"    title="Borrador">🧹</button>
+      <button class="ie-tool"        id="ie-eraser"    data-tool="eraser"    title="Borrador"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21L3 17a2 2 0 0 1 0-2.8L13.2 4a2 2 0 0 1 2.8 0L20 8a2 2 0 0 1 0 2.8L10 21H7z"/><line x1="21" y1="21" x2="10" y2="21"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></svg></button>
     </div>
     <div class="ie-sep"></div>
     <!-- Colors -->

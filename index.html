@@ -23,6 +23,8 @@
 :root{
   /* ── Fondos — grafito neutro (sin tinte de color) ── */
   --bg0:#0a0a0b;
+  /* Oscuridad del fondo de agua: 0 = foto tal cual, 1 = negro. Ajustar solo este número. */
+  --bg-overlay-opacity:.88;
   --bg1:#111113;
   --bg2:#17181b;
   --bg3:#202226;
@@ -110,13 +112,16 @@ body{
 /* Fondo de la app: agua azul oscura. Capa fija (cubre toda la pantalla y no se
    mueve al hacer scroll, también en celular) con un desenfoque leve para que no
    se noten los píxeles al estirarla. Se extiende 12px por fuera de la pantalla
-   para que el desenfoque no aclare los bordes. Overlay suave: la foto ya es oscura. */
+   para que el desenfoque no aclare los bordes. La oscuridad se regula con
+   --bg-overlay-opacity (en :root). */
 body::before{
   content:'';position:fixed;inset:-12px;z-index:-1;pointer-events:none;
-  background:
-    linear-gradient(rgba(9,10,12,.45), rgba(9,10,12,.45)),
-    url('assets/fondo-agua.jpg') center/cover no-repeat var(--bg0);
+  background:url('assets/fondo-agua.jpg') center/cover no-repeat var(--bg0);
   filter:blur(1.5px);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:rgb(9,10,12);opacity:var(--bg-overlay-opacity);
 }
 
 /* ═══════════════════════════════════════════════════════════

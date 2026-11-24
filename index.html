@@ -1311,6 +1311,7 @@ body{
 .risk-key-val .neg,.risk-key-val.neg{color:var(--red)}
 .risk-key-val .pos,.risk-key-val.pos{color:var(--green)}
 .risk-key-val .rr-sep{color:var(--t2);font-weight:700;margin:0 2px}
+.risk-key-val .rr-sep-white{color:var(--t1)}
 .risk-suggest{font-size:12px;font-weight:700;color:var(--t2);margin:-4px 0 8px 13px}
 .risk-suggest b{color:var(--t1)}
 .acct-wd-total{font-size:20px;font-weight:900;color:var(--t1);margin:2px 0}
@@ -6680,12 +6681,19 @@ function renderFondeoRisk() {
 
   // Balance de cuenta y Ganancia (rs.balance / rs.profit) ya se ven en la parte de PNLS:
   // no se muestran acá, pero se siguen calculando (los usan SL que quedan, RR y TP que faltan).
+  // Orden: SL que quedan, TP que faltan (juntos), RR
   let html = '<div class="stat-card-title">Gestión de riesgo</div>';
   if (rs.sl != null) {
     // El SL en uso (rs.sl) no tiene fila propia: se ve en el RR "SL – TP"
     html += key('SL que quedan', fmtCount(rs.slBackup), 'SL', 'neg');
     if (rs.lowBackup) html += '<div class="acct-risk-warn">⚠ Te quedan '+fmtCount(rs.slBackup)+' SL de '+rs.sl.toLocaleString('es-AR')+': no llegás a '+MIN_SL_BACKUP+'.</div>';
-    html += key('RR', '<span class="neg">'+rs.sl.toLocaleString('es-AR')+'</span><span class="rr-sep"> – </span><span class="pos">'+rs.tp.toLocaleString('es-AR')+'</span>');
+  }
+  if (rs.target) {
+    html += key('TP que faltan', rs.tpLeft != null ? fmtCount(rs.tpLeft, 2) : '—', rs.tpLeft != null ? 'TP de '+rs.tp.toLocaleString('es-AR') : '', 'pos');
+  }
+  if (rs.sl != null) {
+    // RR en blanco: los dos números y el guion
+    html += key('RR', rs.sl.toLocaleString('es-AR')+'<span class="rr-sep rr-sep-white"> – </span>'+rs.tp.toLocaleString('es-AR'));
     // SL sugerido: solo como aviso cuando no coincide con el SL en uso
     const sug = Math.floor(rs.suggestedSl);
     if (sug !== rs.sl) html += '<div class="risk-suggest">Sugerido: <b>'+sug.toLocaleString('es-AR')+'</b>'+(rs.suggestedCapped ? ' (tope de etapa)' : '')+'</div>';
@@ -6693,9 +6701,6 @@ function renderFondeoRisk() {
   if (rs.ladderWarnings.length) {
     html += '<div class="acct-risk-warn">⚠ Escalones con menos de '+MIN_SL_BACKUP+' SL de respaldo: '+
       rs.ladderWarnings.map(c => 'desde '+c.from.toLocaleString('es-AR')+' (SL '+c.sl.toLocaleString('es-AR')+' → '+fmtCount(c.count)+' SL)').join(' · ')+'</div>';
-  }
-  if (rs.target) {
-    html += key('TP que faltan', rs.tpLeft != null ? fmtCount(rs.tpLeft, 2) : '—', rs.tpLeft != null ? 'TP de '+rs.tp.toLocaleString('es-AR') : '', 'pos');
   }
 
   // Cantidad retirada hasta el momento = suma de los retiros registrados en la cuenta activa

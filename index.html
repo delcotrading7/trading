@@ -1285,7 +1285,7 @@ body{
    achiquen (si se achican, el texto de una queda tapado por la siguiente) */
 .fondeo-stats-side > .stat-card{flex-shrink:0}
 .acct-wd-line .acct-stage-sub b{color:var(--t1)}
-/* Datos clave del panel de riesgo: SL en uso, SL que quedan, RR, TP que faltan */
+/* Datos clave del panel de riesgo: SL que quedan, RR, TP que faltan */
 .risk-key{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:2px 0 8px;
   padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--t1);border-radius:8px}
 .risk-key-lbl{font-size:14px;font-weight:800;color:var(--t1)}
@@ -6658,7 +6658,7 @@ function renderFondeoRisk() {
   card.style.display = '';
   const rs = accountRiskState(acc);
   const row = (label, value, cls) => '<div class="stat-row"><span class="stat-label">'+label+'</span><span class="stat-value '+(cls||'')+'">'+value+'</span></div>';
-  // Filas destacadas (SL en uso, SL que quedan, RR, TP que faltan): mismo estilo entre las cuatro.
+  // Filas destacadas (SL que quedan, RR, TP que faltan): mismo estilo entre las tres.
   // cls: 'neg' (rojo) / 'pos' (verde), los mismos que usa el calendario para SL / TP.
   const key = (label, value, extra, cls) => '<div class="risk-key"><span class="risk-key-lbl">'+label+'</span><span class="risk-key-val'+(cls ? ' '+cls : '')+'">'+value+(extra ? ' <small>'+extra+'</small>' : '')+'</span></div>';
   // Límite de pérdida (rs.threshold) y Objetivo de la etapa (rs.target) se siguen calculando,
@@ -6670,13 +6670,13 @@ function renderFondeoRisk() {
 
   html += '<hr class="stat-divider">';
   if (rs.sl != null) {
-    html += key('SL en uso <span class="acct-opt">('+(rs.slSource === 'ladder' ? 'escalera' : 'regla de '+MIN_SL_BACKUP+' SL')+')</span>', rs.sl.toLocaleString('es-AR'));
-    // SL sugerido: solo como aviso cuando no coincide con el SL en uso
-    const sug = Math.floor(rs.suggestedSl);
-    if (sug !== rs.sl) html += '<div class="risk-suggest">Sugerido: <b>'+sug.toLocaleString('es-AR')+'</b>'+(rs.suggestedCapped ? ' (tope de etapa)' : '')+'</div>';
+    // El SL en uso (rs.sl) no tiene fila propia: se ve en el RR "SL – TP"
     html += key('SL que quedan', fmtCount(rs.slBackup), 'SL', 'neg');
     if (rs.lowBackup) html += '<div class="acct-risk-warn">⚠ Te quedan '+fmtCount(rs.slBackup)+' SL de '+rs.sl.toLocaleString('es-AR')+': no llegás a '+MIN_SL_BACKUP+'.</div>';
     html += key('RR', '<span class="neg">'+rs.sl.toLocaleString('es-AR')+'</span><span class="rr-sep"> – </span><span class="pos">'+rs.tp.toLocaleString('es-AR')+'</span>');
+    // SL sugerido: solo como aviso cuando no coincide con el SL en uso
+    const sug = Math.floor(rs.suggestedSl);
+    if (sug !== rs.sl) html += '<div class="risk-suggest">Sugerido: <b>'+sug.toLocaleString('es-AR')+'</b>'+(rs.suggestedCapped ? ' (tope de etapa)' : '')+'</div>';
   }
   if (rs.ladderWarnings.length) {
     html += '<div class="acct-risk-warn">⚠ Escalones con menos de '+MIN_SL_BACKUP+' SL de respaldo: '+

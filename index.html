@@ -102,12 +102,21 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{
-  background:
-    linear-gradient(rgba(9,10,12,.78), rgba(9,10,12,.78)),
-    url('FONDO.jpg') center/cover no-repeat fixed var(--bg0);
+  background:var(--bg0);
   color:var(--t1);
   font-family:var(--font-body);
   -webkit-font-smoothing:antialiased;
+}
+/* Fondo de la app: agua azul oscura. Capa fija (cubre toda la pantalla y no se
+   mueve al hacer scroll, también en celular) con un desenfoque leve para que no
+   se noten los píxeles al estirarla. Se extiende 12px por fuera de la pantalla
+   para que el desenfoque no aclare los bordes. Overlay suave: la foto ya es oscura. */
+body::before{
+  content:'';position:fixed;inset:-12px;z-index:-1;pointer-events:none;
+  background:
+    linear-gradient(rgba(9,10,12,.45), rgba(9,10,12,.45)),
+    url('assets/fondo-agua.jpg') center/cover no-repeat var(--bg0);
+  filter:blur(1.5px);
 }
 
 /* ═══════════════════════════════════════════════════════════

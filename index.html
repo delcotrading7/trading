@@ -132,11 +132,14 @@ body::after{
 .top-bar{
   background:linear-gradient(180deg,var(--bg2) 0%,var(--bg1) 100%);
   border-bottom:1px solid var(--goldborder);
-  height:58px;padding:0 28px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:flex-end;
+  height:58px;flex-shrink:0;
+  /* Margen izquierdo = el de los paneles (.fondeo-body: 46px, centrado con
+     max-width 2200px), para que el botón quede alineado con el panel PNLS */
+  padding:0 28px 0 max(46px, calc((100% - 2200px) / 2 + 46px));
+  display:flex;align-items:center;justify-content:flex-start;
   box-shadow:0 2px 24px rgba(0,0,0,.6);
 }
-/* Barra superior: solo el botón de tres barritas; las opciones van en un menú desplegable */
+/* Barra superior: solo el botón de tres barritas (a la izquierda); las opciones van en un menú desplegable */
 .topbar-right{position:relative;display:flex;align-items:center}
 .topbar-menu-btn{
   display:flex;align-items:center;justify-content:center;
@@ -146,11 +149,14 @@ body::after{
 }
 .topbar-menu-btn:hover,.topbar-menu-btn[aria-expanded="true"]{background:var(--bg3);border-color:var(--border);color:var(--t1)}
 .topbar-menu{
-  display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:950;
+  display:none;position:absolute;top:calc(100% + 8px);left:0;z-index:950;
   flex-direction:column;min-width:250px;padding:6px;
   background:var(--bg2);border:1px solid var(--border);border-radius:12px;
   box-shadow:0 14px 32px rgba(0,0,0,.6);
 }
+/* Se abre deslizándose desde la izquierda */
+.topbar-menu.open{animation:topbarMenuIn .16s ease-out}
+@keyframes topbarMenuIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
 .topbar-menu.open{display:flex}
 .topbar-menu-user{
   padding:10px 12px 10px;margin-bottom:4px;border-bottom:1px solid var(--border);

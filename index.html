@@ -2253,7 +2253,7 @@ body::before{
                 <div class="cal-title-wrap">
                   <button class="cal-title-btn" onclick="toggleSectionMenu(this)">Práctica <span class="cal-title-caret">▾</span></button>
                   <div class="cal-title-menu">
-                    <button onclick="switchTab('fondeo');closeSectionMenus()">Fondeo</button>
+                    <button onclick="switchTab('fondeo');closeSectionMenus()">Real</button>
                   </div>
                 </div>
                 <div class="cal-subtitle" id="pCalSubtitle">Sin datos este mes</div>
@@ -2313,7 +2313,7 @@ body::before{
             <div class="cal-header">
               <div class="cal-title-group">
                 <div class="cal-title-wrap">
-                  <button class="cal-title-btn" onclick="toggleSectionMenu(this)">Fondeo <span class="cal-title-caret">▾</span></button>
+                  <button class="cal-title-btn" onclick="toggleSectionMenu(this)">Real <span class="cal-title-caret">▾</span></button>
                   <div class="cal-title-menu">
                     <button onclick="switchTab('practica');closeSectionMenus()">Práctica</button>
                   </div>
@@ -2473,7 +2473,7 @@ body::before{
 
     <!-- Paso 1: editar valores -->
     <div id="cfgStep1">
-      <div class="share-sub">Montos automáticos que se cargan al marcar TP o SL en un día (Práctica y Fondeo).</div>
+      <div class="share-sub">Montos automáticos que se cargan al marcar TP o SL en un día (Práctica y Real).</div>
       <div class="cfg-section-title">Montos automáticos</div>
       <div class="cfg-row">
         <label class="cfg-label" for="cfgTpInput"><span class="res-dot" style="background:#22c55e"></span>Take Profit (TP)</label>
@@ -3371,7 +3371,7 @@ function confirmResetData() {
 
 /* ── LIMPIAR DATOS ───────────────────────────────────────────── */
 async function clearLocalData() {
-  if (!confirm('¿Borrar TODOS los datos (Práctica y Fondeo), en esta computadora Y en la nube? Esta acción no se puede deshacer.')) return;
+  if (!confirm('¿Borrar TODOS los datos (Práctica y Real), en esta computadora Y en la nube? Esta acción no se puede deshacer.')) return;
   localStorage.clear();
   idbClearAll();
   Object.keys(imgCache).forEach(k => delete imgCache[k]);
@@ -5072,11 +5072,11 @@ function submitConfigStep1() {
     const parts = [];
     if (oldCfg.tp !== newCfg.tp) {
       parts.push('TP ' + fmtUSD(oldCfg.tp, true) + ' → ' + fmtUSD(newCfg.tp, true) + ': <b>' + _countCambios(cambios,'tp') + ' día' + (_countCambios(cambios,'tp')!==1?'s':'') + '</b>' +
-        ' (Práctica ' + _countCambios(cambios,'tp','practica') + ' · Fondeo ' + _countCambios(cambios,'tp','fondeo') + ')');
+        ' (Práctica ' + _countCambios(cambios,'tp','practica') + ' · Real ' + _countCambios(cambios,'tp','fondeo') + ')');
     }
     if (oldCfg.sl !== newCfg.sl) {
       parts.push('SL ' + fmtUSD(oldCfg.sl, true) + ' → ' + fmtUSD(newCfg.sl, true) + ': <b>' + _countCambios(cambios,'sl') + ' día' + (_countCambios(cambios,'sl')!==1?'s':'') + '</b>' +
-        ' (Práctica ' + _countCambios(cambios,'sl','practica') + ' · Fondeo ' + _countCambios(cambios,'sl','fondeo') + ')');
+        ' (Práctica ' + _countCambios(cambios,'sl','practica') + ' · Real ' + _countCambios(cambios,'sl','fondeo') + ')');
     }
     sum = parts.join('<br>') +
       '<br>Total: <b>' + cambios.length + ' día' + (cambios.length!==1?'s':'') + '</b>. BE, SP, NE, Día Lateral y montos editados a mano no se tocan.' +
@@ -6192,7 +6192,7 @@ function _acctMainHTML() {
       '<button class="cfg-btn primary" onclick="setAccountsView(\'edit\')">Editar cuenta</button></div>' +
       '</div>';
   } else {
-    h += '<div class="acct-card empty"><div class="acct-stage-sub" style="margin-bottom:12px">No hay ninguna cuenta activa. Los días de Fondeo se siguen viendo en "Total".</div>' +
+    h += '<div class="acct-card empty"><div class="acct-stage-sub" style="margin-bottom:12px">No hay ninguna cuenta activa. Los días de Real se siguen viendo en "Total".</div>' +
       '<button class="share-gen-btn acct-gen-btn" onclick="setAccountsView(\'new\')">+ Nueva cuenta</button></div>';
   }
 
@@ -6651,7 +6651,7 @@ function _acctMigrateHTML() {
   const cambios = _acctView.cambios || [];
   const nTP = cambios.filter(c => c.tipo === 'tp').length, nSL = cambios.length - nTP;
   const lista = cambios.slice(0, 12).map(c => fmtKeyShort(c.dia) + ': ' + c.tipo.toUpperCase() + ' ' + _signedES(Number(c.antes)) + ' → ' + _signedES(c.despues)).join('<br>');
-  return '<div class="cfg-change">Hay <b>' + cambios.length + ' día' + (cambios.length === 1 ? '' : 's') + '</b> de Fondeo ya cargado' + (cambios.length === 1 ? '' : 's') +
+  return '<div class="cfg-change">Hay <b>' + cambios.length + ' día' + (cambios.length === 1 ? '' : 's') + '</b> de Real ya cargado' + (cambios.length === 1 ? '' : 's') +
       ' con el monto automático anterior (' + (nSL ? nSL + ' SL' : '') + (nSL && nTP ? ' · ' : '') + (nTP ? nTP + ' TP' : '') + ').<br>' +
       'Con el riesgo de su etapa quedarían así:</div>' +
     '<div class="acct-stage-sub" style="margin-bottom:12px">' + lista + (cambios.length > 12 ? '<br>… y ' + (cambios.length - 12) + ' más' : '') + '</div>' +
@@ -6687,7 +6687,7 @@ async function restaurarBackupRiesgoEtapas() {
   let bk = null;
   try { bk = JSON.parse(localStorage.getItem(MIGRACION_RIESGO_BACKUP_KEY) || 'null'); } catch (e) {}
   if (!bk || !Array.isArray(bk.cambios) || !bk.cambios.length) { alert('No hay respaldo guardado en este navegador.'); return; }
-  if (!confirm('Esto va a devolver ' + bk.cambios.length + ' día(s) de Fondeo a sus montos anteriores. ¿Continuar?')) return;
+  if (!confirm('Esto va a devolver ' + bk.cambios.length + ' día(s) de Real a sus montos anteriores. ¿Continuar?')) return;
   const revertidos = bk.cambios.filter(c => _fondeo[c.dia]);
   revertidos.forEach(c => { _fondeo[c.dia].mainAmount = c.antes; });
   saveFondeoData();
@@ -8446,8 +8446,8 @@ window.onload = async function() {
 /* ══════════════════════════════════════════════════════════════
    ANALYTICS — zona de estadísticas debajo del calendario
    - Lee los mismos datos del calendario (_practica / _fondeo); no
-     guarda nada propio. En Fondeo usa la cuenta activa (si no hay
-     ninguna, todos los días de Fondeo).
+     guarda nada propio. En Real usa todos los días cargados (de todas
+     las cuentas), para poder ver meses y años anteriores.
    - Se vuelve a dibujar desde renderPStats() / renderStats(), así que
      se actualiza sola al cargar o editar un día, cambiar de mes, etc.
    Definiciones (iguales en toda la zona):
@@ -8460,10 +8460,10 @@ window.onload = async function() {
    - Rachas: orden cronológico sobre días operados; BE no corta ni suma.
 ══════════════════════════════════════════════════════════════ */
 const AN = { filter: 'all', tab: 'overview' };
-const AN_FILTERS = [['all','All'],['week','Week'],['month','Month'],['year','Year']];
-const AN_MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const AN_MON_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const AN_DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const AN_FILTERS = [['all','Todo'],['week','Semana'],['month','Mes'],['year','Año']];
+const AN_MON = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const AN_MON_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const AN_DOW = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const AN_OPERATED = { tp: 1, sl: 1, be: 1, sp: 1 };
 
 /* Fuente de datos de la sección activa */
@@ -8472,8 +8472,7 @@ function anSource(mode) {
     return { store: _practica, keys: Object.keys(_practica), y: PS.y, m: PS.m,
              pl: getDayPLPractica, res: getPDayResult, stats: getDayStatsP };
   }
-  const acc = getActiveAccount();
-  return { store: _fondeo, keys: acc ? accountKeys(acc) : Object.keys(_fondeo), y: FS.y, m: FS.m,
+  return { store: _fondeo, keys: Object.keys(_fondeo), y: FS.y, m: FS.m,
            pl: getDayPL, res: getDayResult, stats: getDayStats };
 }
 
@@ -8580,7 +8579,7 @@ function anCls(n) { return n > 0 ? 'an-pos' : n < 0 ? 'an-neg' : 'an-zero'; }
 function anEsc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function anDateLong(key) {
   const p = parseKey(key), dt = new Date(p.y, p.m, p.d);
-  return AN_DOW[dt.getDay()] + ', ' + p.d + ' ' + AN_MON[p.m] + ' ' + p.y;
+  return AN_DOW[dt.getDay()] + ' ' + p.d + ' ' + AN_MON[p.m] + ' ' + p.y;
 }
 
 /* ── Gráfico de P&L ── */
@@ -8653,8 +8652,8 @@ function anTipShow(col) {
   let d; try { d = JSON.parse(col.dataset.tip); } catch (e) { return; }
   tip.innerHTML =
     '<div class="an-tip-title">' + anEsc(d.t) + '</div>' +
-    '<div class="an-tip-row"><span>Result</span><b class="' + anCls(d.pl) + '">' + anMoney(d.pl, true) + '</b></div>' +
-    '<div class="an-tip-row"><span>Days traded</span><b>' + d.n + '</b></div>' +
+    '<div class="an-tip-row"><span>Resultado</span><b class="' + anCls(d.pl) + '">' + anMoney(d.pl, true) + '</b></div>' +
+    '<div class="an-tip-row"><span>Días operados</span><b>' + d.n + '</b></div>' +
     '<div class="an-tip-row"><span>Win rate</span><b>' + anPct(d.wr) + '</b></div>';
   const cr = chart.getBoundingClientRect(), r = col.getBoundingClientRect();
   tip.classList.add('show');
@@ -8672,7 +8671,7 @@ function anTipHide(col) {
 function anPerfHTML(s, days) {
   return '<div class="an-card an-perf">' +
     '<div class="an-perf-head">' +
-      '<div><div class="an-lbl">P&amp;L Performance</div>' +
+      '<div><div class="an-lbl">Rendimiento P&amp;L</div>' +
         '<div class="an-perf-total ' + anCls(s.total) + '">' + anFull(s.total, true) + '</div></div>' +
       '<div class="an-perf-kpis">' +
         '<div><div class="an-lbl">Trades</div><div class="an-perf-kpi-val an-zero">' + s.trades + '</div></div>' +
@@ -8687,7 +8686,7 @@ function anPerfHTML(s, days) {
 /* ── Tarjeta de métricas con pestañas (Overview / By Strategy / By Weekday) ──
    Las tres pestañas se apilan en la misma celda de la grilla y solo se ve
    la activa: así la tarjeta siempre mide lo que la más alta y no salta. */
-const AN_TABS = [['overview','Overview'],['strategy','By Strategy'],['weekday','By Weekday']];
+const AN_TABS = [['overview','Resumen'],['strategy','Por estrategia'],['weekday','Por día']];
 const AN_STRATEGY_GROUPS = [
   { val: true,     label: 'Sí cumplí',      color: 'var(--green)'  },
   { val: false,    label: 'No cumplí',      color: 'var(--red)'    },
@@ -8705,20 +8704,20 @@ function anOverviewHTML(s) {
   const dash = v => none ? '—' : v;
   return '<div class="an-ov">' +
     anCell('Total P&amp;L',    dash(anMoney(s.total, true)), none ? 'an-zero' : anCls(s.total), 'período seleccionado') +
-    anCell('Largest gain',     s.best  ? anMoney(s.best.pl, true)  : '—', s.best  ? 'an-pos' : 'an-zero', 'single day') +
-    anCell('Largest loss',     s.worst ? anMoney(s.worst.pl, true) : '—', s.worst ? 'an-neg' : 'an-zero', 'single day') +
+    anCell('Mayor ganancia',     s.best  ? anMoney(s.best.pl, true)  : '—', s.best  ? 'an-pos' : 'an-zero', 'en un día') +
+    anCell('Mayor pérdida',     s.worst ? anMoney(s.worst.pl, true) : '—', s.worst ? 'an-neg' : 'an-zero', 'en un día') +
     anCell('Win rate',         anPct(s.wr), s.wr === null ? 'an-zero' : 'an-pos',
-           s.wins + 'W / ' + s.losses + 'L / ' + s.be + 'BE') +
-    anCell('Profit factor',    anPF(s.pf), s.pf === null ? 'an-zero' : 'an-neu', 'gross profit / gross loss') +
-    anCell('Avg win',          anMoney(s.avgWin),  s.avgWin  === null ? 'an-zero' : 'an-pos', 'per winning day') +
-    anCell('Avg loss',         anMoney(s.avgLoss), s.avgLoss === null ? 'an-zero' : 'an-neg', 'per losing day') +
-    anCell('Best streak',      dash(s.bestStreak + 'd'),  none ? 'an-zero' : 'an-neu', 'consecutive wins') +
-    anCell('Worst streak',     dash(s.worstStreak + 'd'), none ? 'an-zero' : 'an-neg', 'consecutive losses') +
+           s.wins + ' ganados / ' + s.losses + ' perdidos / ' + s.be + ' BE') +
+    anCell('Profit factor',    anPF(s.pf), s.pf === null ? 'an-zero' : 'an-neu', 'ganancia bruta / pérdida bruta') +
+    anCell('Ganancia promedio',          anMoney(s.avgWin),  s.avgWin  === null ? 'an-zero' : 'an-pos', 'por día ganador') +
+    anCell('Pérdida promedio',         anMoney(s.avgLoss), s.avgLoss === null ? 'an-zero' : 'an-neg', 'por día perdedor') +
+    anCell('Mejor racha',      dash(s.bestStreak + 'd'),  none ? 'an-zero' : 'an-neu', 'días ganadores seguidos') +
+    anCell('Peor racha',     dash(s.worstStreak + 'd'), none ? 'an-zero' : 'an-neg', 'días perdedores seguidos') +
   '</div>';
 }
 function anTblHead(first) {
-  return '<div class="an-tbl-row an-tbl-head"><span>' + first + '</span><span>Days</span>' +
-         '<span>P&amp;L</span><span>Win rate</span><span>Avg / day</span></div>';
+  return '<div class="an-tbl-row an-tbl-head"><span>' + first + '</span><span>Días</span>' +
+         '<span>P&amp;L</span><span>Win rate</span><span>Prom. / día</span></div>';
 }
 function anTblNums(g) {
   if (!g.n) return '<span class="an-tbl-num dim">—</span><span class="an-tbl-num dim">—</span>' +
@@ -8729,7 +8728,7 @@ function anTblNums(g) {
     '<span class="an-tbl-num ' + anCls(g.total) + '">' + anFull(g.total / g.n, true) + '</span>';
 }
 function anStrategyHTML(days) {
-  let h = '<div class="an-tbl">' + anTblHead('Strategy');
+  let h = '<div class="an-tbl">' + anTblHead('Estrategia');
   AN_STRATEGY_GROUPS.forEach(gr => {
     const g = anSummarize(days.filter(d => d.est === gr.val));
     const share = days.length ? g.n / days.length * 100 : 0;
@@ -8759,10 +8758,10 @@ function anWeekdayHTML(days) {
     worst = withData.reduce((a, b) => b.total < a.total ? b : a);
     if (worst === best) worst = null;
   }
-  let h = '<div class="an-tbl">' + anTblHead('Weekday');
+  let h = '<div class="an-tbl">' + anTblHead('Día');
   rows.forEach(r => {
     const cls = r === best ? ' best' : r === worst ? ' worst' : '';
-    const chip = r === best ? '<span class="an-chip an-pos">Best</span>' : r === worst ? '<span class="an-chip an-neg">Worst</span>' : '';
+    const chip = r === best ? '<span class="an-chip an-pos">Mejor</span>' : r === worst ? '<span class="an-chip an-neg">Peor</span>' : '';
     h += '<div class="an-tbl-row' + cls + '"><div class="an-tbl-name">' + r.label + chip + '</div>' + anTblNums(r) + '</div>';
   });
   return h + '</div>';
@@ -8790,14 +8789,14 @@ const AN_SCORE = {
   PF_POINTS_PER_UNIT: 10,   // puntos = profit factor × 10 (PF 2,5 = máximo)
   JOURNAL_MAX: 25,          // % de días con registro completo × 25
   CONSISTENCY_MAX: 20,      // % de "Sí cumplí" sobre días con respuesta × 20
-  LEVELS: [[85, 'Excellent'], [70, 'Good'], [50, 'Fair'], [0, 'Needs work']],
+  LEVELS: [[85, 'Excelente'], [70, 'Bueno'], [50, 'Regular'], [0, 'A mejorar']],
 };
 const AN_INSIGHTS = {
   MIN_DAYS: 5,              // días operados mínimos para mostrar insights
   STREAK_MIN: 3,            // racha activa mínima para avisar
   MAX_CARDS: 3,
 };
-const AN_DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const AN_DOW_FULL = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const AN_ICONS = {
   calendar: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>',
   check:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16.5 9.5"/></svg>',
@@ -8842,17 +8841,17 @@ function anScoreHTML(sc) {
       box('Win rate', sc && sc.wr, AN_SCORE.WINRATE_MAX) +
       box('Prof. factor', sc && sc.pf, AN_SCORE.PF_MAX) +
       box('Journal', sc && sc.journal, AN_SCORE.JOURNAL_MAX) +
-      box('Consistency', sc && sc.consistency, AN_SCORE.CONSISTENCY_MAX) +
+      box('Consistencia', sc && sc.consistency, AN_SCORE.CONSISTENCY_MAX) +
     '</div>' +
   '</div>';
 }
 function anQuickHTML(s) {
   const row = (label, val) => '<div class="an-qrow"><span>' + label + '</span>' + val + '</div>';
-  return '<div class="an-card an-quick"><div class="an-lbl">Quick stats</div>' +
+  return '<div class="an-card an-quick"><div class="an-lbl">Datos rápidos</div>' +
     row('Win Rate', '<b class="an-mono ' + (s.wr === null ? 'an-zero' : 'an-pos') + '">' + anPct(s.wr) + '</b>') +
     row('Profit Factor', '<b class="an-mono ' + (s.pf === null ? 'an-zero' : 'an-neu') + '">' + anPF(s.pf) + '</b>') +
     row('Total P&amp;L', '<b class="an-mono ' + (s.n ? anCls(s.total) : 'an-zero') + '">' + (s.n ? anMoney(s.total, true) : '—') + '</b>') +
-    row('Best Day', s.best
+    row('Mejor día', s.best
       ? '<b class="an-mono an-pos">' + anMoney(s.best.pl, true) + '<small>' + anDateShort(s.best.key) + '</small></b>'
       : '<b class="an-mono an-zero">—</b>') +
   '</div>';
@@ -8865,9 +8864,9 @@ function anInsightsList(days, s, mt) {
   if (wd.length) {
     const b = wd.reduce((a, c) => c.total > a.total ? c : a);
     if (b.total > 0) out.push({ icon: 'calendar',
-      title: AN_DOW_FULL[b.dow] + ' is your strongest day',
-      key: anPct(b.wr) + ' win rate · ' + b.n + (b.n === 1 ? ' day' : ' days'),
-      text: 'Your ' + AN_DOW_FULL[b.dow] + ' sessions generated ' + anFull(b.total, true) + ' in total.' });
+      title: 'El ' + AN_DOW_FULL[b.dow] + ' es tu mejor día',
+      key: anPct(b.wr) + ' win rate · ' + b.n + (b.n === 1 ? ' día' : ' días'),
+      text: 'Tus días ' + AN_DOW_FULL[b.dow] + ' generaron ' + anFull(b.total, true) + ' en total.' });
   }
   // Disciplina: promedio por día cumpliendo vs no cumpliendo la estrategia
   const si = anSummarize(days.filter(d => d.est === true));
@@ -8875,30 +8874,30 @@ function anInsightsList(days, s, mt) {
   if (si.n && no.n) {
     const a = si.total / si.n, b = no.total / no.n;
     out.push({ icon: 'check',
-      title: a > b ? 'Following your plan pays off' : 'Your plan isn\'t showing an edge yet',
-      key: anFull(a, true) + ' vs ' + anFull(b, true) + ' per day',
-      text: 'Average per day when you followed your strategy (' + si.n + ' days) vs when you didn\'t (' + no.n + ' days).' });
+      title: a > b ? 'Cumplir tu estrategia da resultado' : 'Cumplir tu estrategia todavía no muestra ventaja',
+      key: anFull(a, true) + ' vs ' + anFull(b, true) + ' por día',
+      text: 'Promedio por día cuando cumpliste la estrategia (' + si.n + ' días) contra cuando no la cumpliste (' + no.n + ' días).' });
   }
   // Racha activa
   if (s.current && s.current.n >= AN_INSIGHTS.STREAK_MIN) {
     const sum = s.current.days.reduce((t, d) => t + d.pl, 0);
     const win = s.current.type === 'win';
     out.push({ icon: 'trend',
-      title: 'You\'re on a ' + s.current.n + '-day ' + (win ? 'winning' : 'losing') + ' streak',
-      key: anFull(sum, true) + ' over the streak', keyCls: win ? '' : 'an-neg',
-      text: win ? 'Your last ' + s.current.n + ' trading days closed positive. Keep the same process.'
-                : 'Your last ' + s.current.n + ' trading days closed negative. Review them before the next session.' });
+      title: 'Llevás ' + s.current.n + ' días ' + (win ? 'ganadores' : 'perdedores') + ' seguidos',
+      key: anFull(sum, true) + ' en la racha', keyCls: win ? '' : 'an-neg',
+      text: win ? 'Tus últimos ' + s.current.n + ' días operados cerraron en positivo. Mantené el mismo proceso.'
+                : 'Tus últimos ' + s.current.n + ' días operados cerraron en negativo. Revisalos antes de la próxima sesión.' });
   }
   // Miss Trades: el journal guarda cuántos hubo, no el monto
   if (mt.count) out.push({ icon: 'target',
-    title: 'Miss trades recorded',
-    key: mt.count + ' miss trade' + (mt.count === 1 ? '' : 's') + ' · ' + mt.days + (mt.days === 1 ? ' day' : ' days'),
-    text: 'The journal doesn\'t store the size of a miss trade, so the profit left on the table can\'t be calculated.' });
+    title: 'Miss trades registrados',
+    key: mt.count + ' miss trade' + (mt.count === 1 ? '' : 's') + ' · ' + mt.days + (mt.days === 1 ? ' día' : ' días'),
+    text: 'El journal no guarda el monto de cada miss trade, así que no se puede calcular cuánto se dejó de ganar.' });
   return out.slice(0, AN_INSIGHTS.MAX_CARDS);
 }
 function anInsightsHTML(list) {
-  let h = '<div class="an-ins"><div class="an-lbl">Insights</div>';
-  if (!list.length) return h + '<div class="an-ins-empty">Not enough data yet</div></div>';
+  let h = '<div class="an-ins"><div class="an-lbl">Observaciones</div>';
+  if (!list.length) return h + '<div class="an-ins-empty">Todavía no hay datos suficientes</div></div>';
   list.forEach(i => {
     h += '<div class="an-card an-ins-card">' +
       '<div class="an-ins-head"><span class="an-ins-icon">' + AN_ICONS[i.icon] + '</span>' +
@@ -8934,7 +8933,7 @@ function renderAnalytics(mode) {
     el.innerHTML =
       '<div class="an-divider"></div>' +
       '<div class="an-header">' +
-        '<h2 class="an-title">Analytics</h2>' +
+        '<h2 class="an-title">Estadísticas</h2>' +
         '<div class="an-seg" role="tablist">' +
           AN_FILTERS.map(([v, l]) => '<button type="button" class="' + (AN.filter === v ? 'active' : '') +
             '" onclick="setAnFilter(\'' + v + '\')">' + l + '</button>').join('') +

@@ -1586,11 +1586,39 @@ body::before{
 .ns-all-btn{background:var(--bg3);border:1px solid var(--border);color:var(--t1);font-size:11.5px;font-weight:700;padding:8px 10px;
   border-radius:8px;cursor:pointer;font-family:var(--font-body)}
 .ns-all-btn:hover{border-color:var(--borderl)}
+
+/* Tarjetas "SL de [mes anterior]" y "SL de [mes actual]" (debajo de la de No estadísticos).
+   Mismo estilo que .ns-card; la lista muestra hasta 5 filas y el resto scrollea dentro. */
+.repaso-alerts-side{overflow-y:auto}                 /* último recurso: scroll solo de la columna */
+/* Si no entra todo en el alto del calendario, primero se achican las listas de estas
+   dos tarjetas (hasta ~2 filas) para que la de No estadísticos no quede aplastada */
+.slm-card{min-height:auto;flex-shrink:1000}
+.slm-card:has(.ns-item:nth-child(3)){min-height:215px}
+.slm-card.slm-alert:has(.ns-item:nth-child(3)){min-height:262px}
+.repaso-alerts-side .ns-card:not(.slm-card):has(.ns-list){min-height:150px}
+.slm-card .ns-list{max-height:calc(5 * 58px - 6px);flex:0 1 auto;min-height:0}
+.slm-card.slm-empty{flex-shrink:0}
+.slm-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.slm-head .ns-title{margin-bottom:0}
+.slm-count{font-size:9.5px;font-weight:700;color:var(--t3);white-space:nowrap}
+.slm-count.todo{color:var(--t2)}
+.ns-state.slm-todo{color:var(--t3);display:inline-flex;align-items:center;gap:4px}
+.ns-state.slm-todo::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--t3)}
+.ns-state.slm-stat{color:var(--t2)}
+.ns-state.slm-nostat{color:var(--red);opacity:.8}
+.slm-card.slm-alert{border-left:2px solid var(--mt)}
+.slm-card.slm-alert .slm-count{color:var(--mt)}
+.slm-alert-msg{display:block;width:100%;text-align:left;background:var(--mtbg);border:1px solid var(--mtborder);border-radius:8px;
+  padding:8px 9px;margin-bottom:8px;font-size:11.5px;font-weight:700;line-height:1.4;color:var(--t1);cursor:pointer;
+  font-family:var(--font-body);flex-shrink:0}
+.slm-alert-msg:hover{border-color:var(--mt)}
 @media (max-width:640px){
   .repaso-alerts-side .ns-card{display:none}
   .repaso-alerts-side:not(:has(.sl-alert-card)){display:none}
-  .repaso-ns-mobile{display:block;width:100%;order:1}
+  .repaso-alerts-side{overflow:visible}
+  .repaso-ns-mobile{display:flex;flex-direction:column;gap:14px;width:100%;order:1}
   .repaso-ns-mobile .ns-list{max-height:none}
+  .repaso-ns-mobile .slm-card .ns-list{max-height:calc(5 * 58px - 6px)}
 }
 
 /* Etiqueta Estadístico / No estadístico en la celda del calendario (SL revisados) */
@@ -6968,7 +6996,6 @@ function renderSlAlerts() {
   if (!el) return;
 
   const weekCount  = slPendingCount('week');
-  const monthCount = slPendingCount('month');
   let html = '';
   if (weekCount > 0) {
     html += '<button class="sl-alert-card sl-alert-week" onclick="openFondeoModalForRepaso(\'week\')">' +
@@ -6981,23 +7008,91 @@ function renderSlAlerts() {
       '</span>' +
     '</button>';
   }
-  if (monthCount > 0) {
-    html += '<button class="sl-alert-card sl-alert-month" onclick="openSlReview()">' +
-      '<span class="sl-alert-icon">' + ICON_CAL_MONTH + '</span>' +
-      '<span>' +
-        '<span class="sl-alert-label">Mensual</span>' +
-        '<span class="sl-alert-text">Ya podés repasar el Stop Loss del mes' +
-          '<span class="sl-alert-count">' + monthCount + ' pendiente' + (monthCount > 1 ? 's' : '') + '</span>' +
-        '</span>' +
-      '</span>' +
-    '</button>';
-  }
-  const ns = slNoStatCardHTML();
-  el.innerHTML = html + ns;
+  // El aviso "Mensual" ya no se muestra acá: lo reemplaza la tarjeta del mes
+  // anterior resaltada ("Terminaste [mes]. Revisá los Stop Loss que tuviste.").
+  const ns = slNoStatCardHTML() + slMonthCardHTML(-1) + slMonthCardHTML(0);
   const mob = document.getElementById('fRepasoNsMobile');
+  const scrolls = slSaveListScroll([el, mob]);
+  el.innerHTML = html + ns;
   if (mob) mob.innerHTML = ns;   // en celular se muestra esta copia, debajo del calendario
+  slRestoreListScroll([el, mob], scrolls);
   renderSlReview();          // si la pantalla Repaso SL está abierta, se actualiza
 }
+
+/* ── Tarjetas "SL de [mes anterior]" y "SL de [mes actual]" ─────
+   Mes real según la fecha de hoy (no el mes abierto en el calendario).
+   Usan los mismos datos que el resto del Repaso SL (reviewed / slStatus)
+   y el mismo criterio de estado que la pantalla "Ver todos los SL del mes":
+   Pendiente = sin revisar (o revisado sin clasificar). ─────────── */
+function slMonthOf(off) {
+  const t = new Date();
+  const d = new Date(t.getFullYear(), t.getMonth() + off, 1);
+  return { y: d.getFullYear(), m: d.getMonth() };
+}
+function slMonthCardKeys(off) {
+  const { y, m } = slMonthOf(off);
+  return slKeysInMonth(y, m).sort().reverse();       // más reciente arriba
+}
+function slMonthCardHTML(off) {
+  const { y, m } = slMonthOf(off);
+  const keys = slMonthCardKeys(off);
+  const pending = keys.filter(k => slGroupOf(_fondeo[k]) === 'pending').length;
+  const alert = off === -1 && pending > 0;            // aviso de fin de mes
+  const cnt = !keys.length ? ''
+    : pending ? '<span class="slm-count todo">' + pending + (pending === 1 ? ' pendiente' : ' pendientes') + '</span>'
+              : '<span class="slm-count">Todos revisados</span>';
+  let h = '<div class="ns-card slm-card' + (alert ? ' slm-alert' : '') + (keys.length ? '' : ' slm-empty') + '" data-slm="' + off + '">' +
+    '<div class="slm-head"><div class="ns-title">SL de ' + MONTHS[m] + ' ' + y + '</div>' + cnt + '</div>';
+  if (!keys.length) return h + '<div class="ns-empty">No tuviste Stop Loss en ' + MONTHS[m] + '.</div></div>';
+  if (alert) {
+    h += '<button type="button" class="slm-alert-msg" onclick="openSlReview(' + y + ',' + m + ')">' +
+      'Terminaste ' + MONTHS[m] + '. Revisá los Stop Loss que tuviste.</button>';
+  }
+  h += '<div class="ns-list">';
+  keys.forEach(k => {
+    const d = _fondeo[k];
+    const g = slGroupOf(d);
+    const state = g === 'stat' ? '<span class="ns-state slm-stat">Estadístico</span>'
+                : g === 'nostat' ? '<span class="ns-state slm-nostat">No estadístico</span>'
+                : '<span class="ns-state slm-todo">Sin revisar</span>';
+    h += '<button type="button" class="ns-item" onclick="openSlMonthDay(' + off + ',\'' + k + '\')">' +
+      '<div class="ns-row"><span class="ns-date">' + slDateLabel(k) + '</span><span class="ns-amt">' + slAmountText(d) + '</span></div>' +
+      '<div class="ns-row2"><span class="ns-tags">' + slTagsOf(d).map(t => '<span>' + t + '</span>').join('') + '</span>' + state + '</div>' +
+    '</button>';
+  });
+  h += '</div><div class="ns-foot">' +
+    '<button type="button" class="ns-all-btn" onclick="openSlReview(' + y + ',' + m + ')">Ver todos los SL del mes</button>' +
+  '</div></div>';
+  return h;
+}
+function openSlMonthDay(off, k) {
+  const keys = slMonthCardKeys(off);                  // SL anterior / siguiente recorre los SL de esta tarjeta
+  repasoNavCtx = { keys, idx: Math.max(0, keys.indexOf(k)) };
+  openRepasoModalAt(repasoNavCtx.idx);
+}
+// Al redibujar, las listas mantienen su scroll (si no, saltarían arriba al marcar algo)
+function slSaveListScroll(roots) {
+  return roots.map(r => r ? [...r.querySelectorAll('.ns-card')].map(c => {
+    const l = c.querySelector('.ns-list');
+    return [c.dataset.slm || 'ns', l ? l.scrollTop : 0];
+  }) : []);
+}
+function slRestoreListScroll(roots, saved) {
+  roots.forEach((r, i) => {
+    if (!r) return;
+    saved[i].forEach(([id, top]) => {
+      const c = id === 'ns' ? r.querySelector('.ns-card:not(.slm-card)') : r.querySelector('.slm-card[data-slm="' + id + '"]');
+      const l = c && c.querySelector('.ns-list');
+      if (l && top) l.scrollTop = top;
+    });
+  });
+}
+// Si la app queda abierta cuando cambia el mes, las tarjetas rotan solas
+let _slMonthSeen = slMonthOf(0).y * 12 + slMonthOf(0).m;
+setInterval(() => {
+  const now = slMonthOf(0).y * 12 + slMonthOf(0).m;
+  if (now !== _slMonthSeen) { _slMonthSeen = now; renderSlAlerts(); }
+}, 60000);
 
 /* ── Tarjeta "Repaso SL · No estadísticos" ──────────────────────
    SL marcados No estadístico del mes actual real y del anterior,
